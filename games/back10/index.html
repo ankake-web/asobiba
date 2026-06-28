@@ -1147,25 +1147,41 @@ async function endGame(g,reason){
   await saveRanking(g,result);
   showResult(result);
 }
-async function saveRanking(g,result){
-  if(!db) return;
-  const names = Object.values(g.players||{}).map(p=>p.name).join(" & ") || "Player";
+const LOCAL_RANK_KEY="asobiba:back10:rankings";
+function saveLocalRanking(entry){
   try{
-    await addDoc(collection(db,"rankings"),{
-      mode:g.mode||"multi",
-      dailyKey:(g.mode||"multi")+"_"+result.dateKey,
-      monthlyKey:(g.mode||"multi")+"_"+result.monthKey,
-      score:result.score,
-      clear:result.clear,
-      remaining:result.remaining,
-      back10Total:result.back10Total,
-      maxCombo:result.maxCombo,
-      timeSec:result.timeSec,
-      playerName:names,
-      createdAt:serverTimestamp()
-    });
+    const a=JSON.parse(localStorage.getItem(LOCAL_RANK_KEY)||"[]");
+    a.push(entry);
+    while(a.length>300) a.shift();
+    localStorage.setItem(LOCAL_RANK_KEY,JSON.stringify(a));
+  }catch(e){}
+}
+function localRankings(field,value){
+  try{ return JSON.parse(localStorage.getItem(LOCAL_RANK_KEY)||"[]").filter(r=>r[field]===value); }
+  catch(e){ return []; }
+}
+async function saveRanking(g,result){
+  const names = Object.values(g.players||{}).map(p=>p.name).join(" & ") || "Player";
+  const entry = {
+    mode:g.mode||"multi",
+    dailyKey:(g.mode||"multi")+"_"+result.dateKey,
+    monthlyKey:(g.mode||"multi")+"_"+result.monthKey,
+    score:result.score,
+    clear:result.clear,
+    remaining:result.remaining,
+    back10Total:result.back10Total,
+    maxCombo:result.maxCombo,
+    timeSec:result.timeSec,
+    playerName:names
+  };
+  // この端末のランキングには必ず反映（Firestore不可でも見える）
+  saveLocalRanking({...entry,createdAt:Date.now()});
+  // 共有オンラインランキングにも保存を試みる（Firestoreルール許可時）
+  if(!db) return;
+  try{
+    await addDoc(collection(db,"rankings"),{...entry,createdAt:serverTimestamp()});
   }catch(e){
-    console.warn("ranking save failed", e);
+    console.warn("online ranking save failed (local saved)", e);
   }
 }
 function showResult(result){
@@ -1217,25 +1233,32 @@ function closeModal(id){ $(id).style.display="none"; resumeAudio(); }
 async function loadRankings(mode,period){
   const body = $("rankingBody");
   body.innerHTML="読み込み中...";
-  if(!db){ body.innerHTML="Firebaseに接続できません。"; return; }
   const field = period==="daily" ? "dailyKey" : "monthlyKey";
   const value = mode + "_" + (period==="daily" ? todayKey() : monthKey());
-  try{
-    const q = query(collection(db,"rankings"), where(field,"==",value));
-    const snap = await getDocs(q);
-    const rows=[]; snap.forEach(d=>rows.push(d.data()));
-    rows.sort((a,b)=>{ if((b.score||0)!==(a.score||0)) return (b.score||0)-(a.score||0); return (a.timeSec||999999)-(b.timeSec||999999); });
-    const top = rows.slice(0,10);
-    if(top.length===0){ body.innerHTML="まだ記録がありません。1ゲーム終了すると表示されます。"; return; }
-    let html = `<div style="font-weight:1000;margin-bottom:8px">${mode==="solo"?"ひとり":"みんな"} / ${period==="daily"?"今日":"今月"}</div>`;
-    html += `<table class="rankingTable"><tr><th>#</th><th>名前</th><th>Score</th><th>残り</th><th>B10</th></tr>`;
-    top.forEach((r,i)=>{ html += `<tr><td>${i+1}</td><td>${escapeHtml(r.playerName||"Player")}</td><td>${r.score}</td><td>${r.remaining}</td><td>${r.back10Total}</td></tr>`; });
-    html += `</table>`;
-    body.innerHTML = html;
-  }catch(e){
-    console.warn(e);
-    body.innerHTML="ランキング取得に失敗しました。Firestoreのルールを確認してください。";
+  let rows = localRankings(field,value);
+  let online = false;
+  if(db){
+    try{
+      const q = query(collection(db,"rankings"), where(field,"==",value));
+      const snap = await getDocs(q);
+      snap.forEach(d=>rows.push(d.data()));
+      online = true;
+    }catch(e){
+      console.warn("online ranking read failed (showing local)", e);
+    }
   }
+  // 重複排除（ローカル＝オンラインの同一記録）
+  const seen=new Set();
+  rows = rows.filter(r=>{ const k=`${r.playerName}|${r.score}|${r.remaining}|${r.timeSec}`; if(seen.has(k)) return false; seen.add(k); return true; });
+  rows.sort((a,b)=>{ if((b.score||0)!==(a.score||0)) return (b.score||0)-(a.score||0); return (a.timeSec||999999)-(b.timeSec||999999); });
+  const top = rows.slice(0,10);
+  if(top.length===0){ body.innerHTML="まだ記録がありません。1ゲーム終了すると表示されます。"; return; }
+  const scope = online ? "" : ` <span style="font-weight:700;font-size:11px;opacity:.7">（この端末の記録）</span>`;
+  let html = `<div style="font-weight:1000;margin-bottom:8px">${mode==="solo"?"ひとり":"みんな"} / ${period==="daily"?"今日":"今月"}${scope}</div>`;
+  html += `<table class="rankingTable"><tr><th>#</th><th>名前</th><th>Score</th><th>残り</th><th>B10</th></tr>`;
+  top.forEach((r,i)=>{ html += `<tr><td>${i+1}</td><td>${escapeHtml(r.playerName||"Player")}</td><td>${r.score}</td><td>${r.remaining}</td><td>${r.back10Total}</td></tr>`; });
+  html += `</table>`;
+  body.innerHTML = html;
 }
 function ensureAudio(){ if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); resumeAudio(); }
 function resumeAudio(){ if(audioCtx && audioCtx.state==="suspended") audioCtx.resume(); }

@@ -670,14 +670,13 @@ button.diceStageButton .diceCube{width:54px;height:54px;font-size:28px}
   75%{transform:translateY(9%) rotateX(540deg) rotateY(470deg) rotateZ(7deg)}
   100%{transform:translateY(-16%) rotateX(720deg) rotateY(620deg) rotateZ(-6deg)}
 }
-/* よりリアルな象牙質の面＋エンボスの目 */
+/* canvasテクスチャの面（象牙地＋彫り込み＋ベベル） */
 .die3dFace{
-  background:radial-gradient(circle at 34% 26%,#fffdf6 0%,#f6ecd5 52%,#e2d0a8 100%)!important;
-  border:1px solid #c4a877!important;border-radius:16px!important;
-  box-shadow:inset 0 4px 8px rgba(255,255,255,.9),inset 0 -8px 14px rgba(120,88,38,.3),inset 0 0 0 2px rgba(255,255,255,.4)!important;
-  text-shadow:0 1px 0 rgba(255,255,255,.85),0 -1px 1px rgba(120,90,40,.35),0 2px 3px rgba(80,55,18,.3)!important;
+  background-color:#f1e6cc!important;background-size:cover!important;background-position:center!important;
+  border:0!important;border-radius:16px!important;color:transparent!important;
+  box-shadow:0 0 0 1px rgba(120,88,38,.3)!important;
 }
-.diceArena .die3dFace{filter:saturate(.96) contrast(1.02)}
+.diceArena .die3dFace{filter:saturate(1.02) contrast(1.03)}
 
 /* ===== 盤面を大きく見やすく（窮屈さ解消） ===== */
 .trackBoard{aspect-ratio:1.52!important;border-radius:22px!important}
@@ -694,6 +693,39 @@ button.diceStageButton .diceCube{width:54px;height:54px;font-size:28px}
 @media(max-width:390px){
   .pony{width:24px!important;height:24px!important}
   .diceArena .die3d{--ds:112px}
+}
+
+/* ===== 横向き疾走スプライト ===== */
+.pony.sprite{
+  width:50px!important;height:38px!important;border-radius:0!important;border:0!important;
+  background-color:transparent!important;background-size:contain!important;background-repeat:no-repeat!important;background-position:center bottom!important;
+  box-shadow:none!important;color:transparent!important;overflow:visible!important;
+  filter:drop-shadow(0 3px 2px rgba(0,0,0,.5)) drop-shadow(0 0 1px var(--horse-color));
+  animation:gallopBob .5s ease-in-out infinite;
+}
+@keyframes gallopBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+.pony.sprite.latest{animation:gallopRun .42s ease-in-out infinite}
+@keyframes gallopRun{0%,100%{transform:translateY(0) scale(1.02)}50%{transform:translateY(-6px) scale(1.08)}}
+.pony.sprite.paceLeader{filter:drop-shadow(0 0 6px rgba(255,200,60,.95)) drop-shadow(0 3px 2px rgba(0,0,0,.5))}
+.pony.sprite.movePony{box-shadow:none!important;animation:ponyBeckon 1s ease-in-out infinite;
+  filter:drop-shadow(0 0 5px #ffe27a) drop-shadow(0 0 10px #ffb800) drop-shadow(0 3px 2px rgba(0,0,0,.5))!important}
+.pony.sprite.moved{opacity:.5}
+@media(min-width:721px){.pony.sprite{width:70px!important;height:52px!important}}
+@media(max-width:390px){.pony.sprite{width:44px!important;height:34px!important}}
+.slot{align-items:flex-end!important}
+
+/* ===== 斜め見下ろしの3D遠近（競馬中継風） ===== */
+.trackCard{perspective:1050px;perspective-origin:center 36%}
+.trackBoard{overflow:visible!important;transform:rotateX(16deg) scale(1.015);transform-origin:center 60%;transform-style:preserve-3d}
+.trackBoard:before,.trackBoard:after{transform-style:preserve-3d}
+.slot{transform:rotateX(-16deg);transform-origin:center bottom;transform-style:preserve-3d}
+.centerInfo{transform:translate(-50%,-50%) rotateX(-16deg)!important}
+.diceArena{transform:rotateX(-16deg)}
+@media(min-width:721px){
+  .trackBoard{transform:rotateX(14deg) scale(1.01)}
+  .slot{transform:rotateX(-14deg)}
+  .centerInfo{transform:translate(-50%,-50%) rotateX(-14deg)!important}
+  .diceArena{transform:rotateX(-14deg)}
 }
 </style>
 </head>
@@ -2003,12 +2035,71 @@ function renderRaceControl(){
 const speed=room.settings?.cpuSpeed||"normal";
 return`<section class="card"><div class="row between"><b>第${room.raceNo}レース</b><span class="pill">${room.raceNo===3?"3R：すべて2倍":"通常レース"}</span></div><label class="small" style="display:block;margin-top:8px"><b>CPU速度</b><select id="cpuSpeedGame" ${!isHost()?"disabled":""}><option value="normal" ${speed==="normal"?"selected":""}>普通</option><option value="fast" ${speed==="fast"?"selected":""}>早い</option><option value="instant" ${speed==="instant"?"selected":""}>最速</option></select></label><div class="row" style="margin-top:8px"><button id="toggleBgm" class="secondary">🎺 BGM ${bgmOn?"OFF":"ON"}</button><button id="quitToTop" class="secondary">ゲームをやめる</button></div></section>`;
 }
+const DIE_TEX={};
+function dieFaceTex(sym){
+if(DIE_TEX[sym])return DIE_TEX[sym];
+const S=224,c=document.createElement("canvas");c.width=c.height=S;const x=c.getContext("2d");
+const rr=(X,Y,W,H,R)=>{x.beginPath();x.moveTo(X+R,Y);x.arcTo(X+W,Y,X+W,Y+H,R);x.arcTo(X+W,Y+H,X,Y+H,R);x.arcTo(X,Y+H,X,Y,R);x.arcTo(X,Y,X+W,Y,R);x.closePath()};
+// 象牙地（左上から光）
+const g=x.createRadialGradient(S*.34,S*.28,S*.06,S*.52,S*.56,S*.9);
+g.addColorStop(0,"#fffdf6");g.addColorStop(.5,"#f3e7ce");g.addColorStop(1,"#d6c096");
+x.fillStyle=g;rr(0,0,S,S,S*.17);x.fill();
+// 彫り込み（くぼみの円）
+x.save();x.beginPath();x.arc(S/2,S/2,S*.345,0,7);x.clip();
+const rg=x.createRadialGradient(S*.42,S*.4,S*.04,S/2,S/2,S*.42);
+rg.addColorStop(0,"#efe4c8");rg.addColorStop(1,"#c7b287");
+x.fillStyle=rg;x.fillRect(0,0,S,S);x.restore();
+x.beginPath();x.arc(S/2,S/2,S*.345,0,7);x.lineWidth=S*.02;x.strokeStyle="rgba(120,90,40,.42)";x.stroke();
+x.beginPath();x.arc(S*.43,S*.41,S*.30,3.6,5.2);x.lineWidth=S*.012;x.strokeStyle="rgba(255,255,255,.55)";x.stroke();
+// シンボル（影付き＝立体感）
+x.textAlign="center";x.textBaseline="middle";
+x.font=`${S*.42}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif`;
+x.shadowColor="rgba(70,48,16,.55)";x.shadowBlur=S*.035;x.shadowOffsetY=S*.022;
+x.fillText(sym,S/2,S/2+S*.015);
+x.shadowColor="transparent";
+// 縁のベベル
+x.lineWidth=S*.05;x.strokeStyle="rgba(255,255,255,.5)";rr(S*.03,S*.03,S*.94,S*.94,S*.15);x.stroke();
+x.lineWidth=S*.018;x.strokeStyle="rgba(150,115,60,.45)";rr(S*.012,S*.012,S*.976,S*.976,S*.16);x.stroke();
+return DIE_TEX[sym]=c.toDataURL();
+}
 function die3d(stateClass){
+const f=(cls,sym)=>`<div class="die3dFace ${cls}" style="background-image:url(${dieFaceTex(sym)})"></div>`;
 return`<div class="die3d"><div class="die3dCube ${stateClass}">`
-+`<div class="die3dFace f-front">🐎</div><div class="die3dFace f-back">🧢</div>`
-+`<div class="die3dFace f-right">🐎</div><div class="die3dFace f-left">🥕</div>`
-+`<div class="die3dFace f-top">🐎</div><div class="die3dFace f-bottom">☀️</div>`
++f("f-front","🐎")+f("f-back","🧢")+f("f-right","🐎")+f("f-left","🥕")+f("f-top","🐎")+f("f-bottom","☀️")
 +`</div></div>`;
+}
+
+/* === 横向き疾走スプライト：緑背景をブラウザでクロマキー→透過し、スタイルシートに一括注入 === */
+let spritesReady=false;
+function keyGreenCanvas(img){
+const maxW=360,scale=Math.min(1,maxW/(img.naturalWidth||maxW));
+const w=Math.round((img.naturalWidth||maxW)*scale),h=Math.round((img.naturalHeight||240)*scale);
+const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d");
+x.drawImage(img,0,0,w,h);
+let d;try{d=x.getImageData(0,0,w,h)}catch(e){return null}
+const p=d.data;
+for(let i=0;i<p.length;i+=4){
+const r=p[i],g=p[i+1],b=p[i+2];
+if(g>80&&g>r*1.18&&g>b*1.18){p[i+3]=0;continue}
+const gr=g-Math.max(r,b);
+if(gr>12){p[i+1]=Math.max(r,b)+Math.round(gr*0.18);if(gr>30)p[i+3]=Math.max(0,255-(gr-30)*7);}
+}
+x.putImageData(d,0,0);
+return c;
+}
+function flipCanvas(src){const c=document.createElement("canvas");c.width=src.width;c.height=src.height;const x=c.getContext("2d");x.translate(c.width,0);x.scale(-1,1);x.drawImage(src,0,0);return c;}
+function preloadSprites(){
+const ids=HORSES.map(h=>h.id);let pending=ids.length;const rules=[];
+const done=()=>{if(--pending>0)return;
+  if(rules.length){const s=document.createElement("style");s.id="spriteStyles";s.textContent=rules.join("\n");document.head.appendChild(s);}
+  spritesReady=true; if(typeof room!=="undefined"&&room)render();
+};
+ids.forEach(id=>{
+const img=new Image();
+img.onload=()=>{try{const c=keyGreenCanvas(img);if(c){rules.push(`.pony.sp-${id}{background-image:url(${c.toDataURL("image/png")})}`);rules.push(`.pony.spf-${id}{background-image:url(${flipCanvas(c).toDataURL("image/png")})}`);}}catch(e){}done();};
+img.onerror=done;
+img.src=`assets/horse-side-${id}.jpg`;
+});
 }
 function renderDiceVisual(diceKey,rolling){
 if(rolling)return`<div class="diceStage">${die3d("rolling")}<div><div class="diceText">サイコロ回転中…</div><div class="diceFaces">🐎 🐎 🐎 🧢 🥕 ☀️</div></div></div>`;
@@ -2043,7 +2134,7 @@ placed[pos].push(hid);
 }
 const canMoveNow=room.phase==="racing"&&room.race.dice&&!room.race.diceRolling&&!animationState&&canControlPlayer(currentPlayer(room));
 const moveSet=canMoveNow?new Set(activeCards(clone(room)).map(c=>c.horse)):new Set();
-return`<section class="card trackCard"><div class="trackBoard">${renderCenter()}${renderDiceArena()}${trackSpaces().map(sp=>{const horses=placed[sp.no]||[],cls=`trackSpace ${sp.no===GOAL_LINE?"finish":""} ${sp.no===PACE_SPACE?"pace":""}`;return`<div class="${cls}" style="left:${sp.x}%;top:${sp.y}%"><div class="num">${sp.no}</div><div class="lab">${sp.no===GOAL_LINE?"GOAL":sp.no===PACE_SPACE?"PACE":""}</div><div class="slot">${horses.map(hid=>{const hi=horseInfo(hid),c=horseCard(hid),lastMove=room.race.lastMove||{},latest=lastMove.horse===hid,canMv=moveSet.has(hid);return`<span class="pony photo ${canMv?"movePony clickable":""} ${room.race.paceHorse===hid?"paceLeader":""} ${latest?"latest":""} ${latest&&lastMove.blocked?"blocked":""} ${animationState?.horse===hid?"anim":""} ${c?.moved?"moved":""}" style="--horse-color:${hi.color};background-image:url('assets/horse-${hid}.jpg')" data-horse="${hid}" title="${c?.name||hi.label}">🐴</span>`}).join("")}</div></div>`}).join("")}</div>${renderHorseCards()}</section>`;
+return`<section class="card trackCard"><div class="trackBoard">${renderCenter()}${renderDiceArena()}${trackSpaces().map(sp=>{const horses=placed[sp.no]||[],cls=`trackSpace ${sp.no===GOAL_LINE?"finish":""} ${sp.no===PACE_SPACE?"pace":""}`;const faceLeft=sp.no>=12&&sp.no<=29;return`<div class="${cls}" style="left:${sp.x}%;top:${sp.y}%"><div class="num">${sp.no}</div><div class="lab">${sp.no===GOAL_LINE?"GOAL":sp.no===PACE_SPACE?"PACE":""}</div><div class="slot">${horses.map(hid=>{const hi=horseInfo(hid),c=horseCard(hid),lastMove=room.race.lastMove||{},latest=lastMove.horse===hid,canMv=moveSet.has(hid);const useSp=spritesReady&&!c?.secret;const kind=useSp?("sprite "+(faceLeft?"spf-":"sp-")+hid):("photo");const bg=useSp?"":`background-image:url('assets/horse-${hid}.jpg');`;return`<span class="pony ${kind} ${canMv?"movePony clickable":""} ${room.race.paceHorse===hid?"paceLeader":""} ${latest?"latest":""} ${latest&&lastMove.blocked?"blocked":""} ${animationState?.horse===hid?"anim":""} ${c?.moved?"moved":""}" style="--horse-color:${hi.color};${bg}" data-horse="${hid}" title="${c?.name||hi.label}">🐴</span>`}).join("")}</div></div>`}).join("")}</div>${renderHorseCards()}</section>`;
 }
 function renderHorseCards(){
 const isBet=room.phase==="betting"&&canControlPlayer(currentBetPlayer(room));
@@ -2212,6 +2303,7 @@ await initFirebase().catch(err=>{console.warn("Firebase init failed",err);online
 if(roomCode)await openRoom(roomCode);
 render();
 syncTopBgm();
+preloadSprites();
 </script>
 </body>
 </html>
