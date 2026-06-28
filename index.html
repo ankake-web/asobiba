@@ -130,6 +130,26 @@
   .t-back10{--g:linear-gradient(135deg,#0e1730 0%, #1a2f6b 50%, #2bb6ac 100%)}
   .t-spy{--g:linear-gradient(135deg,#1a1320 0%, #34233f 50%, #5b3a6e 100%)}
 
+  /* rules button on tiles */
+  .tileFoot{margin-top:16px;display:flex;align-items:center;gap:10px}
+  .feature .tileFoot{margin-top:18px}
+  .rulesBtn{display:inline-flex;align-items:center;gap:6px;font-weight:900;font-size:13px;
+    padding:10px 14px;border-radius:999px;background:rgba(0,0,0,.28);color:#fff;border:1px solid rgba(255,255,255,.35);backdrop-filter:blur(4px)}
+  .rulesBtn:active{transform:scale(.95)}
+
+  /* rules modal */
+  .rulesOverlay{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:16px;
+    background:rgba(8,7,11,.8);backdrop-filter:blur(5px)}
+  .rulesOverlay.show{display:flex}
+  .rulesModal{width:min(94vw,480px);max-height:88vh;overflow:auto;border-radius:24px;padding:18px;
+    background:linear-gradient(180deg,#26222f,#1b1825);border:1px solid var(--line2);box-shadow:0 24px 60px rgba(0,0,0,.6)}
+  .rulesModal .rmTop{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .rulesModal .rmTop b{font-size:13px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+  .rmClose{width:34px;height:34px;border-radius:50%;border:1px solid var(--line2);background:rgba(255,255,255,.06);color:var(--ink);font-size:16px;font-weight:800}
+  .rmPlay{display:block;text-align:center;margin-top:16px;padding:14px;border-radius:16px;font-weight:900;font-size:16px;
+    color:#1c1530;background:linear-gradient(180deg,#fff,#ecd9a6);box-shadow:0 6px 0 #b89a48}
+  .rmPlay:active{transform:translateY(3px);box-shadow:0 3px 0 #b89a48}
+
   footer{margin-top:34px;text-align:center;color:var(--muted);font-size:12px;font-weight:700;line-height:1.8}
   footer .heart{color:var(--gold)}
 </style>
@@ -157,8 +177,18 @@
     </footer>
   </div>
 
+  <div class="rulesOverlay" id="rulesOverlay">
+    <div class="rulesModal">
+      <div class="rmTop"><b>遊び方</b><button class="rmClose" id="rmClose" aria-label="とじる">✕</button></div>
+      <div id="rulesBody"></div>
+      <a class="rmPlay" id="rmPlay" href="#">このゲームをあそぶ →</a>
+    </div>
+  </div>
+
   <script type="module">
     import { toggleSound, isSoundOn, sfx } from "./src/shared/sound.js";
+    import { renderRulesInto, RULES_CSS } from "./src/shared/rules.js";
+    document.head.insertAdjacentHTML("beforeend", `<style>${RULES_CSS}</style>`);
 
     const GAMES = [
       {
@@ -196,8 +226,8 @@
         <h2 class="tileTitle">${g.title}</h2>
         <p class="tileDesc">${g.desc}</p>
         ${g.soon
-          ? `<span class="tileSoon">近日登場</span>`
-          : `<span class="tilePlay">あそぶ →</span>`}
+          ? `<div class="tileFoot"><span class="tileSoon">近日登場</span></div>`
+          : `<div class="tileFoot"><span class="tilePlay">あそぶ →</span><button class="rulesBtn" data-rules="${g.slug}">ⓘ ルール</button></div>`}
         <span class="tileEmblem">${g.emblem}</span>`;
       return g.soon
         ? `<div class="${cls}">${inner}</div>`
@@ -208,6 +238,24 @@
       a.addEventListener("pointerenter", () => sfx.hover());
       a.addEventListener("click", () => sfx.enter());
     });
+
+    // rules viewer (open from hub, no navigation)
+    const rulesOverlay = document.getElementById("rulesOverlay");
+    const rulesBody = document.getElementById("rulesBody");
+    const rmPlay = document.getElementById("rmPlay");
+    function openRules(slug) {
+      renderRulesInto(rulesBody, slug);
+      rmPlay.href = `./games/${slug}/index.html`;
+      rulesOverlay.classList.add("show");
+      rulesBody.scrollTop = 0;
+    }
+    function closeRules() { rulesOverlay.classList.remove("show"); }
+    root.querySelectorAll(".rulesBtn").forEach(b => {
+      b.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); sfx.select(); openRules(b.dataset.rules); });
+    });
+    rmPlay.addEventListener("click", () => sfx.enter());
+    document.getElementById("rmClose").addEventListener("click", closeRules);
+    rulesOverlay.addEventListener("click", (e) => { if (e.target === rulesOverlay) closeRules(); });
 
     const soundBtn = document.getElementById("soundBtn");
     const paint = () => soundBtn.textContent = isSoundOn() ? "🔊 サウンド" : "🔈 ミュート";

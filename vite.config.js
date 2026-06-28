@@ -1,28 +1,41 @@
 import { defineConfig } from "vite";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readdirSync, existsSync } from "node:fs";
+import { readdirSync, existsSync, cpSync } from "node:fs";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-// Auto-discover every page so adding a game = drop a folder under games/<slug>/index.html
-const input = { main: resolve(root, "index.html") };
+// Discover game slugs (each games/<slug>/index.html is a page)
 const gamesDir = resolve(root, "games");
-if (existsSync(gamesDir)) {
-  for (const slug of readdirSync(gamesDir, { withFileTypes: true })) {
-    if (!slug.isDirectory()) continue;
-    const page = resolve(gamesDir, slug.name, "index.html");
-    if (existsSync(page)) input[`game-${slug.name}`] = page;
-  }
+const slugs = existsSync(gamesDir)
+  ? readdirSync(gamesDir, { withFileTypes: true })
+      .filter((d) => d.isDirectory() && existsSync(resolve(gamesDir, d.name, "index.html")))
+      .map((d) => d.name)
+  : [];
+
+const input = { main: resolve(root, "index.html") };
+for (const slug of slugs) input[`game-${slug}`] = resolve(gamesDir, slug, "index.html");
+
+// Vite only bundles assets it can statically see. Our games reference images via
+// dynamic strings (background-image / src built at runtime), so copy each
+// games/<slug>/assets folder into dist verbatim after the build.
+function copyGameAssets() {
+  return {
+    name: "copy-game-assets",
+    apply: "build",
+    closeBundle() {
+      for (const slug of slugs) {
+        const src = resolve(gamesDir, slug, "assets");
+        if (existsSync(src)) cpSync(src, resolve(root, "dist/games", slug, "assets"), { recursive: true });
+      }
+    },
+  };
 }
 
 export default defineConfig({
-  // Relative base so the built site works under any path (custom domain or
-  // https://<user>.github.io/<repo>/) without rebuilding.
   base: "./",
+  plugins: [copyGameAssets()],
   build: {
-    // esnext: keep top-level await as-is (uma-race awaits Firebase init at module
-    // top level). All target browsers are modern mobile, so no downleveling needed.
     target: "esnext",
     rollupOptions: { input },
   },

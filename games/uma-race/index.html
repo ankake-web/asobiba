@@ -246,6 +246,34 @@ transform:rotate(-5deg);
 @keyframes diceShake{from{translate:-3px -2px}to{translate:3px 2px}}
 @keyframes diceSpin{from{rotate:0deg}to{rotate:360deg}}
 
+/* --- 本物の3Dダイス（CSS 3Dキューブ） --- */
+.die3d{--ds:62px;width:var(--ds);height:var(--ds);perspective:480px;flex:0 0 auto}
+.die3dCube{position:relative;width:100%;height:100%;transform-style:preserve-3d;
+  transition:transform .55s cubic-bezier(.22,.85,.3,1.25);will-change:transform}
+.die3dFace{position:absolute;inset:0;display:grid;place-items:center;
+  font-size:calc(var(--ds) * .5);border-radius:13px;
+  background:radial-gradient(circle at 32% 26%,#fffefb,#fbf4e6 46%,#ecddbe);
+  border:2px solid #cdb285;
+  box-shadow:inset 0 3px 7px rgba(255,255,255,.85),inset 0 -7px 11px rgba(120,90,40,.22);
+  backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.die3dFace.f-front{transform:translateZ(calc(var(--ds)/2))}
+.die3dFace.f-back{transform:rotateY(180deg) translateZ(calc(var(--ds)/2))}
+.die3dFace.f-right{transform:rotateY(90deg) translateZ(calc(var(--ds)/2))}
+.die3dFace.f-left{transform:rotateY(-90deg) translateZ(calc(var(--ds)/2))}
+.die3dFace.f-top{transform:rotateX(90deg) translateZ(calc(var(--ds)/2))}
+.die3dFace.f-bottom{transform:rotateX(-90deg) translateZ(calc(var(--ds)/2))}
+.die3dCube.idle{transform:rotateX(-18deg) rotateY(-24deg);animation:dieBob 3.2s ease-in-out infinite}
+@keyframes dieBob{0%,100%{transform:rotateX(-18deg) rotateY(-22deg)}50%{transform:rotateX(-10deg) rotateY(-38deg)}}
+.die3dCube.rolling{animation:dieTumble .5s linear infinite}
+@keyframes dieTumble{0%{transform:rotateX(0) rotateY(0)}100%{transform:rotateX(360deg) rotateY(522deg)}}
+.die3dCube.r-horse{transform:rotateX(-15deg) rotateY(-20deg)}
+.die3dCube.r-cap{transform:rotateX(-15deg) rotateY(160deg)}
+.die3dCube.r-carrot{transform:rotateX(-15deg) rotateY(70deg)}
+.die3dCube.r-weather{transform:rotateX(74deg) rotateY(-20deg)}
+button.diceStageButton .die3d{--ds:58px}
+@media(max-width:560px){.die3d{--ds:54px}}
+@media(min-width:721px){.die3d{--ds:72px}}
+
 button.diceStageButton{
 width:100%;display:flex;align-items:center;justify-content:center;gap:11px;
 border-radius:18px;padding:12px 16px;
@@ -556,6 +584,39 @@ button.diceStageButton .diceCube{width:54px;height:54px;font-size:28px}
 .asobibaTop .backPill{font-size:12px;padding:7px 11px}
 .asobibaTop .topCtl button{padding:7px 10px;font-size:12px}
 }
+/* ===== リアルCGアセット統合 ===== */
+.homeHero{background:linear-gradient(180deg,rgba(15,12,8,.10),rgba(15,12,8,.74)),url('assets/title-hero.jpg') center/cover!important;border:1px solid rgba(255,255,255,.22)!important;min-height:206px!important}
+.homeHero:before,.homeHero:after{display:none!important}
+.homeTitle{color:#fff!important;text-shadow:0 3px 14px rgba(0,0,0,.8)!important}
+.homeLead{color:#ffe7d0!important;text-shadow:0 2px 8px rgba(0,0,0,.75)!important}
+
+/* 馬カードのリアルCGポートレート */
+.horsePortrait{position:relative;height:80px;margin:-9px -9px 7px;border-radius:15px 15px 10px 10px;overflow:hidden;
+  background-color:#1a1822;background-size:cover;background-position:center 20%;box-shadow:inset 0 -34px 30px rgba(0,0,0,.55)}
+.cardStrip .horsePortrait{height:64px;margin:-7px -7px 5px}
+.horsePortrait .hpName{position:absolute;left:8px;right:8px;bottom:5px;color:#fff;font-weight:900;font-size:12px;
+  font-family:"Hiragino Mincho ProN","Yu Mincho",serif;text-shadow:0 1px 5px rgba(0,0,0,.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cardStrip .horsePortrait .hpName{font-size:10px;left:5px;right:5px}
+.horsePortrait .hpFlag{position:absolute;top:6px;left:6px;width:13px;height:13px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.6)}
+.horsePortrait.secret{filter:grayscale(.35) brightness(.86) contrast(1.05)}
+
+/* 盤面のコマをリアル馬の円形メダルに */
+.pony.photo{background-size:cover!important;background-position:center 14%!important;color:transparent!important;text-indent:-999px;overflow:hidden}
+
+/* レース実況カットイン */
+#raceCutin{position:fixed;inset:0;z-index:9998;display:none;align-items:center;justify-content:center;pointer-events:none;padding:16px}
+#raceCutin.show{display:flex;animation:cutinFade 1.95s ease forwards}
+.cutinCard{position:relative;width:min(92vw,560px);aspect-ratio:16/10;border-radius:20px;overflow:hidden;background-color:#1a1822;
+  box-shadow:0 24px 60px rgba(0,0,0,.6),0 0 0 3px rgba(255,255,255,.92);background-size:cover;background-position:center;animation:cutinSlide 1.95s cubic-bezier(.2,.8,.2,1) forwards}
+.cutinCard .cutinBar{position:absolute;left:0;right:0;bottom:0;padding:14px 16px;background:linear-gradient(0deg,rgba(0,0,0,.82),transparent)}
+.cutinCard .cutinName{font-size:clamp(20px,5.4vw,32px);font-weight:900;color:#fff;font-family:"Hiragino Mincho ProN","Yu Mincho",serif;text-shadow:0 2px 8px rgba(0,0,0,.85)}
+.cutinCard .cutinHead{font-size:clamp(14px,3.8vw,19px);font-weight:900;color:#ffdf8a;letter-spacing:.12em;text-shadow:0 2px 6px rgba(0,0,0,.85)}
+.cutinCard .cutinChip{position:absolute;top:12px;left:12px;padding:6px 13px;border-radius:999px;font-weight:900;font-size:13px;color:#1a140a;background:linear-gradient(180deg,#ffe27a,#e7c66b);box-shadow:0 3px 10px rgba(0,0,0,.45)}
+@keyframes cutinFade{0%{opacity:0}7%{opacity:1}84%{opacity:1}100%{opacity:0}}
+@keyframes cutinSlide{0%{transform:scale(1.14) translateX(7%);opacity:.15}11%{transform:scale(1) translateX(0);opacity:1}100%{transform:scale(1.05) translateX(-2%)}}
+
+/* 結果画面の勝利CG */
+.winnerShot{width:100%;max-width:440px;margin:8px auto 2px;display:block;border-radius:18px;box-shadow:0 12px 30px rgba(0,0,0,.4)}
 </style>
 </head>
 <body>
@@ -568,6 +629,7 @@ button.diceStageButton .diceCube{width:54px;height:54px;font-size:28px}
 </div>
 </header>
 <div id="app" class="app"></div>
+<div id="raceCutin" aria-hidden="true"></div>
 
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
@@ -1667,11 +1729,31 @@ return arr;
 }
 
 const displayPosition=(hid,fallback)=>animationState&&animationState.horse===hid?animationState.pos:fallback;
+function maybeCutin(move,path){
+const el=document.getElementById("raceCutin");
+if(!el||!move)return;
+const steps=Array.isArray(path)?path.length:0;
+const goal=!!move.goal;
+const big=steps>=9;
+if(!goal&&!big)return;
+const hid=move.horse;
+const name=horseDisplayName(hid);
+const color=horseInfo(hid)?.color||"#c9a14a";
+const win=goal&&(move.rank===1);
+const bg=win?"assets/winner.jpg":"assets/cutin-charge.jpg";
+const chip=goal?(move.rank?`🏁 ${move.rank}着`:"🏁 ゴール"):`⚡ ${steps}マス`;
+const head=win?"ゴールイン！":goal?"ゴール！":"猛 追 ！";
+el.innerHTML=`<div class="cutinCard" style="background-image:linear-gradient(90deg,rgba(0,0,0,.18),transparent 55%),url('${bg}')"><div class="cutinChip">${chip}</div><div class="cutinBar"><div class="cutinHead">${head}</div><div class="cutinName" style="border-left:5px solid ${color};padding-left:9px">${escapeHtml(name)}</div></div></div>`;
+el.classList.remove("show");void el.offsetWidth;el.classList.add("show");
+try{playEffect(goal?"goal":"step")}catch(e){}
+clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),1980);
+}
 function maybeStartMoveAnimation(){
 const move=room?.race?.lastMove;
 if(!move?.ts||move.ts===lastAnimatedMoveTs)return;
 const path=Array.isArray(move.path)&&move.path.length?move.path:[move.finalTarget];
 lastAnimatedMoveTs=move.ts;
+maybeCutin(move,path);
 clearTimeout(animationTimer);
 let idx=0;
 const step=()=>{
@@ -1824,7 +1906,7 @@ ${offlineButtons}
 ${renderHorseMaster()}`;
 }
 function renderHorseMaster(){
-return`<section class="card"><b>出走馬・基本能力</b><div class="horseGrid">${HORSES.map(h=>`<div class="horseCard"><div class="horseHead"><b class="horseName"><span class="pony" style="--horse-color:${h.color}">🐴</span> ${h.label}</b></div><div class="moves"><span>${face("horse")}${h.base.horse}</span><span>${face("cap")}${h.base.cap}</span><span>${face("carrot")}${h.base.carrot}</span><span>${face("weather")}${h.base.weather}</span></div></div>`).join("")}</div></section>`;
+return`<section class="card"><b>出走馬・基本能力</b><div class="horseGrid">${HORSES.map(h=>`<div class="horseCard"><div class="horseHead"><b class="horseName"><span class="pony photo" style="--horse-color:${h.color};background-image:url('assets/horse-${h.id}.jpg')">🐴</span> ${h.label}</b></div><div class="moves"><span>${face("horse")}${h.base.horse}</span><span>${face("cap")}${h.base.cap}</span><span>${face("carrot")}${h.base.carrot}</span><span>${face("weather")}${h.base.weather}</span></div></div>`).join("")}</div></section>`;
 }
 function renderGame(){
 return`${renderGoalConfetti()}${renderTrack()}${renderPayout()}${renderLogSection()}${renderScoreBoard()}${renderRaceControl()}${renderPayoutGuide()}${renderActionPanel()}`;
@@ -1843,10 +1925,17 @@ function renderRaceControl(){
 const speed=room.settings?.cpuSpeed||"normal";
 return`<section class="card"><div class="row between"><b>第${room.raceNo}レース</b><span class="pill">${room.raceNo===3?"3R：すべて2倍":"通常レース"}</span></div><label class="small" style="display:block;margin-top:8px"><b>CPU速度</b><select id="cpuSpeedGame" ${!isHost()?"disabled":""}><option value="normal" ${speed==="normal"?"selected":""}>普通</option><option value="fast" ${speed==="fast"?"selected":""}>早い</option><option value="instant" ${speed==="instant"?"selected":""}>最速</option></select></label><div class="row" style="margin-top:8px"><button id="toggleBgm" class="secondary">🎺 BGM ${bgmOn?"OFF":"ON"}</button><button id="quitToTop" class="secondary">ゲームをやめる</button></div></section>`;
 }
+function die3d(stateClass){
+return`<div class="die3d"><div class="die3dCube ${stateClass}">`
++`<div class="die3dFace f-front">🐎</div><div class="die3dFace f-back">🧢</div>`
++`<div class="die3dFace f-right">🐎</div><div class="die3dFace f-left">🥕</div>`
++`<div class="die3dFace f-top">🐎</div><div class="die3dFace f-bottom">☀️</div>`
++`</div></div>`;
+}
 function renderDiceVisual(diceKey,rolling){
-if(rolling)return`<div class="diceStage"><div class="diceCube rolling">🎲</div><div><div class="diceText">サイコロ回転中…</div><div class="diceFaces">🐎 🐎 🐎 🧢 🥕 ☀️</div></div></div>`;
+if(rolling)return`<div class="diceStage">${die3d("rolling")}<div><div class="diceText">サイコロ回転中…</div><div class="diceFaces">🐎 🐎 🐎 🧢 🥕 ☀️</div></div></div>`;
 const d=diceKey?diceObj(diceKey):null;
-return`<div class="diceStage"><div class="diceCube">${d?d.icon:"🎲"}</div><div><div class="diceText">${d?`出目：${d.label}`:"サイコロ待ち"}</div><div class="diceFaces">🐎×3 / 🧢 / 🥕 / ☀️</div></div></div>`;
+return`<div class="diceStage">${die3d(d?("r-"+d.key):"idle")}<div><div class="diceText">${d?`出目：${d.label}`:"サイコロ待ち"}</div><div class="diceFaces">🐎×3 / 🧢 / 🥕 / ☀️</div></div></div>`;
 }
 function renderCenter(){
 if(room.race.diceRolling)return`<div class="centerInfo"><div class="waitLine">🎲 回転中…</div></div>`;
@@ -1866,7 +1955,7 @@ const pos=displayPosition(hid,horseDisplayPos(s));
 placed[pos]??=[];
 placed[pos].push(hid);
 }
-return`<section class="card trackCard"><div class="trackBoard">${renderCenter()}${trackSpaces().map(sp=>{const horses=placed[sp.no]||[],cls=`trackSpace ${sp.no===GOAL_LINE?"finish":""} ${sp.no===PACE_SPACE?"pace":""}`;return`<div class="${cls}" style="left:${sp.x}%;top:${sp.y}%"><div class="num">${sp.no}</div><div class="lab">${sp.no===GOAL_LINE?"GOAL":sp.no===PACE_SPACE?"PACE":""}</div><div class="slot">${horses.map(hid=>{const hi=horseInfo(hid),c=horseCard(hid),lastMove=room.race.lastMove||{},latest=lastMove.horse===hid;return`<span class="pony ${room.race.paceHorse===hid?"paceLeader":""} ${latest?"latest":""} ${latest&&lastMove.blocked?"blocked":""} ${animationState?.horse===hid?"anim":""} ${c?.moved?"moved":""}" style="--horse-color:${hi.color}" title="${c?.name||hi.label}">🐴</span>`}).join("")}</div></div>`}).join("")}</div>${renderHorseCards()}</section>`;
+return`<section class="card trackCard"><div class="trackBoard">${renderCenter()}${trackSpaces().map(sp=>{const horses=placed[sp.no]||[],cls=`trackSpace ${sp.no===GOAL_LINE?"finish":""} ${sp.no===PACE_SPACE?"pace":""}`;return`<div class="${cls}" style="left:${sp.x}%;top:${sp.y}%"><div class="num">${sp.no}</div><div class="lab">${sp.no===GOAL_LINE?"GOAL":sp.no===PACE_SPACE?"PACE":""}</div><div class="slot">${horses.map(hid=>{const hi=horseInfo(hid),c=horseCard(hid),lastMove=room.race.lastMove||{},latest=lastMove.horse===hid;return`<span class="pony photo ${room.race.paceHorse===hid?"paceLeader":""} ${latest?"latest":""} ${latest&&lastMove.blocked?"blocked":""} ${animationState?.horse===hid?"anim":""} ${c?.moved?"moved":""}" style="--horse-color:${hi.color};background-image:url('assets/horse-${hid}.jpg')" title="${c?.name||hi.label}">🐴</span>`}).join("")}</div></div>`}).join("")}</div>${renderHorseCards()}</section>`;
 }
 function renderHorseCards(){
 const isBet=room.phase==="betting"&&canControlPlayer(currentBetPlayer(room));
@@ -1880,7 +1969,7 @@ const canBet=isBet&&!used.has(c.horse);
 const canMove=isRace&&room.race.dice&&activeIds.has(c.horse);
 const bets=room.race.bets.filter(b=>b.horse===c.horse);
 return`<div class="horseCard ${room.race.paceHorse===c.horse?"paceHorseCard":""} ${c.secret?"secretHorse":""} ${c.moved?"moved":""} ${canBet?"clickable betCard":""} ${canMove?"clickable moveCard":""} ${used.has(c.horse)?"selected":""}" data-horse="${c.horse}">
-<div class="horseHead"><b class="horseName"><span class="pony" style="--horse-color:${h.color}">🐴</span> ${c.name}</b></div>
+<div class="horsePortrait ${c.secret?'secret':''}" style="background-image:url('assets/horse-${c.horse}.jpg')"><span class="hpFlag" style="background:${h.color}"></span><span class="hpName">${c.name}</span></div>
 ${room.race.paceHorse===c.horse?`<div class="paceBadge paceHorseBadge">👑 ペースホース</div>`:""}
 ${c.secret?`<div class="paceBadge">✨ 配当2倍</div>`:""}
 <div class="moves"><span><i>${face("horse")}</i><b>${c.moves.horse}</b></span><span><i>${face("cap")}</i><b>${c.moves.cap}</b></span><span><i>${face("carrot")}</i><b>${c.moves.carrot}</b></span><span><i>${face("weather")}</i><b>${c.moves.weather}</b></span></div>
@@ -1935,7 +2024,7 @@ return`<section class="actions"><div class="dicePanel" style="margin-top:0">${re
 if(!canControlPlayer(p)){
 return`<section class="actions"><div class="resultHold">${p?.type==="cpu"?cpuOperatingLabel(p,"順番が来ています。"):`${escapeHtml(p?.name||"")} のターン待ち…`}</div></section>`;
 }
-return`<section class="actions"><button id="rollDice" class="diceStageButton"><div class="diceCube">🎲</div><div><div class="diceText">${escapeHtml(p.name)}：サイコロを振る</div><div class="diceFaces">🐎×3 / 🧢 / 🥕 / ☀️</div></div></button></section>`;
+return`<section class="actions"><button id="rollDice" class="diceStageButton">${die3d("idle")}<div><div class="diceText">${escapeHtml(p.name)}：サイコロを振る</div><div class="diceFaces">🐎×3 / 🧢 / 🥕 / ☀️</div></div></button></section>`;
 }
 function renderPayout(){
 if(!room.race?.payout)return"";
@@ -1946,7 +2035,7 @@ const podium=room.race.finishOrder.slice(0,3);
 const last=room.race.lastHorse;
 const winner=[...room.players].sort((a,b)=>b.money-a.money)[0];
 const raceResult=`<section class="card resultShow"><div class="resultTitle">第${room.raceNo}レース 結果発表</div><div class="podiumGrid">${podium.map((hid,i)=>`<div class="podiumCard ${i===0?"first":""}"><div class="podiumRank">${i===0?"🥇":i===1?"🥈":"🥉"}</div><div class="podiumHorse">${escapeHtml(horseDisplayName(hid))}</div></div>`).join("")}</div><div class="lastCard">ビリ：${last?escapeHtml(horseDisplayName(last)):"-"}</div></section>`;
-const winnerBlock=room.phase==="gameover"?`<section class="card winnerCelebration"><div class="winnerTrophy">🏆</div><div class="winnerName">${escapeHtml(winner.name)} 優勝！</div><div class="winnerSub">最終所持金 ¥${winner.money}</div></section>`:"";
+const winnerBlock=room.phase==="gameover"?`<section class="card winnerCelebration"><img class="winnerShot" src="assets/winner.jpg" alt="優勝" loading="lazy"><div class="winnerTrophy">🏆</div><div class="winnerName">${escapeHtml(winner.name)} 優勝！</div><div class="winnerSub">最終所持金 ¥${winner.money}</div></section>`:"";
 return`${raceResult}${winnerBlock}<section class="card"><b>${room.phase==="gameover"?"最終結果":"払い戻し"}</b><div class="grid" style="margin-top:10px">${room.race.payout.playerResults.map(res=>`<div class="playerBox"><div class="row between"><b>${escapeHtml(res.name)}</b><span class="money">${res.net>=0?"+":""}${res.net} → ¥${res.after}</span></div><div class="tiny">${res.details.length?escapeHtml(res.details.join(" / ")):"的中・支払いなし"}</div></div>`).join("")}</div></section>`;
 }
 
