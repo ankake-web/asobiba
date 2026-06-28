@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#13243b">
+<title>霧稜のクライム — あそびば</title>
+<style>
+  :root{
+    --slate-0:#0d1b2e;
+    --slate-1:#13243b;
+    --slate-2:#1f3a5f;
+    --slate-3:#2e5a86;
+    --glacier:#cfe6f5;
+    --snow:#f4fbff;
+    --rock:#5a6878;
+    --rock-d:#3c4756;
+    --gold:#ffd27a;
+    --orange:#ff9d4d;
+    --rope:#a9743f;
+    --rope-d:#7c5128;
+    --cpu:#7fd1c4;
+    --cpu-d:#3f9c8d;
+    --ok:#9fe3a0;
+    --bad:#ff7b6b;
+    --ink:#0a1422;
+    --shadow:0 6px 18px rgba(0,0,0,.35);
+    --safe-b:env(safe-area-inset-bottom);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,system-ui,-apple-system,sans-serif;
+    color:var(--snow);
+    background:
+      radial-gradient(120% 80% at 50% -10%, #2e5a86 0%, #1f3a5f 38%, #13243b 70%, #0d1b2e 100%);
+    overflow:hidden;
+    user-select:none;-webkit-user-select:none;
+    touch-action:manipulation;
+  }
+  #app{
+    position:fixed;inset:0;
+    display:flex;flex-direction:column;
+    max-width:560px;margin:0 auto;
+  }
+
+  /* ===== atmospheric background ===== */
+  .bg{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+  .peak{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:160%;opacity:.55;}
+  .peak.back{opacity:.32;filter:blur(1px);bottom:6%;}
+  .mist{
+    position:absolute;left:-20%;width:140%;height:120px;
+    background:radial-gradient(60% 100% at 50% 50%, rgba(207,230,245,.20), rgba(207,230,245,0) 70%);
+    animation:drift 26s linear infinite;
+  }
+  .mist.m1{top:30%;animation-duration:32s;}
+  .mist.m2{top:52%;animation-duration:44s;opacity:.7;animation-direction:reverse;}
+  .mist.m3{top:70%;animation-duration:38s;opacity:.5;}
+  @keyframes drift{from{transform:translateX(-12%);}to{transform:translateX(12%);}}
+  .star{position:absolute;width:2px;height:2px;border-radius:50%;background:#dfeefc;opacity:.5;animation:tw 4s ease-in-out infinite;}
+  @keyframes tw{0%,100%{opacity:.2;}50%{opacity:.7;}}
+
+  /* ===== top bar ===== */
+  .topbar{
+    position:relative;z-index:5;
+    display:flex;align-items:center;gap:8px;
+    padding:calc(env(safe-area-inset-top) + 8px) 10px 8px;
+  }
+  .pill{
+    appearance:none;border:none;cursor:pointer;
+    background:rgba(255,255,255,.10);
+    color:var(--snow);
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:999px;
+    padding:9px 14px;font-size:15px;font-weight:700;
+    text-decoration:none;display:inline-flex;align-items:center;gap:6px;
+    backdrop-filter:blur(6px);
+  }
+  .pill:active{transform:scale(.96);}
+  .title{
+    flex:1;display:flex;flex-direction:column;line-height:1.05;padding-left:4px;
+  }
+  .title .emblem{font-size:18px;font-weight:900;letter-spacing:.02em;
+    display:flex;align-items:center;gap:7px;}
+  .title .sub{font-size:11px;color:var(--glacier);opacity:.85;margin-top:2px;letter-spacing:.08em;}
+  .iconbtn{
+    appearance:none;border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.08);
+    color:var(--snow);width:42px;height:42px;border-radius:50%;
+    font-size:18px;cursor:pointer;display:grid;place-items:center;
+  }
+  .iconbtn:active{transform:scale(.92);}
+  .iconbtn.off{opacity:.45;}
+
+  /* ===== scoreboard ===== */
+  .scorebar{
+    position:relative;z-index:4;
+    display:flex;gap:8px;padding:2px 12px 8px;
+  }
+  .score{
+    flex:1;border-radius:14px;padding:7px 10px;
+    background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.10);
+    display:flex;align-items:center;gap:8px;
+  }
+  .score.you{box-shadow:inset 0 0 0 1.5px rgba(255,157,77,.55);}
+  .score.cpu{box-shadow:inset 0 0 0 1.5px rgba(127,209,196,.45);}
+  .score .who{font-size:12px;font-weight:800;opacity:.9;}
+  .score.you .who{color:var(--gold);}
+  .score.cpu .who{color:var(--cpu);}
+  .flags{display:flex;gap:3px;font-size:16px;margin-left:auto;}
+  .flags .slot{opacity:.22;}
+  .flags .slot.on{opacity:1;}
+
+  /* ===== mountain board ===== */
+  .board-wrap{
+    position:relative;z-index:3;flex:1;min-height:0;
+    margin:0 8px;border-radius:18px;
+    background:linear-gradient(180deg, rgba(19,36,59,.35), rgba(13,27,46,.55));
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .board{
+    height:100%;
+    display:flex;align-items:stretch;gap:0;
+    padding:8px 4px 6px;
+  }
+  .col{
+    flex:1;min-width:0;
+    display:flex;flex-direction:column;align-items:center;
+    position:relative;
+  }
+  .col .summit{
+    font-size:15px;margin-bottom:2px;height:20px;display:grid;place-items:center;
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.5));
+  }
+  .track{
+    flex:1;width:100%;position:relative;
+    display:flex;flex-direction:column-reverse;align-items:center;
+    justify-content:flex-start;gap:0;padding:2px 0 0;
+  }
+  .step{
+    width:62%;flex:1;margin:1px 0;border-radius:3px;
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.05);
+    position:relative;min-height:3px;max-height:14px;
+  }
+  .step.perm{background:linear-gradient(180deg,var(--orange),#e07a2a);border-color:rgba(255,210,122,.6);}
+  .step.temp{background:repeating-linear-gradient(45deg,rgba(255,210,122,.85),rgba(255,210,122,.85) 4px,rgba(255,157,77,.7) 4px,rgba(255,157,77,.7) 8px);border-color:var(--gold);}
+  .step.cpu{background:linear-gradient(180deg,var(--cpu),var(--cpu-d));border-color:rgba(127,209,196,.6);}
+  .col.claimed-you .track{background:linear-gradient(180deg,rgba(255,157,77,.18),rgba(255,157,77,0));}
+  .col.claimed-cpu .track{background:linear-gradient(180deg,rgba(127,209,196,.18),rgba(127,209,196,0));}
+  .col.usable .label{box-shadow:0 0 0 2px var(--gold),0 0 12px rgba(255,210,122,.5);}
+  .col.dimmed{opacity:.4;}
+
+  /* climber markers */
+  .climber{
+    position:absolute;
+    z-index:6;font-size:14px;pointer-events:none;
+    transition:bottom .28s cubic-bezier(.34,1.56,.64,1);
+    filter:drop-shadow(0 2px 2px rgba(0,0,0,.5));
+    transform:translateX(-50%);
+  }
+  .climber.you{left:34%;}
+  .climber.cpu{left:66%;}
+  .climber.hop{animation:hop .3s ease;}
+  @keyframes hop{
+    0%{transform:translateX(-50%) translateY(0) scale(1);}
+    40%{transform:translateX(-50%) translateY(-10px) scale(1.15);}
+    100%{transform:translateX(-50%) translateY(0) scale(1);}
+  }
+
+  .col .label{
+    margin-top:3px;font-size:14px;font-weight:900;
+    width:88%;text-align:center;border-radius:8px;padding:2px 0;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);
+    color:var(--glacier);
+  }
+  .col.usable .label{color:var(--ink);background:linear-gradient(180deg,var(--gold),var(--orange));}
+
+  /* ===== dice + guidance ===== */
+  .panel{
+    position:relative;z-index:5;
+    padding:8px 12px calc(8px + var(--safe-b));
+    background:linear-gradient(180deg, rgba(13,27,46,0), rgba(13,27,46,.85) 30%);
+  }
+  .guide{
+    text-align:center;font-size:14px;font-weight:800;
+    min-height:22px;margin-bottom:6px;color:var(--glacier);
+    transition:color .2s;
+  }
+  .guide .accent{color:var(--gold);}
+  .guide.warn{color:var(--bad);}
+
+  .dicerow{
+    display:flex;justify-content:center;gap:10px;margin-bottom:8px;min-height:54px;align-items:center;
+  }
+  .die{
+    width:48px;height:48px;border-radius:11px;
+    background:linear-gradient(145deg,#fbfdff,#d8e6f2);
+    color:var(--ink);position:relative;
+    box-shadow:0 3px 0 #9fb4c6, var(--shadow);
+    display:grid;place-items:center;
+  }
+  .die .pips{
+    width:100%;height:100%;display:grid;
+    grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+    padding:7px;gap:0;
+  }
+  .die .pip{width:8px;height:8px;border-radius:50%;background:#23364b;align-self:center;justify-self:center;box-shadow:inset 0 1px 1px rgba(0,0,0,.3);}
+  .die.rolling{animation:shake .5s ease;}
+  @keyframes shake{
+    0%{transform:translateY(0) rotate(0);}
+    20%{transform:translateY(-14px) rotate(-18deg);}
+    45%{transform:translateY(4px) rotate(14deg);}
+    70%{transform:translateY(-7px) rotate(-8deg);}
+    100%{transform:translateY(0) rotate(0);}
+  }
+  .die.faded{opacity:.9;}
+
+  /* pairing choices */
+  .pairs{display:flex;flex-direction:column;gap:7px;margin-bottom:8px;}
+  .pair{
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    border-radius:13px;padding:9px 8px;cursor:pointer;
+    background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);
+    font-weight:800;
+  }
+  .pair:active{transform:scale(.985);}
+  .pair.dead{opacity:.4;}
+  .pair .sumchip{
+    min-width:54px;text-align:center;border-radius:9px;padding:5px 8px;font-size:15px;
+    background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);
+  }
+  .pair .sumchip.good{background:linear-gradient(180deg,var(--gold),var(--orange));color:var(--ink);border-color:var(--gold);}
+  .pair .sumchip.no{opacity:.45;text-decoration:line-through;}
+  .pair .plus{opacity:.6;font-size:13px;}
+  .pair .tag{font-size:11px;opacity:.7;margin-left:2px;}
+
+  /* action bar */
+  .actions{display:flex;gap:10px;}
+  .btn{
+    flex:1;appearance:none;border:none;cursor:pointer;
+    border-radius:15px;padding:15px 10px;font-size:17px;font-weight:900;
+    color:var(--ink);box-shadow:var(--shadow);position:relative;
+    transition:transform .08s,filter .2s,opacity .2s;
+  }
+  .btn:active{transform:translateY(2px);}
+  .btn[disabled]{opacity:.32;cursor:default;filter:grayscale(.4);box-shadow:none;}
+  .btn.roll{background:linear-gradient(180deg,var(--glacier),#9fc6e4);}
+  .btn.bank{background:linear-gradient(180deg,var(--gold),var(--orange));}
+  .btn .small{display:block;font-size:11px;font-weight:700;opacity:.75;margin-top:1px;}
+
+  /* ===== modal / overlay ===== */
+  .overlay{
+    position:fixed;inset:0;z-index:50;display:none;
+    align-items:center;justify-content:center;padding:20px;
+    background:rgba(6,14,26,.72);backdrop-filter:blur(4px);
+  }
+  .overlay.show{display:flex;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;}to{opacity:1;}}
+  .card{
+    width:100%;max-width:420px;max-height:86vh;overflow:auto;
+    background:linear-gradient(180deg,#1c3553,#13243b);
+    border:1px solid rgba(255,255,255,.14);border-radius:20px;
+    padding:20px;box-shadow:var(--shadow);
+  }
+  .card h2{margin:0 0 10px;font-size:20px;display:flex;align-items:center;gap:8px;}
+  .card h3{margin:14px 0 4px;font-size:14px;color:var(--gold);}
+  .card p,.card li{font-size:13.5px;line-height:1.6;color:var(--glacier);}
+  .card ul{margin:4px 0;padding-left:18px;}
+  .card .close{margin-top:16px;width:100%;}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;font-size:12px;}
+  .sw{width:16px;height:12px;border-radius:3px;display:inline-block;}
+
+  /* result screen */
+  .result .big{font-size:40px;text-align:center;margin:6px 0 2px;}
+  .result .msg{text-align:center;font-size:15px;color:var(--glacier);margin-bottom:14px;}
+  .result .row{display:flex;gap:10px;}
+  .result .row .btn{font-size:16px;padding:14px;}
+  .result .btn.again{background:linear-gradient(180deg,var(--gold),var(--orange));}
+  .result .btn.home{background:linear-gradient(180deg,var(--glacier),#9fc6e4);}
+
+  /* toast */
+  .toast{
+    position:fixed;left:50%;top:18%;transform:translateX(-50%) translateY(-12px);
+    z-index:60;background:rgba(10,20,34,.92);border:1px solid rgba(255,255,255,.18);
+    padding:12px 22px;border-radius:14px;font-weight:900;font-size:18px;
+    opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;
+    box-shadow:var(--shadow);text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast.bust{color:var(--bad);border-color:var(--bad);}
+  .toast.bank{color:var(--gold);border-color:var(--gold);}
+  .toast.claim{color:var(--gold);border-color:var(--gold);font-size:20px;}
+
+  /* confetti */
+  .confetti{position:fixed;inset:0;z-index:55;pointer-events:none;overflow:hidden;display:none;}
+  .confetti.show{display:block;}
+  .conf{position:absolute;top:-20px;width:9px;height:14px;border-radius:2px;animation:fall linear forwards;}
+  @keyframes fall{to{transform:translateY(108vh) rotate(720deg);}}
+
+  @media (max-height:620px){
+    .die{width:42px;height:42px;}
+    .btn{padding:12px 8px;font-size:16px;}
+    .col .summit{font-size:13px;height:16px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="bg" id="bg">
+    <svg class="peak back" viewBox="0 0 1000 300" preserveAspectRatio="none">
+      <polygon points="0,300 180,120 320,200 500,60 680,190 840,110 1000,300" style="fill:#1a3251"/>
+    </svg>
+    <svg class="peak" viewBox="0 0 1000 320" preserveAspectRatio="none">
+      <polygon points="0,320 150,150 280,220 460,80 520,140 640,40 780,180 900,120 1000,320" style="fill:#16263f"/>
+      <polygon points="430,108 460,80 490,108" style="fill:#cfe6f5;opacity:.7"/>
+      <polygon points="612,66 640,40 666,66" style="fill:#cfe6f5;opacity:.7"/>
+    </svg>
+    <div class="mist m1"></div><div class="mist m2"></div><div class="mist m3"></div>
+  </div>
+
+  <!-- top bar -->
+  <div class="topbar">
+    <a class="pill" href="../../index.html">← あそびば</a>
+    <div class="title">
+      <div class="emblem">🏔️ 霧稜のクライム</div>
+      <div class="sub">ALPINE PUSH-YOUR-LUCK</div>
+    </div>
+    <button class="iconbtn" id="soundBtn" title="サウンド">♪</button>
+    <button class="iconbtn" id="helpBtn" title="遊び方">？</button>
+  </div>
+
+  <!-- scoreboard -->
+  <div class="scorebar">
+    <div class="score you">
+      <span class="who">あなた</span>
+      <span class="flags" id="youFlags"></span>
+    </div>
+    <div class="score cpu">
+      <span class="who">CPU</span>
+      <span class="flags" id="cpuFlags"></span>
+    </div>
+  </div>
+
+  <!-- mountain board -->
+  <div class="board-wrap">
+    <div class="board" id="board"></div>
+  </div>
+
+  <!-- bottom panel -->
+  <div class="panel">
+    <div class="guide" id="guide">「振る」で挑戦開始！</div>
+    <div class="dicerow" id="dicerow"></div>
+    <div class="pairs" id="pairs"></div>
+    <div class="actions">
+      <button class="btn roll" id="rollBtn">⛰️ 振る<span class="small">RISK IT</span></button>
+      <button class="btn bank" id="bankBtn" disabled>🧗 確定<span class="small">SECURE</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- toast -->
+<div class="toast" id="toast"></div>
+<div class="confetti" id="confetti"></div>
+
+<!-- help modal -->
+<div class="overlay" id="helpOverlay">
+  <div class="card">
+    <h2>🏔️ 遊び方</h2>
+    <p>霧の稜線を越え、3つの山を<b>制覇</b>すれば勝ち。攻めるほど落ちる危険も増す——“引き際”の駆け引きです。</p>
+    <h3>① 振る（サイコロ4個）</h3>
+    <p>4個を2個ずつ3通りに分けられます。好きな組み合わせを選ぶと、その<b>合計値の山</b>を1歩ずつ登ります。</p>
+    <h3>② 登る山は3つまで</h3>
+    <p>1ターンで進められるのは最大3つの山。すでに登り始めた山か、まだ枠が空いていれば登れます。</p>
+    <h3>③ 確定 or もう一度</h3>
+    <p><span class="accent">確定（🧗）</span>すると今ターンの前進が<b>ロープ確保＝永続</b>に。まだ攻めるなら続けて振れます。</p>
+    <h3>⚠️ 滑落（バスト）</h3>
+    <p>振った4個がどう分けても登れない時は<b>滑落</b>。今ターンの未確定ぶんは全部失います。</p>
+    <h3>🏁 制覇</h3>
+    <p>頂上まで届いた山はあなたのもの。先に<b>3山</b>制覇した方の勝ち！</p>
+    <div class="legend">
+      <span><i class="sw" style="background:linear-gradient(180deg,#ff9d4d,#e07a2a)"></i>確保済</span>
+      <span><i class="sw" style="background:repeating-linear-gradient(45deg,#ffd27a,#ffd27a 3px,#ff9d4d 3px,#ff9d4d 6px)"></i>登攀中</span>
+      <span><i class="sw" style="background:linear-gradient(180deg,#7fd1c4,#3f9c8d)"></i>CPU</span>
+    </div>
+    <button class="btn roll close" id="helpClose">わかった</button>
+  </div>
+</div>
+
+<!-- result modal -->
+<div class="overlay" id="resultOverlay">
+  <div class="card result">
+    <div class="big" id="resultBig">🏁</div>
+    <h2 style="justify-content:center" id="resultTitle">登頂成功！</h2>
+    <div class="msg" id="resultMsg"></div>
+    <div class="row">
+      <button class="btn again" id="againBtn">🔁 もう一回</button>
+      <a class="btn home" id="homeBtn" href="../../index.html" style="text-decoration:none;display:grid;place-items:center;">🏠 トップへ</a>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+(function(){
+  /* ===================== CONFIG ===================== */
+  const LENGTHS = {2:3,3:5,4:7,5:9,6:11,7:13,8:11,9:9,10:7,11:5,12:3};
+  const COLS = [2,3,4,5,6,7,8,9,10,11,12];
+  const MAX_ACTIVE = 3;        // active columns per turn
+  const WIN_CLAIMS = 3;        // claims to win
+  const YOU=0, CPU=1;
+
+  /* ===================== STATE ===================== */
+  let perm, claimed, temp, activeYou, dice, pairings, turn, phase, hasRolledThisTurn, soundOn=true, busy=false;
+  // perm[player][col] = permanent steps
+  // claimed[col] = -1 none / 0 you / 1 cpu
+  // temp[col] = this-turn temp steps (current player only)
+  // activeYou = Set of columns advanced this turn
+  // phase: 'idle'(need roll) | 'choose'(pick pairing) | 'over'
+
+  function newGame(){
+    perm=[{},{}];
+    claimed={};
+    COLS.forEach(c=>{perm[YOU][c]=0;perm[CPU][c]=0;claimed[c]=-1;});
+    temp={};
+    activeYou=new Set();
+    cpuActive=new Set();
+    dice=[3,5,2,4];
+    pairings=[];
+    turn=YOU;
+    phase='idle';
+    hasRolledThisTurn=false;
+    busy=false;
+    closeOverlay(resultOverlay);
+    buildBoard();
+    render();
+    renderDice(false);
+    pairsEl.innerHTML='';
+    setGuide('「振る」で挑戦開始！ 3つの山を制覇しよう。');
+  }
+
+  /* ===================== HELPERS ===================== */
+  const $=id=>document.getElementById(id);
+  const board=$('board'), dicerow=$('dicerow'), pairsEl=$('pairs');
+  const rollBtn=$('rollBtn'), bankBtn=$('bankBtn'), guideEl=$('guide');
+  const toastEl=$('toast'), confettiEl=$('confetti');
+  const helpOverlay=$('helpOverlay'), resultOverlay=$('resultOverlay');
+
+  function colsAvailableFor(player){
+    // columns not claimed by anyone
+    return COLS.filter(c=>claimed[c]===-1);
+  }
+  // current displayed position of player in a column = perm + (temp if this player's turn)
+  function posOf(player,col){
+    let p = perm[player][col]||0;
+    if(player===turn && temp[col]!==undefined) p = perm[player][col] + temp[col];
+    return p;
+  }
+
+  // For the *current* climber decide if a sum is usable to advance.
+  // Usable if: column not claimed, not already at/over summit via current pos,
+  //  and (already active this turn) OR (active count < MAX_ACTIVE)
+  function activeColsOfTurn(){
+    return turn===YOU ? activeYou : cpuActive;
+  }
+  let cpuActive=new Set();
+
+  function sumUsable(sum){
+    if(claimed[sum]!==-1) return false;
+    const act = activeColsOfTurn();
+    const alreadyActive = act.has(sum);
+    if(!alreadyActive && act.size>=MAX_ACTIVE) return false;
+    // if current pos already at summit it's effectively claimed-pending; treat as not usable
+    const cur = perm[turn][sum] + (temp[sum]||0);
+    if(cur >= LENGTHS[sum]) return false;
+    return true;
+  }
+
+  // Build the 3 pairings from 4 dice
+  function makePairings(d){
+    return [
+      {sums:[d[0]+d[1], d[2]+d[3]], idx:[[0,1],[2,3]]},
+      {sums:[d[0]+d[2], d[1]+d[3]], idx:[[0,2],[1,3]]},
+      {sums:[d[0]+d[3], d[1]+d[2]], idx:[[0,3],[1,2]]},
+    ];
+  }
+  // which sums of a pairing are usable (returns array of usable sums after considering activation order)
+  function usableSumsOfPairing(p){
+    // Evaluate carefully: two sums; both may want to activate columns.
+    // Greedy: count current active, allow up to MAX_ACTIVE.
+    const act = new Set(activeColsOfTurn());
+    const res=[];
+    for(const s of p.sums){
+      if(claimed[s]!==-1){res.push(false);continue;}
+      const cur = perm[turn][s] + (temp[s]||0) + res.filter((v,i)=>v&&p.sums[i]===s).length;
+      if(cur>=LENGTHS[s]){res.push(false);continue;}
+      if(act.has(s)){res.push(true);continue;}
+      if(act.size<MAX_ACTIVE){act.add(s);res.push(true);continue;}
+      res.push(false);
+    }
+    return res; // boolean[2]
+  }
+  function pairingPlayable(p){ return usableSumsOfPairing(p).some(Boolean); }
+  function anyPlayable(ps){ return ps.some(pairingPlayable); }
+
+  /* ===================== RENDER ===================== */
+  function buildBoard(){
+    board.innerHTML='';
+    COLS.forEach(c=>{
+      const col=document.createElement('div');
+      col.className='col';col.dataset.col=c;
+      const summit=document.createElement('div');summit.className='summit';summit.dataset.summit=c;
+      const track=document.createElement('div');track.className='track';
+      const n=LENGTHS[c];
+      for(let i=0;i<n;i++){
+        const st=document.createElement('div');st.className='step';st.dataset.i=i;
+        track.appendChild(st);
+      }
+      // climbers
+      const cyou=document.createElement('div');cyou.className='climber you';cyou.dataset.cl='you';cyou.textContent='🧗';
+      const ccpu=document.createElement('div');ccpu.className='climber cpu';ccpu.dataset.cl='cpu';ccpu.textContent='🐐';
+      track.appendChild(cyou);track.appendChild(ccpu);
+      const label=document.createElement('div');label.className='label';label.textContent=c;
+      col.appendChild(summit);col.appendChild(track);col.appendChild(label);
+      col.addEventListener('click',()=>onColTap(c));
+      board.appendChild(col);
+    });
+  }
+
+  function render(){
+    COLS.forEach(c=>{
+      const col=board.querySelector('.col[data-col="'+c+'"]');
+      const track=col.querySelector('.track');
+      const n=LENGTHS[c];
+      const youPerm=perm[YOU][c], cpuPerm=perm[CPU][c];
+      const youTemp=(turn===YOU?(temp[c]||0):0);
+      const cpuTemp=(turn===CPU?(temp[c]||0):0);
+      const youShow=youPerm+youTemp;
+      const cpuShow=cpuPerm+cpuTemp;
+      // paint steps
+      track.querySelectorAll('.step').forEach((st)=>{
+        const i=parseInt(st.dataset.i,10); // 0 bottom .. n-1 top (column-reverse)
+        st.className='step';
+        const level=i+1; // step covers level
+        if(claimed[c]===YOU){ if(level<=youPerm) st.classList.add('perm'); }
+        else if(claimed[c]===CPU){ if(level<=cpuPerm) st.classList.add('cpu'); }
+        else {
+          if(level<=youPerm) st.classList.add('perm');
+          else if(level>youPerm && level<=youShow) st.classList.add('temp');
+          else if(level<=cpuShow) st.classList.add('cpu');
+        }
+      });
+      // summit flag
+      const summit=col.querySelector('.summit');
+      if(claimed[c]===YOU) summit.textContent='🏁';
+      else if(claimed[c]===CPU) summit.textContent='🚩';
+      else summit.textContent='⛰️';
+      col.classList.toggle('claimed-you',claimed[c]===YOU);
+      col.classList.toggle('claimed-cpu',claimed[c]===CPU);
+
+      // climber position
+      placeClimber(col,'you',youShow,n);
+      placeClimber(col,'cpu',cpuShow,n);
+
+      // usable highlight (only during your choose phase handled in renderPairs)
+      col.classList.remove('usable','dimmed');
+    });
+    renderFlags();
+  }
+
+  function placeClimber(col,who,pos,n){
+    const cl=col.querySelector('.climber.'+who);
+    const track=col.querySelector('.track');
+    // show climber only if it has any presence on this column
+    if(pos<=0){ cl.style.opacity='0'; return; }
+    cl.style.opacity='1';
+    const h=track.clientHeight||1;
+    const frac=Math.min(pos,n)/n;
+    const bottom = 2 + frac*(h-18);
+    cl.style.bottom=bottom+'px';
+  }
+
+  function renderFlags(){
+    const youN=COLS.filter(c=>claimed[c]===YOU).length;
+    const cpuN=COLS.filter(c=>claimed[c]===CPU).length;
+    let yh='',ch='';
+    for(let i=0;i<WIN_CLAIMS;i++){
+      yh+='<span class="slot'+(i<youN?' on':'')+'">🏁</span>';
+      ch+='<span class="slot'+(i<cpuN?' on':'')+'">🚩</span>';
+    }
+    $('youFlags').innerHTML=yh;
+    $('cpuFlags').innerHTML=ch;
+  }
+
+  /* ===================== DICE RENDER ===================== */
+  const PIP_MAP={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+  function dieHTML(v){
+    let pips='';
+    for(let i=0;i<9;i++){ pips += '<div class="pip" style="visibility:'+(PIP_MAP[v].includes(i)?'visible':'hidden')+'"></div>'; }
+    return '<div class="pips">'+pips+'</div>';
+  }
+  function renderDice(rolling){
+    dicerow.innerHTML='';
+    dice.forEach((v,i)=>{
+      const d=document.createElement('div');
+      d.className='die'+(rolling?' rolling':'');
+      d.style.animationDelay=(i*0.04)+'s';
+      d.innerHTML=dieHTML(v);
+      dicerow.appendChild(d);
+    });
+  }
+
+  /* ===================== PAIRINGS UI ===================== */
+  function renderPairs(){
+    pairsEl.innerHTML='';
+    if(phase!=='choose' || turn!==YOU){ clearUsableHL(); return; }
+    pairings.forEach((p,pi)=>{
+      const us=usableSumsOfPairing(p);
+      const playable=us.some(Boolean);
+      const row=document.createElement('div');
+      row.className='pair'+(playable?'':' dead');
+      const c0=document.createElement('div');
+      c0.className='sumchip'+(us[0]?' good':' no');c0.textContent=p.sums[0];
+      const plus=document.createElement('div');plus.className='plus';plus.textContent='＋';
+      const c1=document.createElement('div');
+      c1.className='sumchip'+(us[1]?' good':' no');c1.textContent=p.sums[1];
+      const tag=document.createElement('div');tag.className='tag';
+      tag.textContent = playable ? ((us[0]&&us[1])?'2山登れる':'1山登れる') : '登れない';
+      row.appendChild(c0);row.appendChild(plus);row.appendChild(c1);row.appendChild(tag);
+      if(playable) row.addEventListener('click',()=>choosePairing(pi));
+      pairsEl.appendChild(row);
+    });
+    // highlight usable columns on board
+    highlightUsable();
+  }
+  function highlightUsable(){
+    clearUsableHL();
+    const set=new Set();
+    pairings.forEach(p=>{usableSumsOfPairing(p).forEach((u,i)=>{if(u)set.add(p.sums[i]);});});
+    COLS.forEach(c=>{
+      const col=board.querySelector('.col[data-col="'+c+'"]');
+      if(set.has(c)) col.classList.add('usable');
+    });
+  }
+  function clearUsableHL(){ board.querySelectorAll('.col').forEach(c=>c.classList.remove('usable')); }
+
+  function onColTap(c){
+    // convenience: tapping a usable column picks the first pairing that advances it
+    if(phase!=='choose'||turn!==YOU) return;
+    for(let pi=0;pi<pairings.length;pi++){
+      const us=usableSumsOfPairing(pairings[pi]);
+      if((us[0]&&pairings[pi].sums[0]===c)||(us[1]&&pairings[pi].sums[1]===c)){
+        choosePairing(pi);return;
+      }
+    }
+  }
+
+  /* ===================== TURN FLOW (YOU) ===================== */
+  function rollDice(){
+    dice=[rd(),rd(),rd(),rd()];
+    pairings=makePairings(dice);
+  }
+  function rd(){return 1+Math.floor(Math.random()*6);}
+
+  function onRoll(){
+    if(busy||turn!==YOU||phase==='over') return;
+    if(phase==='choose') return; // must choose first
+    busy=true;
+    beep(540,0.05);
+    rollDice();
+    renderDice(true);
+    setGuide('…サイコロを振っています');
+    rollBtn.disabled=true;bankBtn.disabled=true;
+    setTimeout(()=>{
+      busy=false;
+      if(!anyPlayable(pairings)){
+        bust(YOU);
+        return;
+      }
+      phase='choose';hasRolledThisTurn=true;
+      renderDice(false);
+      renderPairs();
+      updateButtons();
+      setGuide('<span class="accent">どのペア</span>で登る？ 進める山をタップ');
+    },560);
+  }
+
+  function choosePairing(pi){
+    if(phase!=='choose'||turn!==YOU) return;
+    const p=pairings[pi];
+    const us=usableSumsOfPairing(p);
+    let advanced=[];
+    p.sums.forEach((s,i)=>{
+      if(!us[i]) return;
+      if(temp[s]===undefined) temp[s]=0;
+      activeYou.add(s);
+      temp[s]++;
+      advanced.push(s);
+    });
+    beep(660,0.05);
+    phase='idle';
+    renderPairs();
+    render();
+    advanced.forEach(s=>hopClimber(s,'you'));
+    // check temp summit -> auto pending claim (claimed on bank). show note
+    let reachedSummit=advanced.filter(s=>(perm[YOU][s]+temp[s])>=LENGTHS[s]);
+    updateButtons();
+    if(reachedSummit.length){
+      setGuide('🏔️ '+reachedSummit.join('・')+' が頂上目前！ <span class="accent">確定</span>で制覇');
+    }else{
+      setGuide('続けて<span class="accent">振る</span>？ それとも<span class="accent">確定</span>で確保？');
+    }
+  }
+
+  function onBank(){
+    if(busy||turn!==YOU||phase==='over') return;
+    if(!hasRolledThisTurn || Object.keys(temp).length===0){
+      // nothing to bank
+      flashGuide('まだ登っていません。まず「振る」！');
+      return;
+    }
+    if(phase==='choose'){ flashGuide('先にペアを選んでね'); return; }
+    bank(YOU);
+  }
+
+  function bank(player){
+    // commit temp -> perm; claim summits
+    let claimedNow=[];
+    Object.keys(temp).forEach(k=>{
+      const c=+k;
+      perm[player][c]=Math.min(LENGTHS[c], perm[player][c]+temp[c]);
+      if(perm[player][c]>=LENGTHS[c] && claimed[c]===-1){
+        claimed[c]=player;claimedNow.push(c);
+      }
+    });
+    temp={};
+    if(player===YOU) activeYou.clear(); else cpuActive.clear();
+    hasRolledThisTurn=false;
+    render();
+    if(player===YOU){
+      beep(440,0.08);setTimeout(()=>beep(660,0.1),90);
+      showToast('🧗 ロープ確保！','bank');
+    }
+    if(claimedNow.length){
+      const summitToast=claimedNow.map(c=>c).join('・')+' 制覇！';
+      setTimeout(()=>{
+        showToast('🏁 '+summitToast,'claim');
+        if(player===YOU) confettiBurst();
+        sfxSummit();
+      },player===YOU?420:150);
+    }
+    // win check
+    const youN=COLS.filter(c=>claimed[c]===YOU).length;
+    const cpuN=COLS.filter(c=>claimed[c]===CPU).length;
+    if(youN>=WIN_CLAIMS){ endGame(YOU); return; }
+    if(cpuN>=WIN_CLAIMS){ endGame(CPU); return; }
+    // pass turn
+    setTimeout(()=>endTurn(), claimedNow.length? 900: 520);
+  }
+
+  function bust(player){
+    // lose all temp
+    temp={};
+    if(player===YOU) activeYou.clear(); else cpuActive.clear();
+    hasRolledThisTurn=false;
+    phase='idle';
+    render();
+    if(player===YOU){
+      showToast('💥 滑落！ 今回の前進は消滅','bust');
+      sfxBust();
+      shakeBoard();
+    }
+    setTimeout(()=>endTurn(), 1000);
+  }
+
+  function endTurn(){
+    if(phase==='over') return;
+    temp={};
+    if(turn===YOU){
+      turn=CPU;phase='idle';
+      render();updateButtons();
+      setGuide('CPU（🐐）が登攀中…');
+      busy=true;
+      setTimeout(cpuTurn, 700);
+    }else{
+      turn=YOU;phase='idle';
+      busy=false;
+      render();updateButtons();
+      setGuide('あなたの番。「振る」で挑戦！');
+    }
+  }
+
+  /* ===================== CPU AI ===================== */
+  function cpuTurn(){
+    cpuActive=new Set();
+    cpuStep(0);
+  }
+  // CPU: roll, pick best pairing, decide push/bank
+  function cpuStep(pushCount){
+    if(phase==='over') return;
+    rollDice();
+    renderDice(true);
+    setTimeout(()=>{
+      if(phase==='over') return;
+      if(!anyPlayable(pairings)){
+        renderDice(false);
+        bust(CPU);
+        return;
+      }
+      renderDice(false);
+      // pick best playable pairing
+      const choice=cpuPickPairing();
+      const p=pairings[choice];
+      const us=usableSumsOfPairing(p);
+      p.sums.forEach((s,i)=>{
+        if(!us[i]) return;
+        if(temp[s]===undefined) temp[s]=0;
+        cpuActive.add(s);
+        temp[s]++;
+      });
+      render();
+      p.sums.forEach((s,i)=>{ if(us[i]) hopClimber(s,'cpu'); });
+      beep(500,0.04);
+      // decide bank or push
+      const decideBank = cpuShouldBank(pushCount+1);
+      setTimeout(()=>{
+        if(phase==='over') return;
+        if(decideBank){
+          bank(CPU);
+        }else{
+          setGuide('CPU（🐐）が更に上へ…');
+          cpuStep(pushCount+1);
+        }
+      }, 650);
+    },560);
+  }
+
+  function cpuPickPairing(){
+    // score each playable pairing: prefer more usable sums; prefer columns close to summit; prefer shorter (easier) columns
+    let best=-1,bestScore=-1e9;
+    pairings.forEach((p,pi)=>{
+      const us=usableSumsOfPairing(p);
+      if(!us.some(Boolean)) return;
+      let score=0;
+      const usedCount=us.filter(Boolean).length;
+      score += usedCount*10;                       // value double advances
+      p.sums.forEach((s,i)=>{
+        if(!us[i]) return;
+        const pos = perm[CPU][s]+(temp[s]||0)+1;   // after this step
+        const len = LENGTHS[s];
+        const remain = len-pos;
+        score += (1 - remain/len)*8;               // closer to summit better
+        if(remain<=0) score += 25;                 // reaching summit big bonus
+        score += (1/len)*6;                        // shorter columns easier to claim
+        if(!cpuActive.has(s) && cpuActive.size>=MAX_ACTIVE-1) score -= 1; // mild caution opening new
+      });
+      if(score>bestScore){bestScore=score;best=pi;}
+    });
+    return best<0?0:best;
+  }
+
+  function cpuShouldBank(pushCount){
+    // bank if any active column reached summit (lock the claim!)
+    for(const s of cpuActive){
+      if(perm[CPU][s]+(temp[s]||0) >= LENGTHS[s]) return true;
+    }
+    // total temp progress
+    const totalTemp=Object.values(temp).reduce((a,b)=>a+b,0);
+    // estimate bust risk grows with active cols away from being safe.
+    // base: push roughly 3 advances, with randomness; bank earlier if 3 active (more bust risk)
+    const activeN=cpuActive.size;
+    let bankProb=0;
+    if(pushCount>=4) bankProb=0.85;
+    else if(pushCount>=3) bankProb=0.55;
+    else if(pushCount>=2) bankProb=0.25;
+    else bankProb=0.05;
+    if(activeN>=3) bankProb+=0.15;       // committed, protect gains
+    if(totalTemp>=6) bankProb+=0.15;
+    // if close to winning, be a bit greedier toward claims but still secure
+    const cpuClaims=COLS.filter(c=>claimed[c]===CPU).length;
+    if(cpuClaims===WIN_CLAIMS-1) bankProb+=0.1; // secure the win path
+    return Math.random()<Math.min(0.95,bankProb);
+  }
+
+  /* ===================== UI STATE ===================== */
+  function updateButtons(){
+    if(phase==='over'){rollBtn.disabled=true;bankBtn.disabled=true;return;}
+    if(turn!==YOU){rollBtn.disabled=true;bankBtn.disabled=true;return;}
+    if(phase==='choose'){
+      rollBtn.disabled=true;
+      bankBtn.disabled=true;
+    }else{ // idle
+      rollBtn.disabled=false;
+      bankBtn.disabled=!(hasRolledThisTurn && Object.keys(temp).length>0);
+    }
+  }
+
+  function setGuide(html,warn){
+    guideEl.innerHTML=html;
+    guideEl.classList.toggle('warn',!!warn);
+  }
+  let flashT=null;
+  function flashGuide(msg){
+    const prev=guideEl.innerHTML;
+    setGuide(msg,true);
+    clearTimeout(flashT);
+    flashT=setTimeout(()=>{ if(turn===YOU&&phase!=='over'){ guideEl.classList.remove('warn'); refreshGuide(); } },1400);
+  }
+  function refreshGuide(){
+    if(phase==='choose') setGuide('<span class="accent">どのペア</span>で登る？');
+    else if(hasRolledThisTurn && Object.keys(temp).length>0) setGuide('続けて<span class="accent">振る</span>？ <span class="accent">確定</span>で確保？');
+    else setGuide('「振る」で挑戦！');
+  }
+
+  /* ===================== EFFECTS ===================== */
+  function hopClimber(col,who){
+    const c=board.querySelector('.col[data-col="'+col+'"]');
+    if(!c) return;
+    const cl=c.querySelector('.climber.'+who);
+    cl.classList.remove('hop');void cl.offsetWidth;cl.classList.add('hop');
+  }
+  function shakeBoard(){
+    const w=document.querySelector('.board-wrap');
+    w.animate([
+      {transform:'translateX(0)'},{transform:'translateX(-8px)'},
+      {transform:'translateX(7px)'},{transform:'translateX(-5px)'},
+      {transform:'translateX(0)'}],{duration:380});
+  }
+  let toastT=null;
+  function showToast(msg,cls){
+    toastEl.className='toast '+(cls||'');
+    toastEl.textContent=msg;
+    void toastEl.offsetWidth;
+    toastEl.classList.add('show');
+    clearTimeout(toastT);
+    toastT=setTimeout(()=>toastEl.classList.remove('show'),1500);
+  }
+  function confettiBurst(){
+    confettiEl.classList.add('show');
+    confettiEl.innerHTML='';
+    const colors=['#ffd27a','#ff9d4d','#cfe6f5','#7fd1c4','#f4fbff'];
+    for(let i=0;i<70;i++){
+      const c=document.createElement('div');c.className='conf';
+      c.style.left=Math.random()*100+'%';
+      c.style.background=colors[i%colors.length];
+      c.style.animationDuration=(1.6+Math.random()*1.6)+'s';
+      c.style.animationDelay=(Math.random()*0.3)+'s';
+      c.style.transform='rotate('+(Math.random()*360)+'deg)';
+      confettiEl.appendChild(c);
+    }
+    setTimeout(()=>{confettiEl.classList.remove('show');confettiEl.innerHTML='';},2600);
+  }
+
+  /* ===================== AUDIO ===================== */
+  let actx=null;
+  function ac(){ if(!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}} return actx; }
+  function beep(freq,dur,type){
+    if(!soundOn) return;const a=ac();if(!a)return;
+    if(a.state==='suspended') a.resume();
+    const o=a.createOscillator(),g=a.createGain();
+    o.type=type||'triangle';o.frequency.value=freq;
+    o.connect(g);g.connect(a.destination);
+    const t=a.currentTime;
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.18,t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.start(t);o.stop(t+dur+0.02);
+  }
+  function sfxSummit(){ if(!soundOn)return;[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,0.16,'triangle'),i*110)); }
+  function sfxBust(){ if(!soundOn)return;const a=ac();if(!a)return;if(a.state==='suspended')a.resume();
+    const o=a.createOscillator(),g=a.createGain();o.type='sawtooth';
+    o.connect(g);g.connect(a.destination);const t=a.currentTime;
+    o.frequency.setValueAtTime(440,t);o.frequency.exponentialRampToValueAtTime(80,t+0.5);
+    g.gain.setValueAtTime(0.2,t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.55);
+    o.start(t);o.stop(t+0.6);
+  }
+
+  /* ===================== RESULT ===================== */
+  function endGame(winner){
+    phase='over';updateButtons();
+    clearUsableHL();pairsEl.innerHTML='';
+    const youCols=COLS.filter(c=>claimed[c]===YOU);
+    const cpuCols=COLS.filter(c=>claimed[c]===CPU);
+    if(winner===YOU){
+      $('resultBig').textContent='🏁🎉';
+      $('resultTitle').textContent='登頂成功！';
+      $('resultMsg').innerHTML='霧の稜線を制し、<b>'+youCols.join('・')+'</b> の頂に旗を立てた！';
+      confettiBurst();sfxSummit();
+      setGuide('🏆 あなたの勝ち！');
+    }else{
+      $('resultBig').textContent='🐐🏔️';
+      $('resultTitle').textContent='惜敗…';
+      $('resultMsg').innerHTML='CPUが先に <b>'+cpuCols.join('・')+'</b> を制覇。次は引き際を見極めて！';
+      sfxBust();
+      setGuide('CPUの勝ち。もう一回挑戦！');
+    }
+    setTimeout(()=>openOverlay(resultOverlay),900);
+  }
+
+  /* ===================== OVERLAYS ===================== */
+  function openOverlay(o){o.classList.add('show');}
+  function closeOverlay(o){o.classList.remove('show');}
+
+  /* ===================== EVENTS ===================== */
+  rollBtn.addEventListener('click',onRoll);
+  bankBtn.addEventListener('click',onBank);
+  $('helpBtn').addEventListener('click',()=>{ac();openOverlay(helpOverlay);});
+  $('helpClose').addEventListener('click',()=>closeOverlay(helpOverlay));
+  helpOverlay.addEventListener('click',e=>{if(e.target===helpOverlay)closeOverlay(helpOverlay);});
+  $('againBtn').addEventListener('click',()=>{closeOverlay(resultOverlay);newGame();});
+  $('soundBtn').addEventListener('click',()=>{
+    soundOn=!soundOn;
+    $('soundBtn').classList.toggle('off',!soundOn);
+    $('soundBtn').textContent=soundOn?'♪':'🔇';
+    if(soundOn){ac();beep(660,0.06);}
+  });
+  // unlock audio on first interaction
+  document.addEventListener('pointerdown',()=>ac(),{once:true});
+  window.addEventListener('resize',()=>render());
+
+  // tiny stars in bg
+  (function stars(){
+    const bg=$('bg');
+    for(let i=0;i<26;i++){
+      const s=document.createElement('div');s.className='star';
+      s.style.left=Math.random()*100+'%';
+      s.style.top=Math.random()*55+'%';
+      s.style.animationDelay=(Math.random()*4)+'s';
+      bg.appendChild(s);
+    }
+  })();
+
+  // boot
+  newGame();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#14111c" />
+<title>あそびば — ミニゲーム集</title>
+<meta name="description" content="スマホでさっと遊べる、夫婦・友だち向けのミニゲーム集。" />
+<style>
+  :root{
+    --bg0:#14111c;
+    --bg1:#1b1726;
+    --bg2:#241d33;
+    --ink:#f4eee6;
+    --muted:#b3a9c4;
+    --line:rgba(255,255,255,.10);
+    --line2:rgba(255,255,255,.18);
+    --gold:#e7c66b;
+    --radius:26px;
+    --maxw:1080px;
+    --font:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    font-family:var(--font);
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 700px at 12% -8%, #3a2b54 0%, transparent 55%),
+      radial-gradient(1100px 800px at 96% 4%, #16384a 0%, transparent 52%),
+      radial-gradient(900px 900px at 70% 110%, #4a2336 0%, transparent 50%),
+      linear-gradient(180deg, var(--bg0), var(--bg1) 50%, var(--bg2));
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:18px 16px 64px}
+
+  /* top bar */
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:8px 4px;
+  }
+  .brandMini{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.04em}
+  .brandMini .dot{width:12px;height:12px;border-radius:50%;
+    background:conic-gradient(from 0deg,#ff9d4d,#e7c66b,#38e1d6,#8be36b,#c084fc,#ff9d4d);
+    box-shadow:0 0 14px rgba(231,198,107,.6)}
+  .iconbtn{
+    border:1px solid var(--line2);background:rgba(255,255,255,.06);
+    color:var(--ink);font-weight:800;border-radius:999px;padding:9px 14px;font-size:14px;
+    cursor:pointer;backdrop-filter:blur(6px);transition:transform .12s, background .2s;
+  }
+  .iconbtn:active{transform:scale(.95)}
+  .iconbtn:hover{background:rgba(255,255,255,.12)}
+
+  /* hero */
+  .hero{
+    position:relative;overflow:hidden;
+    margin:14px 0 22px;padding:34px 26px 30px;
+    border:1px solid var(--line);border-radius:var(--radius);
+    background:
+      radial-gradient(600px 280px at 90% -20%, rgba(231,198,107,.22), transparent 60%),
+      radial-gradient(520px 320px at -5% 120%, rgba(56,225,214,.18), transparent 60%),
+      linear-gradient(160deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+    box-shadow:0 30px 60px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.10);
+  }
+  .hero h1{
+    margin:0;font-size:clamp(46px,12vw,96px);line-height:.92;font-weight:900;letter-spacing:.02em;
+    background:linear-gradient(180deg,#fff 0%, #ffe9c2 55%, var(--gold) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 1px 0 rgba(255,255,255,.15);
+    filter:drop-shadow(0 8px 20px rgba(0,0,0,.35));
+  }
+  .hero .romaji{margin-top:4px;font-size:clamp(11px,2.6vw,15px);letter-spacing:.55em;color:var(--gold);font-weight:800;text-transform:uppercase;padding-left:.3em}
+  .hero p{margin:16px 0 0;max-width:34ch;color:var(--muted);font-size:clamp(13px,3.4vw,16px);font-weight:600;line-height:1.7}
+  .hero .floaties{position:absolute;inset:0;pointer-events:none;font-size:42px;opacity:.16}
+  .hero .floaties span{position:absolute;animation:float 7s ease-in-out infinite}
+  .hero .f1{right:7%;top:18%;animation-delay:0s}
+  .hero .f2{right:22%;top:54%;font-size:30px;animation-delay:1.4s}
+  .hero .f3{right:38%;top:10%;font-size:26px;animation-delay:2.7s}
+  @keyframes float{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-14px) rotate(6deg)}}
+
+  .sectionLabel{display:flex;align-items:center;gap:10px;margin:6px 4px 14px;color:var(--muted);font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+  .sectionLabel::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  /* game grid */
+  .grid{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:680px){.grid{grid-template-columns:1fr 1fr}}
+  @media(min-width:680px){.feature{grid-column:1 / -1}}
+
+  .tile{
+    position:relative;overflow:hidden;display:block;
+    border-radius:var(--radius);border:1px solid var(--line2);
+    padding:20px;min-height:148px;
+    color:#fff;isolation:isolate;
+    transition:transform .16s ease, box-shadow .2s ease;
+    box-shadow:0 14px 30px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.16);
+  }
+  .feature{min-height:182px;padding:24px}
+  .tile::before{content:"";position:absolute;inset:0;z-index:-2;background:var(--g)}
+  .tile::after{content:"";position:absolute;inset:0;z-index:-1;
+    background:radial-gradient(120% 90% at 88% 0%, rgba(255,255,255,.28), transparent 55%);
+    mix-blend-mode:overlay}
+  .tile:hover{transform:translateY(-4px);box-shadow:0 22px 44px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.22)}
+  .tile:active{transform:translateY(-1px) scale(.995)}
+
+  .tileEmblem{position:absolute;right:-6px;bottom:-18px;font-size:118px;line-height:1;opacity:.92;
+    filter:drop-shadow(0 10px 16px rgba(0,0,0,.34));transform:rotate(-8deg);z-index:-1;pointer-events:none}
+  .feature .tileEmblem{font-size:160px;right:2%;bottom:-26px}
+  .tileGenre{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.08em;
+    padding:5px 11px;border-radius:999px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.22);
+    backdrop-filter:blur(4px)}
+  .tileTitle{margin:12px 0 0;font-size:clamp(26px,6.4vw,34px);font-weight:900;letter-spacing:.01em;
+    text-shadow:0 2px 10px rgba(0,0,0,.4)}
+  .feature .tileTitle{font-size:clamp(32px,8vw,46px)}
+  .tileDesc{margin:8px 0 0;max-width:30ch;font-size:13.5px;font-weight:650;line-height:1.6;
+    color:rgba(255,255,255,.92);text-shadow:0 1px 6px rgba(0,0,0,.4)}
+  .tilePlay{margin-top:16px;display:inline-flex;align-items:center;gap:7px;font-weight:900;font-size:14px;
+    padding:10px 18px;border-radius:999px;background:rgba(255,255,255,.95);color:#1c1530;
+    box-shadow:0 6px 16px rgba(0,0,0,.3)}
+  .tile.soon{filter:saturate(.65)}
+  .tile.soon{cursor:default}
+  .tileSoon{margin-top:16px;display:inline-flex;align-items:center;gap:7px;font-weight:900;font-size:13px;
+    padding:9px 16px;border-radius:999px;background:rgba(0,0,0,.3);border:1px dashed rgba(255,255,255,.4);color:rgba(255,255,255,.9)}
+
+  /* per-game worldview gradients */
+  .t-uma{--g:linear-gradient(135deg,#2f8d48 0%, #6aa23a 38%, #f0a85a 72%, #f08a8a 100%)}
+  .t-dice{--g:linear-gradient(135deg,#1f3a5f 0%, #2e5a86 48%, #6f97bf 100%)}
+  .t-treasure{--g:linear-gradient(135deg,#10201f 0%, #1d3b38 45%, #b88a2e 100%)}
+  .t-back10{--g:linear-gradient(135deg,#0e1730 0%, #1a2f6b 50%, #2bb6ac 100%)}
+  .t-spy{--g:linear-gradient(135deg,#1a1320 0%, #34233f 50%, #5b3a6e 100%)}
+
+  footer{margin-top:34px;text-align:center;color:var(--muted);font-size:12px;font-weight:700;line-height:1.8}
+  footer .heart{color:var(--gold)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brandMini"><span class="dot"></span><span>あそびば</span></div>
+      <button class="iconbtn" id="soundBtn" aria-label="サウンド切替">🔊 サウンド</button>
+    </div>
+
+    <section class="hero">
+      <div class="floaties"><span class="f1">🎲</span><span class="f2">🏇</span><span class="f3">🪙</span></div>
+      <h1>あそびば</h1>
+      <div class="romaji">Asobiba</div>
+      <p>スマホでさっと、夫婦で・友だちと。<br>短時間で盛り上がるミニゲーム集。</p>
+    </section>
+
+    <div class="sectionLabel">遊べるゲーム</div>
+    <div class="grid" id="games"></div>
+
+    <footer>
+      <div>© あそびば</div>
+      <div>同じ画面で対戦・協力 / オンライン対応ゲームあり <span class="heart">♥</span></div>
+    </footer>
+  </div>
+
+  <script type="module">
+    import { toggleSound, isSoundOn, sfx } from "./src/shared/sound.js";
+
+    const GAMES = [
+      {
+        slug: "uma-race", theme: "t-uma", emblem: "🏇", feature: true,
+        genre: "レース × 予想", title: "うまうまレース",
+        desc: "出目で馬を進め、配当を予想。最後まで逆転のある競馬ゲーム。オンライン対戦対応。",
+      },
+      {
+        slug: "dice-climb", theme: "t-dice", emblem: "🏔️",
+        genre: "ダイス × 駆け引き", title: "霧稜のクライム",
+        desc: "4つのダイスを組み分けて霧の稜線を攻める。攻めるか、ロープを確保するか。",
+      },
+      {
+        slug: "treasure", theme: "t-treasure", emblem: "🪙",
+        genre: "カード × 押し引き", title: "呪宝の蔵",
+        desc: "呪われた財宝を押しつけ合う心理戦。チップで受け流し、損を最小に。",
+      },
+      {
+        slug: "back10", theme: "t-back10", emblem: "🌊",
+        genre: "協力 × カード", title: "BACK10",
+        desc: "数字の流れをみんなで捌く協力ゲーム。10戻しを決めて高得点へ。オンライン協力対応。",
+      },
+      {
+        slug: "spy", theme: "t-spy", emblem: "✉️", soon: true,
+        genre: "心理戦 × カード", title: "密書カードバトル",
+        desc: "裏をかき合う密書の読み合い。近日登場予定。",
+      },
+    ];
+
+    const root = document.getElementById("games");
+    root.innerHTML = GAMES.map(g => {
+      const cls = `tile ${g.theme}${g.feature ? " feature" : ""}${g.soon ? " soon" : ""}`;
+      const inner = `
+        <span class="tileGenre">${g.genre}</span>
+        <h2 class="tileTitle">${g.title}</h2>
+        <p class="tileDesc">${g.desc}</p>
+        ${g.soon
+          ? `<span class="tileSoon">近日登場</span>`
+          : `<span class="tilePlay">あそぶ →</span>`}
+        <span class="tileEmblem">${g.emblem}</span>`;
+      return g.soon
+        ? `<div class="${cls}">${inner}</div>`
+        : `<a class="${cls}" href="./games/${g.slug}/index.html" data-slug="${g.slug}">${inner}</a>`;
+    }).join("");
+
+    root.querySelectorAll("a.tile").forEach(a => {
+      a.addEventListener("pointerenter", () => sfx.hover());
+      a.addEventListener("click", () => sfx.enter());
+    });
+
+    const soundBtn = document.getElementById("soundBtn");
+    const paint = () => soundBtn.textContent = isSoundOn() ? "🔊 サウンド" : "🔈 ミュート";
+    paint();
+    soundBtn.addEventListener("click", () => { toggleSound(); paint(); });
+  </script>
+</body>
+</html>
