@@ -617,6 +617,84 @@ button.diceStageButton .diceCube{width:54px;height:54px;font-size:28px}
 
 /* 結果画面の勝利CG */
 .winnerShot{width:100%;max-width:440px;margin:8px auto 2px;display:block;border-radius:18px;box-shadow:0 12px 30px rgba(0,0,0,.4)}
+
+/* ===== リアルなターフ走路（写真ベース） ===== */
+.trackBoard{
+  background:linear-gradient(rgba(10,34,18,.30),rgba(6,24,12,.52)),url('assets/turf-bg.jpg') center 35%/cover!important;
+  border:5px solid #6b3f17!important;
+  box-shadow:inset 0 0 0 3px rgba(231,198,107,.55),inset 0 0 60px rgba(0,0,0,.45),0 20px 44px rgba(40,24,9,.4)!important;
+}
+.trackBoard:before{
+  background:transparent!important;
+  border:8px solid rgba(231,198,107,.85)!important;
+  box-shadow:inset 0 0 0 3px rgba(120,80,30,.4),0 0 0 2px rgba(84,49,20,.4)!important;
+}
+.trackBoard:after{
+  background:radial-gradient(circle at 50% 45%,rgba(0,0,0,.10),rgba(0,0,0,.34))!important;
+  border:2px solid rgba(255,255,255,.16)!important;
+  box-shadow:inset 0 0 26px rgba(0,0,0,.3)!important;
+}
+.trackSpace{
+  background:linear-gradient(180deg,#fff3d6 0%,#e8be78 50%,#c98a3c 100%)!important;
+  border:1.5px solid rgba(72,39,13,.6)!important;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.6),inset 0 -3px 5px rgba(92,45,12,.3),0 4px 9px rgba(20,12,4,.4)!important;
+}
+.trackSpace.finish{background:linear-gradient(135deg,#fff7a8,#e7c24a 45%,#fff7a8)!important;box-shadow:0 0 18px rgba(255,215,80,.85),inset 0 2px 0 rgba(255,255,255,.7)!important}
+.num{color:rgba(40,24,8,.85)!important;text-shadow:0 1px 0 rgba(255,255,255,.5)}
+.pony.photo{box-shadow:0 0 0 2px var(--horse-color),0 4px 10px rgba(0,0,0,.55)!important;border:0!important}
+
+/* 盤面の馬をクリックで発走 */
+.pony.movePony{cursor:pointer;pointer-events:auto;z-index:6;
+  box-shadow:0 0 0 3px #fff,0 0 0 6px var(--horse-color),0 0 16px rgba(255,215,90,.95)!important;
+  animation:ponyBeckon 1s ease-in-out infinite}
+@keyframes ponyBeckon{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.12)}}
+
+/* ===== 盤面で転がる本物っぽい3Dダイス ===== */
+.diceArena{position:absolute;inset:0;z-index:7;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .25s}
+.diceArena.show{opacity:1}
+.diceArena .dim{position:absolute;inset:0;border-radius:inherit;opacity:0;transition:opacity .3s;
+  background:radial-gradient(circle at 50% 56%,rgba(4,10,6,.10),rgba(3,8,12,.40) 55%,rgba(2,5,10,.66))}
+.diceArena.rolling .dim{opacity:1}
+.diceArena .boardDie{position:relative;display:flex;flex-direction:column;align-items:center;gap:9px;transition:transform .35s,margin .35s}
+.diceArena.result{align-items:flex-start}
+.diceArena.result .boardDie{margin-top:10px;transform:scale(.6)}
+.diceArena .die3d{--ds:118px;filter:drop-shadow(0 16px 14px rgba(0,0,0,.5))}
+.diceArena .dieLabel{font-weight:900;font-size:16px;color:#fff;background:rgba(20,16,10,.6);padding:5px 14px;border-radius:999px;
+  border:1px solid rgba(231,198,107,.6);text-shadow:0 1px 3px rgba(0,0,0,.8);backdrop-filter:blur(3px)}
+/* 盤上ロール：弾みながら多軸回転 */
+.diceArena .die3dCube.rolling{animation:dieRollBoard .68s cubic-bezier(.45,.05,.55,.95) infinite!important}
+@keyframes dieRollBoard{
+  0%{transform:translateY(-16%) rotateX(0) rotateY(0) rotateZ(-6deg)}
+  25%{transform:translateY(10%) rotateX(190deg) rotateY(140deg) rotateZ(8deg)}
+  50%{transform:translateY(-12%) rotateX(360deg) rotateY(300deg) rotateZ(-10deg)}
+  75%{transform:translateY(9%) rotateX(540deg) rotateY(470deg) rotateZ(7deg)}
+  100%{transform:translateY(-16%) rotateX(720deg) rotateY(620deg) rotateZ(-6deg)}
+}
+/* よりリアルな象牙質の面＋エンボスの目 */
+.die3dFace{
+  background:radial-gradient(circle at 34% 26%,#fffdf6 0%,#f6ecd5 52%,#e2d0a8 100%)!important;
+  border:1px solid #c4a877!important;border-radius:16px!important;
+  box-shadow:inset 0 4px 8px rgba(255,255,255,.9),inset 0 -8px 14px rgba(120,88,38,.3),inset 0 0 0 2px rgba(255,255,255,.4)!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.85),0 -1px 1px rgba(120,90,40,.35),0 2px 3px rgba(80,55,18,.3)!important;
+}
+.diceArena .die3dFace{filter:saturate(.96) contrast(1.02)}
+
+/* ===== 盤面を大きく見やすく（窮屈さ解消） ===== */
+.trackBoard{aspect-ratio:1.52!important;border-radius:22px!important}
+.trackSpace{height:13.5%!important;border-radius:8px!important}
+.pony{width:27px!important;height:27px!important;font-size:15px!important;border-width:0!important}
+.slot{inset:13px 2px 2px!important;gap:2px!important}
+.num{font-size:9px!important}
+.diceArena .die3d{--ds:128px}
+@media(min-width:721px){
+  .trackBoard{aspect-ratio:1.95!important}
+  .pony{width:42px!important;height:42px!important}
+  .diceArena .die3d{--ds:150px}
+}
+@media(max-width:390px){
+  .pony{width:24px!important;height:24px!important}
+  .diceArena .die3d{--ds:112px}
+}
 </style>
 </head>
 <body>
@@ -1938,13 +2016,21 @@ const d=diceKey?diceObj(diceKey):null;
 return`<div class="diceStage">${die3d(d?("r-"+d.key):"idle")}<div><div class="diceText">${d?`出目：${d.label}`:"サイコロ待ち"}</div><div class="diceFaces">🐎×3 / 🧢 / 🥕 / ☀️</div></div></div>`;
 }
 function renderCenter(){
-if(room.race.diceRolling)return`<div class="centerInfo"><div class="waitLine">🎲 回転中…</div></div>`;
+if(room.race.diceRolling)return"";
 if(room.phase==="racing"&&room.race.dice){
 const dice=diceObj(room.race.dice);
 const cards=activeCards(clone(room));
 return`<div class="centerInfo"><b>🎲 ${dice.icon} ${dice.label}</b><div class="centerList">${cards.map(c=>{const p=previewMove(c);return`<div class="moveLine">🐴${horseShort(c.horse)} ${p.from}→${p.to}</div>`}).join("")}</div></div>`;
 }
 return`<div class="centerInfo"><div class="commentaryBox"><span class="commentaryLabel">実況</span><br>${escapeHtml(room.race.commentary||"レースは静かに進行中です。")}</div></div>`;
+}
+function renderDiceArena(){
+const dr=room.race.diceRolling;
+const dres=room.phase==="racing"&&room.race.dice&&!dr&&!animationState;
+if(!dr&&!dres)return"";
+const dieState=dr?"rolling":("r-"+room.race.dice);
+const label=dr?"サイコロ回転中…":`出目：${diceObj(room.race.dice).label}`;
+return`<div class="diceArena show ${dr?"rolling":"result"}"><div class="dim"></div><div class="boardDie">${die3d(dieState)}<div class="dieLabel">${label}</div></div></div>`;
 }
 function renderTrack(){
 const placed={};
@@ -1955,7 +2041,9 @@ const pos=displayPosition(hid,horseDisplayPos(s));
 placed[pos]??=[];
 placed[pos].push(hid);
 }
-return`<section class="card trackCard"><div class="trackBoard">${renderCenter()}${trackSpaces().map(sp=>{const horses=placed[sp.no]||[],cls=`trackSpace ${sp.no===GOAL_LINE?"finish":""} ${sp.no===PACE_SPACE?"pace":""}`;return`<div class="${cls}" style="left:${sp.x}%;top:${sp.y}%"><div class="num">${sp.no}</div><div class="lab">${sp.no===GOAL_LINE?"GOAL":sp.no===PACE_SPACE?"PACE":""}</div><div class="slot">${horses.map(hid=>{const hi=horseInfo(hid),c=horseCard(hid),lastMove=room.race.lastMove||{},latest=lastMove.horse===hid;return`<span class="pony photo ${room.race.paceHorse===hid?"paceLeader":""} ${latest?"latest":""} ${latest&&lastMove.blocked?"blocked":""} ${animationState?.horse===hid?"anim":""} ${c?.moved?"moved":""}" style="--horse-color:${hi.color};background-image:url('assets/horse-${hid}.jpg')" title="${c?.name||hi.label}">🐴</span>`}).join("")}</div></div>`}).join("")}</div>${renderHorseCards()}</section>`;
+const canMoveNow=room.phase==="racing"&&room.race.dice&&!room.race.diceRolling&&!animationState&&canControlPlayer(currentPlayer(room));
+const moveSet=canMoveNow?new Set(activeCards(clone(room)).map(c=>c.horse)):new Set();
+return`<section class="card trackCard"><div class="trackBoard">${renderCenter()}${renderDiceArena()}${trackSpaces().map(sp=>{const horses=placed[sp.no]||[],cls=`trackSpace ${sp.no===GOAL_LINE?"finish":""} ${sp.no===PACE_SPACE?"pace":""}`;return`<div class="${cls}" style="left:${sp.x}%;top:${sp.y}%"><div class="num">${sp.no}</div><div class="lab">${sp.no===GOAL_LINE?"GOAL":sp.no===PACE_SPACE?"PACE":""}</div><div class="slot">${horses.map(hid=>{const hi=horseInfo(hid),c=horseCard(hid),lastMove=room.race.lastMove||{},latest=lastMove.horse===hid,canMv=moveSet.has(hid);return`<span class="pony photo ${canMv?"movePony clickable":""} ${room.race.paceHorse===hid?"paceLeader":""} ${latest?"latest":""} ${latest&&lastMove.blocked?"blocked":""} ${animationState?.horse===hid?"anim":""} ${c?.moved?"moved":""}" style="--horse-color:${hi.color};background-image:url('assets/horse-${hid}.jpg')" data-horse="${hid}" title="${c?.name||hi.label}">🐴</span>`}).join("")}</div></div>`}).join("")}</div>${renderHorseCards()}</section>`;
 }
 function renderHorseCards(){
 const isBet=room.phase==="betting"&&canControlPlayer(currentBetPlayer(room));
@@ -2016,10 +2104,10 @@ function renderRaceAction(){
 const p=currentPlayer(room);
 if(animationState)return"";
 if(room.race.diceRolling){
-return`<section class="actions"><div class="betGuide" style="color:var(--ink);margin-bottom:6px">${p?.type==="cpu"?cpuOperatingLabel(p,"サイコロを振っています。"):`${escapeHtml(p?.name||"")} のサイコロ`}</div><div class="dicePanel" style="margin-top:0">${renderDiceVisual(room.race.dice,room.race.diceRolling)}</div></section>`;
+return`<section class="actions"><div class="betGuide" style="color:var(--ink)">🎲 ${p?.type==="cpu"?cpuOperatingLabel(p,"サイコロを盤上で回しています。"):`${escapeHtml(p?.name||"")} のサイコロが盤上で回転中…`}</div></section>`;
 }
 if(room.race.dice){
-return`<section class="actions"><div class="dicePanel" style="margin-top:0">${renderDiceVisual(room.race.dice,room.race.diceRolling)}</div><div class="betGuide" style="color:var(--ink);margin-top:6px">${p?.type==="cpu"?cpuOperatingLabel(p,"進める馬を考えています。"):`${escapeHtml(p?.name||"")}：${canControlPlayer(p)?"進める馬カードをタップ":"操作待ち…"}`}</div></section>`;
+return`<section class="actions"><div class="betGuide" style="color:var(--ink)">${p?.type==="cpu"?cpuOperatingLabel(p,"進める馬を考えています。"):`${escapeHtml(p?.name||"")}：<b>盤面の光る馬</b>か<b>下の馬カード</b>をタップして発走！`}</div></section>`;
 }
 if(!canControlPlayer(p)){
 return`<section class="actions"><div class="resultHold">${p?.type==="cpu"?cpuOperatingLabel(p,"順番が来ています。"):`${escapeHtml(p?.name||"")} のターン待ち…`}</div></section>`;
@@ -2100,6 +2188,7 @@ document.getElementById("quitToTop")?.addEventListener("click",quitToTop);
 document.querySelectorAll("#toggleBgm").forEach(btn=>btn.addEventListener("click",toggleBgm));
 document.querySelectorAll(".betCard").forEach(el=>el.addEventListener("click",e=>{e.stopPropagation();placeBet(el.dataset.horse)}));
 document.querySelectorAll(".moveCard").forEach(el=>el.addEventListener("click",e=>{e.stopPropagation();moveHorse(el.dataset.horse)}));
+document.querySelectorAll(".pony.movePony").forEach(el=>el.addEventListener("click",e=>{e.stopPropagation();moveHorse(el.dataset.horse)}));
 document.querySelectorAll("button").forEach(btn=>btn.addEventListener("click",()=>playEffect("click")));
 }
 document.addEventListener("pointerdown",()=>resumeLocalIfInactive(),{passive:true});
