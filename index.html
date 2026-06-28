@@ -231,7 +231,7 @@
         <span class="tileEmblem">${g.emblem}</span>`;
       return g.soon
         ? `<div class="${cls}">${inner}</div>`
-        : `<a class="${cls}" href="./games/${g.slug}/index.html" data-slug="${g.slug}">${inner}</a>`;
+        : `<a class="${cls}" href="./games/${g.slug}/" data-slug="${g.slug}">${inner}</a>`;
     }).join("");
 
     root.querySelectorAll("a.tile").forEach(a => {
@@ -245,7 +245,7 @@
     const rmPlay = document.getElementById("rmPlay");
     function openRules(slug) {
       renderRulesInto(rulesBody, slug);
-      rmPlay.href = `./games/${slug}/index.html`;
+      rmPlay.href = `./games/${slug}/`;
       rulesOverlay.classList.add("show");
       rulesBody.scrollTop = 0;
     }

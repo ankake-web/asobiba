@@ -135,8 +135,8 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
 .topbar{
   position:sticky; top:0; z-index:50;
   display:flex; align-items:center; gap:10px;
-  padding:calc(8px + env(safe-area-inset-top)) max(10px,env(safe-area-inset-left)) 8px max(10px,env(safe-area-inset-right));
-  margin:0 -12px 12px;
+  padding:calc(8px + env(safe-area-inset-top)) max(12px,env(safe-area-inset-left)) 8px max(12px,env(safe-area-inset-right));
+  margin:0 0 12px;
   background:linear-gradient(180deg, rgba(10,18,38,.92), rgba(10,18,38,.62) 70%, transparent);
   backdrop-filter:blur(10px);
   -webkit-backdrop-filter:blur(10px);
@@ -163,7 +163,18 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
   white-space:nowrap;
 }
 .topCtl{display:flex; gap:7px; flex:0 0 auto}
-.topCtl button{padding:9px 11px;font-size:13px;border-radius:12px}
+.topCtl button{padding:9px 11px;font-size:13px;border-radius:12px;white-space:nowrap}
+.topCtl .bi{font-size:15px}
+.topCtl .bl{margin-left:5px}
+@media(max-width:560px){
+  .topbar{gap:6px;margin-bottom:10px}
+  .topTitle{margin-left:2px;gap:6px}
+  .topTitle .name{font-size:16px}
+  .backLink{padding:8px 10px;font-size:13px}
+  .topCtl{gap:5px}
+  .topCtl button{padding:9px;font-size:14px}
+  .topCtl .bl{display:none}        /* スマホはアイコンのみで重なり回避 */
+}
 
 /* ===== HOME ===== */
 .home{
@@ -583,7 +594,7 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
 </head>
 <body>
 <div class="topbar">
-  <a class="backLink" href="../../index.html">← あそびば</a>
+  <a class="backLink" href="../../">← あそびば</a>
   <div class="topTitle">
     <svg class="topEmblem" viewBox="0 0 40 40" aria-hidden="true">
       <defs><linearGradient id="emb" x1="0" y1="0" x2="1" y2="1">
@@ -595,9 +606,9 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
     <span class="name">BACK10</span>
   </div>
   <div class="topCtl">
-    <button class="softpink" onclick="toggleBgm()">♪ BGM</button>
-    <button class="ghost" onclick="showRules()">ルール</button>
-    <button class="ghost" onclick="openRankings()">ランキング</button>
+    <button class="softpink" onclick="toggleBgm()" aria-label="BGM"><span class="bi">♪</span><span class="bl">BGM</span></button>
+    <button class="ghost" onclick="showRules()" aria-label="ルール"><span class="bi">📖</span><span class="bl">ルール</span></button>
+    <button class="ghost" onclick="openRankings()" aria-label="ランキング"><span class="bi">🏆</span><span class="bl">ランキング</span></button>
   </div>
 </div>
 
