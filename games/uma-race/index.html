@@ -661,15 +661,14 @@ button.diceStageButton .diceCube{width:54px;height:54px;font-size:28px}
 .diceArena .die3d{--ds:118px;filter:drop-shadow(0 16px 14px rgba(0,0,0,.5))}
 .diceArena .dieLabel{font-weight:900;font-size:16px;color:#fff;background:rgba(20,16,10,.6);padding:5px 14px;border-radius:999px;
   border:1px solid rgba(231,198,107,.6);text-shadow:0 1px 3px rgba(0,0,0,.8);backdrop-filter:blur(3px)}
-/* 盤上ロール：弾みながら多軸回転 */
-.diceArena .die3dCube.rolling{animation:dieRollBoard .68s cubic-bezier(.45,.05,.55,.95) infinite!important}
-@keyframes dieRollBoard{
-  0%{transform:translateY(-16%) rotateX(0) rotateY(0) rotateZ(-6deg)}
-  25%{transform:translateY(10%) rotateX(190deg) rotateY(140deg) rotateZ(8deg)}
-  50%{transform:translateY(-12%) rotateX(360deg) rotateY(300deg) rotateZ(-10deg)}
-  75%{transform:translateY(9%) rotateX(540deg) rotateY(470deg) rotateZ(7deg)}
-  100%{transform:translateY(-16%) rotateX(720deg) rotateY(620deg) rotateZ(-6deg)}
+/* 盤上ロール：等速の滑らかな多軸スピン＋ふわっと浮遊（自然なタンブル） */
+.diceArena .die3dCube.rolling{animation:dieSpin3d .72s linear infinite!important}
+@keyframes dieSpin3d{
+  0%{transform:rotateX(0) rotateY(0) rotateZ(0)}
+  100%{transform:rotateX(360deg) rotateY(540deg) rotateZ(180deg)}
 }
+.diceArena.rolling .boardDie{animation:diceHover .72s ease-in-out infinite}
+@keyframes diceHover{0%,100%{transform:translateY(2%)}50%{transform:translateY(-8%)}}
 /* canvasテクスチャの面（象牙地＋彫り込み＋ベベル） */
 .die3dFace{
   background-color:#f1e6cc!important;background-size:cover!important;background-position:center!important;
@@ -883,10 +882,10 @@ if(level==="strong")return{skill:2.65,random:1.5,level:"strong"};
 return{skill:1.18,random:8,level:"normal"};
 }
 function cpuDelay(r=room){
-const speed=r?.settings?.cpuSpeed||"normal";
-if(speed==="fast")return 800+Math.random()*450;
-if(speed==="instant")return 80+Math.random()*120;
-return 2300+Math.random()*1000;
+const speed=r?.settings?.cpuSpeed||"fast";
+if(speed==="instant")return 70+Math.random()*110;
+if(speed==="normal")return 1000+Math.random()*600;
+return 420+Math.random()*280; // fast（既定）
 }
 
 function reduceStats(base,delta){
@@ -1054,7 +1053,7 @@ phase:"lobby",
 raceNo:0,
 turnIndex:0,
 starterIndex:0,
-settings:{cpuLevel:"normal",cpuSpeed:"normal",singleDevice},
+settings:{cpuLevel:"normal",cpuSpeed:"fast",singleDevice},
 players:[{
 id:localId,
 name:localName||"名無",
@@ -1122,7 +1121,7 @@ render();
 return;
 }
 room=snap.data();
-room.settings={cpuLevel:"normal",cpuSpeed:"normal",singleDevice:false,...(room.settings||{})};
+room.settings={cpuLevel:"normal",cpuSpeed:"fast",singleDevice:false,...(room.settings||{})};
 room.presence=room.presence||{};
 await maybeJoinAsHuman();
 startHeartbeat();
@@ -1135,7 +1134,7 @@ maybeRunCpu();
 }else{
 const saved=localStorage.getItem("umaRaceLocalRoom");
 room=saved?JSON.parse(saved):null;
-if(room)room.settings={cpuLevel:"normal",cpuSpeed:"normal",singleDevice:false,...(room.settings||{})};
+if(room)room.settings={cpuLevel:"normal",cpuSpeed:"fast",singleDevice:false,...(room.settings||{})};
 render();
 maybeRunCpu();
 }
@@ -1467,7 +1466,7 @@ markActionStart(latest);
 latest.race.commentary=`出目は${d.label}！どの馬を動かすか、ここが勝負どころです。`;
 latest.race.log.unshift(`${currentPlayer(latest).name} の出目：${d.label}`);
 await saveRoom(latest);
-},900);
+},700);
 }
 
 function activeCards(r){
@@ -1807,7 +1806,9 @@ await saveRoom(next);
 };
 const p=room.phase==="betting"?currentBetPlayer(room):currentPlayer(room);
 if((room.phase==="betting"||room.phase==="racing")&&p?.type==="cpu"){
-cpuTimer=setTimeout(act,cpuDelay());
+// サイコロ回転中はプレイヤーと同じ短さで止める（CPUだけ長くならないように）
+const spinning=room.phase==="racing"&&room.race?.diceRolling;
+cpuTimer=setTimeout(act,spinning?(560+Math.random()*180):cpuDelay());
 }
 }
 
@@ -2022,30 +2023,39 @@ const speed=room.settings?.cpuSpeed||"normal";
 return`<section class="card"><div class="row between"><b>第${room.raceNo}レース</b><span class="pill">${room.raceNo===3?"3R：すべて2倍":"通常レース"}</span></div><label class="small" style="display:block;margin-top:8px"><b>CPU速度</b><select id="cpuSpeedGame" ${!isHost()?"disabled":""}><option value="normal" ${speed==="normal"?"selected":""}>普通</option><option value="fast" ${speed==="fast"?"selected":""}>早い</option><option value="instant" ${speed==="instant"?"selected":""}>最速</option></select></label><div class="row" style="margin-top:8px"><button id="toggleBgm" class="secondary">🎺 BGM ${bgmOn?"OFF":"ON"}</button><button id="quitToTop" class="secondary">ゲームをやめる</button></div></section>`;
 }
 const DIE_TEX={};
+// 絵文字をシルエット化（source-in で単色塗り）
+function glyphSilhouette(sym,size,color){
+const c=document.createElement("canvas");c.width=c.height=size;const x=c.getContext("2d");
+x.textAlign="center";x.textBaseline="middle";
+x.font=`${Math.round(size*0.82)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Segoe UI Symbol",sans-serif`;
+x.fillText(sym,size/2,size/2+size*0.02);
+x.globalCompositeOperation="source-in";x.fillStyle=color;x.fillRect(0,0,size,size);
+return c;
+}
 function dieFaceTex(sym){
 if(DIE_TEX[sym])return DIE_TEX[sym];
-const S=224,c=document.createElement("canvas");c.width=c.height=S;const x=c.getContext("2d");
+const S=256,c=document.createElement("canvas");c.width=c.height=S;const x=c.getContext("2d");
 const rr=(X,Y,W,H,R)=>{x.beginPath();x.moveTo(X+R,Y);x.arcTo(X+W,Y,X+W,Y+H,R);x.arcTo(X+W,Y+H,X,Y+H,R);x.arcTo(X,Y+H,X,Y,R);x.arcTo(X,Y,X+W,Y,R);x.closePath()};
 // 象牙地（左上から光）
-const g=x.createRadialGradient(S*.34,S*.28,S*.06,S*.52,S*.56,S*.9);
-g.addColorStop(0,"#fffdf6");g.addColorStop(.5,"#f3e7ce");g.addColorStop(1,"#d6c096");
-x.fillStyle=g;rr(0,0,S,S,S*.17);x.fill();
-// 彫り込み（くぼみの円）
-x.save();x.beginPath();x.arc(S/2,S/2,S*.345,0,7);x.clip();
-const rg=x.createRadialGradient(S*.42,S*.4,S*.04,S/2,S/2,S*.42);
-rg.addColorStop(0,"#efe4c8");rg.addColorStop(1,"#c7b287");
+const g=x.createRadialGradient(S*.32,S*.26,S*.05,S*.54,S*.58,S*.95);
+g.addColorStop(0,"#fffef9");g.addColorStop(.5,"#f4ead4");g.addColorStop(1,"#d9c39a");
+x.fillStyle=g;rr(0,0,S,S,S*.18);x.fill();
+// 中央のくぼみ（皿状）
+x.save();rr(S*.5-S*.37,S*.5-S*.37,S*.74,S*.74,S*.14);x.clip();
+const rg=x.createRadialGradient(S*.44,S*.42,S*.04,S/2,S/2,S*.5);
+rg.addColorStop(0,"#f1e6ca");rg.addColorStop(1,"#cdb88e");
 x.fillStyle=rg;x.fillRect(0,0,S,S);x.restore();
-x.beginPath();x.arc(S/2,S/2,S*.345,0,7);x.lineWidth=S*.02;x.strokeStyle="rgba(120,90,40,.42)";x.stroke();
-x.beginPath();x.arc(S*.43,S*.41,S*.30,3.6,5.2);x.lineWidth=S*.012;x.strokeStyle="rgba(255,255,255,.55)";x.stroke();
-// シンボル（影付き＝立体感）
-x.textAlign="center";x.textBaseline="middle";
-x.font=`${S*.42}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif`;
-x.shadowColor="rgba(70,48,16,.55)";x.shadowBlur=S*.035;x.shadowOffsetY=S*.022;
-x.fillText(sym,S/2,S/2+S*.015);
-x.shadowColor="transparent";
+// シンボル＝彫り込み（intaglio）：明るい下エッジ＋暗い本体
+const gs=Math.round(S*0.56),gx=(S-gs)/2,gy=(S-gs)/2;
+const light=glyphSilhouette(sym,gs,"rgba(255,255,250,0.85)");
+const dark=glyphSilhouette(sym,gs,"#6e5325");
+const darker=glyphSilhouette(sym,gs,"#4a3717");
+x.drawImage(light,gx+S*0.012,gy+S*0.016);      // 溝の下側に光
+x.drawImage(dark,gx,gy);                         // 本体（彫り）
+x.globalAlpha=0.5;x.drawImage(darker,gx-S*0.006,gy-S*0.008);x.globalAlpha=1; // 上側に影
 // 縁のベベル
-x.lineWidth=S*.05;x.strokeStyle="rgba(255,255,255,.5)";rr(S*.03,S*.03,S*.94,S*.94,S*.15);x.stroke();
-x.lineWidth=S*.018;x.strokeStyle="rgba(150,115,60,.45)";rr(S*.012,S*.012,S*.976,S*.976,S*.16);x.stroke();
+x.lineWidth=S*.055;x.strokeStyle="rgba(255,255,255,.55)";rr(S*.035,S*.03,S*.93,S*.93,S*.15);x.stroke();
+x.lineWidth=S*.02;x.strokeStyle="rgba(150,115,60,.5)";rr(S*.012,S*.012,S*.976,S*.976,S*.17);x.stroke();
 return DIE_TEX[sym]=c.toDataURL();
 }
 function die3d(stateClass){
@@ -2074,6 +2084,7 @@ x.putImageData(d,0,0);
 return c;
 }
 function flipCanvas(src){const c=document.createElement("canvas");c.width=src.width;c.height=src.height;const x=c.getContext("2d");x.translate(c.width,0);x.scale(-1,1);x.drawImage(src,0,0);return c;}
+const SPRITE_BASE_FACES_LEFT={red:true}; // この素材だけ元が左向きなので基準を反転
 function preloadSprites(){
 const ids=HORSES.map(h=>h.id);let pending=ids.length;const rules=[];
 const done=()=>{if(--pending>0)return;
@@ -2082,7 +2093,12 @@ const done=()=>{if(--pending>0)return;
 };
 ids.forEach(id=>{
 const img=new Image();
-img.onload=()=>{try{const c=keyGreenCanvas(img);if(c){rules.push(`.pony.sp-${id}{background-image:url(${c.toDataURL("image/png")})}`);rules.push(`.pony.spf-${id}{background-image:url(${flipCanvas(c).toDataURL("image/png")})}`);}}catch(e){}done();};
+img.onload=()=>{try{const c=keyGreenCanvas(img);if(c){
+  const right=SPRITE_BASE_FACES_LEFT[id]?flipCanvas(c):c;      // 右向き表示用
+  const left =SPRITE_BASE_FACES_LEFT[id]?c:flipCanvas(c);      // 左向き表示用
+  rules.push(`.pony.sp-${id}{background-image:url(${right.toDataURL("image/png")})}`);
+  rules.push(`.pony.spf-${id}{background-image:url(${left.toDataURL("image/png")})}`);
+}}catch(e){}done();};
 img.onerror=done;
 img.src=`assets/horse-side-${id}.jpg`;
 });
