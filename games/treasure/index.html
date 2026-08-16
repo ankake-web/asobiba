@@ -2,9 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#10201f">
 <title>呪宝の蔵 — あそびば</title>
+<!-- @shared:base-css -->
 <style>
   :root{
     --stone-0:#0b1716;
@@ -38,7 +39,7 @@
     position:fixed; inset:0;
     display:flex; flex-direction:column;
     max-width:560px; margin:0 auto;
-    padding-bottom:env(safe-area-inset-bottom);
+    /* 下の余白は .actionbar 側で var(--sab) を取る（二重取りしない） */
   }
 
   /* ---------- candle ambiance ---------- */
@@ -62,7 +63,7 @@
   .topbar{
     position:relative; z-index:5;
     display:flex; align-items:center; gap:8px;
-    padding:calc(env(safe-area-inset-top) + 8px) 12px 8px;
+    padding:calc(var(--sat) + 8px) 12px 8px;
   }
   .pill{
     appearance:none; border:none; cursor:pointer;
@@ -76,20 +77,20 @@
     transition:transform .08s ease, filter .15s ease;
   }
   .pill:active{transform:translateY(1px) scale(.97);}
-  .back{padding:9px 14px; font-size:14px; display:inline-flex; align-items:center; gap:4px;}
+  .back{padding:9px 14px; font-size:14px; display:inline-flex; align-items:center; gap:4px; min-height:44px;}
   .title{
     flex:1; min-width:0;
     display:flex; flex-direction:column; line-height:1.05; padding-left:4px;
   }
   .title .emblem{
-    font-size:18px; font-weight:800; letter-spacing:.06em;
+    font-size:clamp(15px, 4.8vw, 18px); font-weight:800; letter-spacing:.06em;
     color:var(--gold-bright);
     text-shadow:0 0 14px rgba(231,184,78,.45), 0 1px 0 #000;
     white-space:nowrap;
   }
-  .title .sub{font-size:10.5px; color:var(--parch-dim); letter-spacing:.18em;}
+  .title .sub{font-size:11px; color:var(--parch-dim); letter-spacing:.18em; white-space:nowrap;}
   .iconbtn{
-    width:40px; height:40px; padding:0; border-radius:50%;
+    width:44px; height:44px; padding:0; border-radius:50%;
     display:grid; place-items:center; font-size:17px;
   }
 
@@ -123,7 +124,7 @@
   .stat .v{font-size:18px; font-weight:800; line-height:1;}
   .stat .v.chips{color:var(--gold-bright);}
   .stat .v.score{color:var(--gem-teal);}
-  .stat .l{font-size:9px; color:var(--parch-dim); margin-top:2px; letter-spacing:.08em;}
+  .stat .l{font-size:11px; color:var(--parch-dim); margin-top:2px; letter-spacing:.08em;}
 
   /* ---------- center stage ---------- */
   .stage{
@@ -132,12 +133,12 @@
     padding:4px 12px; min-height:0;
   }
   .deckinfo{
-    font-size:11px; color:var(--parch-dim); letter-spacing:.1em;
+    font-size:12px; color:var(--parch-dim); letter-spacing:.1em;
     margin-bottom:6px; display:flex; align-items:center; gap:6px;
   }
   .deckinfo b{color:var(--gold-bright); font-size:13px;}
 
-  .treasure-wrap{position:relative; display:flex; flex-direction:column; align-items:center;}
+  .treasure-wrap{position:relative; display:flex; flex-direction:column; align-items:center; flex-shrink:0;}
 
   /* the cursed treasure card */
   .card{
@@ -162,7 +163,10 @@
   }
   .card .corner.tl{top:9px; left:11px;}
   .card .corner.br{bottom:9px; right:11px; transform:rotate(180deg);}
-  .card .skull{font-size:30px; filter:drop-shadow(0 2px 2px rgba(0,0,0,.25)); margin-bottom:2px;}
+  .card .skull{
+    font-size:30px; line-height:1; color:#6b5320;
+    filter:drop-shadow(0 2px 2px rgba(0,0,0,.25)); margin-bottom:2px;
+  }
   .card .value{
     font-size:64px; font-weight:900; line-height:.9;
     color:#3a2c0e; text-shadow:0 1px 0 rgba(255,255,255,.5);
@@ -186,6 +190,21 @@
   }
   .card.danger .value{color:var(--ruby-deep);}
   .card.danger .corner{color:var(--ruby-deep);}
+  .card.danger .skull{color:var(--ruby-deep);}
+
+  /* 連番ヒント（カード下端に重ねるチップ） */
+  .runhints{
+    position:absolute; bottom:-11px; left:50%; transform:translateX(-50%);
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    pointer-events:none;
+  }
+  .runhint{
+    font-size:12px; font-weight:800; letter-spacing:.02em;
+    padding:3px 10px; border-radius:999px; white-space:nowrap;
+    box-shadow:0 2px 6px rgba(0,0,0,.45);
+  }
+  .runhint.mine{background:linear-gradient(180deg,#4fe0c8,#2bb89f); color:#06302a;}
+  .runhint.cpu{background:linear-gradient(180deg,#8a9694,#66716f); color:#101816;}
 
   /* reveal animation */
   @keyframes dealIn{
@@ -205,7 +224,7 @@
     display:flex; align-items:flex-end; justify-content:center;
     width:170px;
   }
-  .pile-empty{font-size:11px; color:var(--parch-dim); letter-spacing:.1em; align-self:center;}
+  .pile-empty{font-size:12px; color:var(--parch-dim); letter-spacing:.1em; align-self:center;}
   .chip{
     position:absolute; bottom:0;
     width:30px; height:30px; border-radius:50%;
@@ -227,8 +246,14 @@
 
   /* ---------- hoards ---------- */
   .hoards{
-    position:relative; z-index:2;
+    position:relative; z-index:1; /* カード(.stage)より下に描く。数字を隠さない */
     padding:2px 12px 4px; display:flex; flex-direction:column; gap:6px;
+    flex-shrink:0;
+    /* 終盤に蔵が伸びてもカードへ食い込まず、この中だけスクロール */
+    max-height:26vh;
+    max-height:26dvh;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
   }
   .hoard{
     background:rgba(11,23,22,.55);
@@ -237,7 +262,7 @@
   }
   .hoard .hhead{
     display:flex; justify-content:space-between; align-items:center;
-    font-size:11px; color:var(--parch-dim); margin-bottom:4px; letter-spacing:.05em;
+    font-size:12px; color:var(--parch-dim); margin-bottom:4px; letter-spacing:.05em;
   }
   .hoard .hhead b{color:var(--parch);}
   .hoard .hhead .pen{color:var(--ruby); font-weight:800;}
@@ -260,12 +285,12 @@
     box-shadow:0 0 0 2px var(--ruby), 0 1px 3px rgba(0,0,0,.5);
   }
   .mini.danger{background:linear-gradient(160deg,#e7c3b8,#cf9d92); color:var(--ruby-deep);}
-  .hoard-empty{font-size:11px; color:#6e7d7b; font-style:italic;}
+  .hoard-empty{font-size:12px; color:#6e7d7b; font-style:italic;}
 
   /* ---------- action bar ---------- */
   .actionbar{
     position:relative; z-index:5;
-    padding:8px 12px calc(env(safe-area-inset-bottom) + 12px);
+    padding:8px 12px calc(var(--sab) + 12px);
     background:linear-gradient(180deg, transparent, rgba(11,23,22,.85) 30%);
   }
   .guide{
@@ -285,7 +310,7 @@
     transition:transform .07s ease, filter .15s ease, opacity .2s ease;
     display:flex; flex-direction:column; align-items:center; line-height:1.1;
   }
-  .btn .small{font-size:10.5px; font-weight:700; opacity:.8; margin-top:3px;}
+  .btn .small{font-size:12px; font-weight:700; opacity:.8; margin-top:3px;}
   .btn:active{transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.35), 0 2px 6px var(--shadow);}
   .btn.pass{background:linear-gradient(180deg,#f0e6c9,#d8c69c);}
   .btn.take{background:linear-gradient(180deg,#ffd97a,#e7b84e); color:#3a2308;}
@@ -301,7 +326,9 @@
   }
   .overlay.show{opacity:1; pointer-events:auto;}
   .sheet{
-    width:100%; max-width:420px; max-height:86vh; overflow-y:auto;
+    width:100%; max-width:420px; overflow-y:auto;
+    max-height:86vh;
+    max-height:86dvh;
     -webkit-overflow-scrolling:touch;
     background:linear-gradient(180deg,var(--stone-2),var(--stone-1));
     border:1px solid rgba(231,184,78,.3);
@@ -314,7 +341,6 @@
     margin:0 0 6px; font-size:20px; color:var(--gold-bright);
     text-shadow:0 0 14px rgba(231,184,78,.4); text-align:center;
   }
-  .sheet h2 .sk{font-size:22px;}
   .sheet p{font-size:13.5px; line-height:1.7; color:var(--parch); margin:8px 0;}
   .sheet .rule{
     background:rgba(0,0,0,.25); border-radius:12px; padding:10px 12px; margin:8px 0;
@@ -338,6 +364,9 @@
 
   /* result specifics */
   .result-emblem{font-size:54px; text-align:center; line-height:1; margin:4px 0 2px;}
+  .result-emblem.win{color:var(--gold-bright); filter:drop-shadow(0 0 14px rgba(231,184,78,.45));}
+  .result-emblem.lose{color:#ff8f7e;}
+  .result-emblem.draw{color:var(--gem-teal);}
   .result-title{text-align:center; font-size:26px; font-weight:900; margin:2px 0 6px;}
   .result-title.win{color:var(--gold-bright); text-shadow:0 0 18px rgba(231,184,78,.5);}
   .result-title.lose{color:#ff8f7e;}
@@ -352,7 +381,7 @@
   .scoreline .col.win{border-color:var(--gold); box-shadow:0 0 14px rgba(231,184,78,.25);}
   .scoreline .who{font-size:12px; color:var(--parch-dim);}
   .scoreline .total{font-size:30px; font-weight:900; color:var(--gem-teal); line-height:1.1;}
-  .scoreline .break{font-size:11px; color:var(--parch-dim); margin-top:3px;}
+  .scoreline .break{font-size:12px; color:var(--parch-dim); margin-top:3px;}
   .resbtns{display:flex; gap:10px; margin-top:14px;}
   .resbtns .closebtn{margin-top:0;}
   .resbtns .ghost{
@@ -394,17 +423,19 @@
 </style>
 </head>
 <body>
+<!-- @shared:icons -->
+<!-- @shared:confirm -->
 <div class="ambiance"></div>
 <div id="app">
 
   <div class="topbar">
-    <a class="pill back" href="../../">← あそびば</a>
+    <a class="pill back" href="../../"><svg class="ic"><use href="#ic-back"/></svg>あそびば</a>
     <div class="title">
-      <span class="emblem">⚜ 呪宝の蔵</span>
+      <span class="emblem"><svg class="ic"><use href="#ic-seal"/></svg> 呪宝の蔵</span>
       <span class="sub">CURSED VAULT</span>
     </div>
-    <button class="pill iconbtn" id="soundBtn" title="サウンド">♪</button>
-    <button class="pill iconbtn" id="helpBtn" title="遊び方">？</button>
+    <button class="pill iconbtn" id="soundBtn" title="サウンド"><svg class="ic"><use href="#ic-sound-on"/></svg></button>
+    <button class="pill iconbtn" id="helpBtn" title="遊び方"><svg class="ic"><use href="#ic-help"/></svg></button>
   </div>
 
   <div class="board">
@@ -429,11 +460,12 @@
     <div class="treasure-wrap">
       <div class="card" id="card">
         <span class="corner tl" id="cornerTL">3</span>
-        <span class="skull" id="skull">💀</span>
+        <span class="skull"><svg class="ic"><use href="#ic-skull"/></svg></span>
         <span class="value" id="cardValue">3</span>
         <span class="neg">−3 点</span>
         <span class="gem" id="gemRow">◆</span>
         <span class="corner br" id="cornerBR">3</span>
+        <div class="runhints" id="runHints"></div>
       </div>
       <div class="pile" id="pile">
         <span class="pile-empty">チップなし</span>
@@ -464,7 +496,7 @@
 <!-- help modal -->
 <div class="overlay" id="helpOverlay">
   <div class="sheet">
-    <h2><span class="sk">💀</span> 呪宝の蔵 — 遊び方</h2>
+    <h2><svg class="ic"><use href="#ic-skull"/></svg> 呪宝の蔵 — 遊び方</h2>
     <p>薄暗い宝物庫で、あなたと<b>番人</b>が呪われた財宝を押し付け合います。財宝はすべて<b>マイナス点</b>。チップで身を守りましょう。</p>
     <div class="rule">
       <b>あなたの手番</b>でできること：
@@ -562,7 +594,10 @@
   }
 
   // ---------------- sound (tiny WebAudio kit) ----------------
+  // 設定は全ゲーム共通キー asobiba:sound（"on"/"off"）で共有する
+  var SOUND_KEY = "asobiba:sound";
   var soundOn = true;
+  try{ soundOn = localStorage.getItem(SOUND_KEY) !== "off"; }catch(e){}
   var actx = null;
   function ac(){
     if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ actx=null; } }
@@ -598,7 +633,7 @@
   var $ = function(id){ return document.getElementById(id); };
   var els = {
     card:$("card"), cardValue:$("cardValue"), cornerTL:$("cornerTL"), cornerBR:$("cornerBR"),
-    skull:$("skull"), gemRow:$("gemRow"),
+    gemRow:$("gemRow"), runHints:$("runHints"),
     pile:$("pile"), deckLeft:$("deckLeft"),
     chipsYou:$("chips-you"), chipsCpu:$("chips-cpu"),
     scoreYou:$("score-you"), scoreCpu:$("score-cpu"),
@@ -618,14 +653,32 @@
     els.cornerBR.textContent = v;
     var danger = v >= DANGER_THRESHOLD;
     els.card.classList.toggle("danger", danger);
-    els.skull.textContent = danger ? "☠️" : "💀";
     // gem density grows with value
     var g = Math.min(5, Math.max(1, Math.round((v-CARD_MIN)/((CARD_MAX-CARD_MIN)/5)) ));
     els.gemRow.textContent = GEMS[g-1];
+    // 連番ヒント（飛んでいく最中は前の表示のまま一緒に消す）
+    if(animClass !== "taking") renderRunHints(v);
     if(animClass){
       els.card.classList.remove("dealing","taking");
       void els.card.offsetWidth; // reflow
       els.card.classList.add(animClass);
+    }
+  }
+
+  // このカードが蔵の数字±1（＝連番でつながる）なら、取る/パスの判断材料を出す
+  function renderRunHints(v){
+    els.runHints.innerHTML = "";
+    if(hoardHas(S.hoard.you, v-1) || hoardHas(S.hoard.you, v+1)){
+      var mine = document.createElement("span");
+      mine.className = "runhint mine";
+      mine.textContent = "連番になる（実質0点）";
+      els.runHints.appendChild(mine);
+    }
+    if(hoardHas(S.hoard.cpu, v-1) || hoardHas(S.hoard.cpu, v+1)){
+      var cpu = document.createElement("span");
+      cpu.className = "runhint cpu";
+      cpu.textContent = "番人の連番";
+      els.runHints.appendChild(cpu);
     }
   }
 
@@ -886,14 +939,20 @@
     var win = sy > sc, lose = sy < sc, draw = sy === sc;
     if(win) SFX.win(); else if(lose) SFX.lose(); else SFX.deal();
 
-    var emblem = win ? "👑" : lose ? "🐉" : "⚖️";
+    // 天秤だけスプライトに無いので同じ流儀のインラインSVG
+    var scalesSvg = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+      + '<path d="M12 4v16M8.5 20h7M4.5 7h15"/>'
+      + '<path d="M6.5 7 4 12.5h5z"/><path d="M17.5 7 15 12.5h5z"/></svg>';
+    var emblem = win ? '<svg class="ic"><use href="#ic-crown"/></svg>'
+               : lose ? '<svg class="ic"><use href="#ic-skull"/></svg>'
+               : scalesSvg;
     var titleTxt = win ? "宝物庫を制した！" : lose ? "番人に呑まれた…" : "痛み分け";
     var titleCls = win ? "win" : lose ? "lose" : "draw";
 
     var penY = cardPenalty(S.hoard.you), penC = cardPenalty(S.hoard.cpu);
 
     var html = ""
-      + '<div class="result-emblem">'+emblem+'</div>'
+      + '<div class="result-emblem '+titleCls+'">'+emblem+'</div>'
       + '<div class="result-title '+titleCls+'">'+titleTxt+'</div>'
       + '<div class="scoreline">'
         + '<div class="col '+(win?"win":"")+'">'
@@ -937,19 +996,49 @@
   }
 
   // ---------------- events ----------------
+  // ±X点 の表示用（0 は ±0点）
+  function fmtPts(n){
+    return (n > 0 ? "+" : n < 0 ? "−" : "±") + Math.abs(n) + "点";
+  }
+
   els.passBtn.addEventListener("click", function(){ if(!els.passBtn.disabled){ SFX.click(); youPass(); } });
-  els.takeBtn.addEventListener("click", function(){ if(!els.takeBtn.disabled){ SFX.click(); youTake(); } });
+  els.takeBtn.addEventListener("click", function(){
+    if(els.takeBtn.disabled) return;
+    SFX.click();
+    // チップ0枚は引き取るしかない（選択肢が無い）ので確認は挟まない
+    if(S.chips.you <= 0){ youTake(); return; }
+    var v = S.current, pile = S.pile;
+    var marginal = marginalPenalty(S.hoard.you, v); // 連番なら実際に増える失点は小さい
+    asobibaConfirm({
+      title: "呪宝 " + v + " を引き取る",
+      lines: [
+        ["呪宝 " + v, fmtPts(-marginal) + (marginal < v ? "（連番）" : "")],
+        ["たまったチップ", fmtPts(pile)],
+        ["実質", fmtPts(pile - marginal)]
+      ],
+      note: "この操作は取り消せません",
+      okLabel: "引き取る", cancelLabel: "やめる",
+      danger: true
+    }).then(function(ok){
+      if(ok) youTake();
+    });
+  });
 
   $("helpBtn").addEventListener("click", function(){ ac(); els.helpOverlay.classList.add("show"); });
   $("helpClose").addEventListener("click", function(){ els.helpOverlay.classList.remove("show"); });
   els.helpOverlay.addEventListener("click", function(e){ if(e.target===els.helpOverlay) els.helpOverlay.classList.remove("show"); });
 
+  function renderSoundBtn(){
+    els.soundBtn.innerHTML = '<svg class="ic"><use href="#' + (soundOn ? "ic-sound-on" : "ic-sound-off") + '"/></svg>';
+    els.soundBtn.style.opacity = soundOn ? "1" : ".6";
+  }
   els.soundBtn.addEventListener("click", function(){
     soundOn = !soundOn;
-    els.soundBtn.textContent = soundOn ? "♪" : "🔇";
-    els.soundBtn.style.opacity = soundOn ? "1" : ".6";
+    try{ localStorage.setItem(SOUND_KEY, soundOn ? "on" : "off"); }catch(e){}
+    renderSoundBtn();
     if(soundOn){ ac(); SFX.click(); }
   });
+  renderSoundBtn();
 
   // resume audio on first touch (mobile policy)
   document.addEventListener("touchstart", function once(){ ac(); document.removeEventListener("touchstart", once); }, {passive:true});

@@ -5,7 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#14111c" />
 <title>あそびば — ミニゲーム集</title>
-<meta name="description" content="スマホでさっと遊べる、夫婦・友だち向けのミニゲーム集。" />
+<meta name="description" content="スマホでさっと遊べる、夫婦・友だち向けのミニゲーム集。競馬レース・登山ダイス・押しつけ財宝・協力カード・ブラフの5本。" />
+<!-- SNSでURLを貼ったときのプレビュー（OGP） -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="あそびば" />
+<meta property="og:title" content="あそびば — スマホでさっと遊べるミニゲーム集" />
+<meta property="og:description" content="夫婦で・友だちと、短時間で盛り上がる5つのミニゲーム。競馬・登山ダイス・押しつけ財宝・協力カード・ブラフ。" />
+<meta property="og:url" content="https://ankake-web.github.io/asobiba/" />
+<meta property="og:image" content="https://ankake-web.github.io/asobiba/og.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+<!-- @shared:base-css -->
 <style>
   :root{
     --bg0:#14111c;
@@ -25,16 +36,20 @@
   body{
     font-family:var(--font);
     color:var(--ink);
+    background:var(--bg0);
+    -webkit-font-smoothing:antialiased;
+  }
+  /* 背景グラデは fixed 要素へ（background-attachment:fixed は iOS で効かない） */
+  .bgfx{position:fixed;inset:0;z-index:-1;pointer-events:none;
     background:
       radial-gradient(1200px 700px at 12% -8%, #3a2b54 0%, transparent 55%),
       radial-gradient(1100px 800px at 96% 4%, #16384a 0%, transparent 52%),
       radial-gradient(900px 900px at 70% 110%, #4a2336 0%, transparent 50%),
       linear-gradient(180deg, var(--bg0), var(--bg1) 50%, var(--bg2));
-    background-attachment:fixed;
-    -webkit-font-smoothing:antialiased;
   }
   a{color:inherit;text-decoration:none}
-  .wrap{max-width:var(--maxw);margin:0 auto;padding:18px 16px 64px}
+  .wrap{max-width:var(--maxw);margin:0 auto;
+    padding:calc(14px + var(--sat)) calc(16px + var(--sar)) calc(56px + var(--sab)) calc(16px + var(--sal))}
 
   /* top bar */
   .topbar{
@@ -46,8 +61,9 @@
     background:conic-gradient(from 0deg,#ff9d4d,#e7c66b,#38e1d6,#8be36b,#c084fc,#ff9d4d);
     box-shadow:0 0 14px rgba(231,198,107,.6)}
   .iconbtn{
+    display:inline-flex;align-items:center;gap:7px;
     border:1px solid var(--line2);background:rgba(255,255,255,.06);
-    color:var(--ink);font-weight:800;border-radius:999px;padding:9px 14px;font-size:14px;
+    color:var(--ink);font-weight:800;border-radius:999px;padding:10px 16px;font-size:14px;
     cursor:pointer;backdrop-filter:blur(6px);transition:transform .12s, background .2s;
   }
   .iconbtn:active{transform:scale(.95)}
@@ -71,13 +87,13 @@
     text-shadow:0 1px 0 rgba(255,255,255,.15);
     filter:drop-shadow(0 8px 20px rgba(0,0,0,.35));
   }
-  .hero .romaji{margin-top:4px;font-size:clamp(11px,2.6vw,15px);letter-spacing:.55em;color:var(--gold);font-weight:800;text-transform:uppercase;padding-left:.3em}
+  .hero .romaji{margin-top:4px;font-size:clamp(12px,2.6vw,15px);letter-spacing:.55em;color:var(--gold);font-weight:800;text-transform:uppercase;padding-left:.3em}
   .hero p{margin:16px 0 0;max-width:34ch;color:var(--muted);font-size:clamp(13px,3.4vw,16px);font-weight:600;line-height:1.7}
-  .hero .floaties{position:absolute;inset:0;pointer-events:none;font-size:42px;opacity:.16}
-  .hero .floaties span{position:absolute;animation:float 7s ease-in-out infinite}
+  .hero .floaties{position:absolute;inset:0;pointer-events:none;color:var(--gold);opacity:.14}
+  .hero .floaties svg{position:absolute;width:44px;height:44px;animation:float 7s ease-in-out infinite}
   .hero .f1{right:7%;top:18%;animation-delay:0s}
-  .hero .f2{right:22%;top:54%;font-size:30px;animation-delay:1.4s}
-  .hero .f3{right:38%;top:10%;font-size:26px;animation-delay:2.7s}
+  .hero .f2{right:22%;top:54%;width:32px;height:32px;animation-delay:1.4s}
+  .hero .f3{right:38%;top:10%;width:27px;height:27px;animation-delay:2.7s}
   @keyframes float{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-14px) rotate(6deg)}}
 
   .sectionLabel{display:flex;align-items:center;gap:10px;margin:6px 4px 14px;color:var(--muted);font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
@@ -88,98 +104,330 @@
   @media(min-width:680px){.grid{grid-template-columns:1fr 1fr}}
   @media(min-width:680px){.feature{grid-column:1 / -1}}
 
+  /* タイル: 暗色ガラスの共通ベース＋ゲームごとのアクセント（--acc / --w1 / --w2）。
+     文字は常に白ベース＝どのタイルでも読める（旧: 明るいグラデに白文字で読めなかった） */
   .tile{
-    position:relative;overflow:hidden;display:block;
+    position:relative;overflow:hidden;
     border-radius:var(--radius);border:1px solid var(--line2);
-    padding:20px;min-height:148px;
     color:#fff;isolation:isolate;
+    background:linear-gradient(140deg, var(--w1), var(--w2) 62%, #15121d 100%);
     transition:transform .16s ease, box-shadow .2s ease;
-    box-shadow:0 14px 30px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.16);
+    box-shadow:0 14px 30px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.14);
   }
-  .feature{min-height:182px;padding:24px}
-  .tile::before{content:"";position:absolute;inset:0;z-index:-2;background:var(--g)}
   .tile::after{content:"";position:absolute;inset:0;z-index:-1;
-    background:radial-gradient(120% 90% at 88% 0%, rgba(255,255,255,.28), transparent 55%);
+    background:radial-gradient(130% 100% at 90% 0%, rgba(255,255,255,.14), transparent 55%);
     mix-blend-mode:overlay}
-  .tile:hover{transform:translateY(-4px);box-shadow:0 22px 44px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.22)}
+  .tile:hover{transform:translateY(-4px);box-shadow:0 22px 44px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.2)}
   .tile:active{transform:translateY(-1px) scale(.995)}
 
-  .tileEmblem{position:absolute;right:-6px;bottom:-18px;font-size:118px;line-height:1;opacity:.92;
-    filter:drop-shadow(0 10px 16px rgba(0,0,0,.34));transform:rotate(-8deg);z-index:-1;pointer-events:none}
-  .feature .tileEmblem{font-size:160px;right:2%;bottom:-26px}
-  .tileGenre{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.08em;
-    padding:5px 11px;border-radius:999px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.22);
-    backdrop-filter:blur(4px)}
-  .tileTitle{margin:12px 0 0;font-size:clamp(26px,6.4vw,34px);font-weight:900;letter-spacing:.01em;
+  .t-uma     {--acc:#57c97e; --w1:#1e3d28; --w2:#33291e}
+  .t-dice    {--acc:#7fb2e8; --w1:#1c3350; --w2:#161c2c}
+  .t-treasure{--acc:#e5b54a; --w1:#173430; --w2:#241c10}
+  .t-back10  {--acc:#3fd6c8; --w1:#152459; --w2:#101a30}
+  .t-spy     {--acc:#c9a14a; --w1:#2a1c33; --w2:#181020}
+
+  /* スマホ: エンブレムは右上の小型表示・テキストは全幅。広い画面では右中央の大型表示 */
+  .tileMain{display:block;padding:20px 20px 4px}
+  .feature .tileMain{padding:24px 24px 4px}
+  .tileChips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding-right:88px}
+  .feature .tileChips{padding-right:100px}
+  .tileGenre{display:inline-block;font-size:12px;font-weight:900;letter-spacing:.06em;
+    padding:5px 11px;border-radius:999px;color:#101018;background:var(--acc);
+    box-shadow:0 2px 8px rgba(0,0,0,.3)}
+  .tileBadge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;
+    padding:5px 10px;border-radius:999px;background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.2);
+    color:rgba(255,255,255,.9)}
+  .tileTitle{margin:12px 0 0;font-size:clamp(24px,6vw,34px);font-weight:900;letter-spacing:.01em;
     text-shadow:0 2px 10px rgba(0,0,0,.4)}
-  .feature .tileTitle{font-size:clamp(32px,8vw,46px)}
-  .tileDesc{margin:8px 0 0;max-width:30ch;font-size:13.5px;font-weight:650;line-height:1.6;
-    color:rgba(255,255,255,.92);text-shadow:0 1px 6px rgba(0,0,0,.4)}
-  .tilePlay{margin-top:16px;display:inline-flex;align-items:center;gap:7px;font-weight:900;font-size:14px;
-    padding:10px 18px;border-radius:999px;background:rgba(255,255,255,.95);color:#1c1530;
+  .feature .tileTitle{font-size:clamp(27px,7.2vw,44px)}
+  .tileDesc{margin:8px 0 0;max-width:26ch;font-size:13.5px;font-weight:650;line-height:1.6;
+    color:rgba(255,255,255,.88);text-shadow:0 1px 6px rgba(0,0,0,.4)}
+
+  /* エンブレム: 常に完全に見える位置（旧: 半分見切れた120pxの絵文字） */
+  .tileEmblem{position:absolute;right:16px;top:14px;transform:rotate(-4deg);
+    width:76px;height:76px;z-index:-1;pointer-events:none;
+    filter:drop-shadow(0 10px 18px rgba(0,0,0,.4))}
+  .feature .tileEmblem{width:88px;height:88px}
+  .tileEmblem svg{width:100%;height:100%}
+  .embPhoto{border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,.5);
+    background:#222;transform:none}
+  .embPhoto img{width:100%;height:100%;object-fit:cover;display:block}
+  @media(min-width:560px){
+    .tileEmblem{top:50%;transform:translateY(-50%) rotate(-4deg);width:100px;height:100px;right:14px}
+    .embPhoto{transform:translateY(-50%)}
+    .feature .tileEmblem{width:122px;height:122px;right:18px}
+    .tileChips{padding-right:0}
+    .feature .tileChips{padding-right:0}
+    .tileTitle,.tileDesc{padding-right:104px}
+    .feature .tileTitle,.feature .tileDesc{padding-right:124px}
+  }
+
+  /* フッター行: あそぶ／ルールはリンクの外＝誤タップでゲームに飛ばない */
+  .tileFoot{display:flex;align-items:center;gap:10px;padding:14px 20px 20px}
+  .feature .tileFoot{padding:16px 24px 24px}
+  .tilePlay{display:inline-flex;align-items:center;gap:7px;font-weight:900;font-size:14px;
+    min-height:44px;padding:10px 20px;border-radius:999px;background:var(--acc);color:#141019;
     box-shadow:0 6px 16px rgba(0,0,0,.3)}
-  .tile.soon{filter:saturate(.65)}
-  .tile.soon{cursor:default}
-  .tileSoon{margin-top:16px;display:inline-flex;align-items:center;gap:7px;font-weight:900;font-size:13px;
-    padding:9px 16px;border-radius:999px;background:rgba(0,0,0,.3);border:1px dashed rgba(255,255,255,.4);color:rgba(255,255,255,.9)}
-
-  /* per-game worldview gradients */
-  .t-uma{--g:linear-gradient(135deg,#2f8d48 0%, #6aa23a 38%, #f0a85a 72%, #f08a8a 100%)}
-  .t-dice{--g:linear-gradient(135deg,#1f3a5f 0%, #2e5a86 48%, #6f97bf 100%)}
-  .t-treasure{--g:linear-gradient(135deg,#10201f 0%, #1d3b38 45%, #b88a2e 100%)}
-  .t-back10{--g:linear-gradient(135deg,#0e1730 0%, #1a2f6b 50%, #2bb6ac 100%)}
-  .t-spy{--g:linear-gradient(135deg,#1a1320 0%, #34233f 50%, #5b3a6e 100%)}
-
-  /* rules button on tiles */
-  .tileFoot{margin-top:16px;display:flex;align-items:center;gap:10px}
-  .feature .tileFoot{margin-top:18px}
+  .tilePlay:active{transform:scale(.97)}
   .rulesBtn{display:inline-flex;align-items:center;gap:6px;font-weight:900;font-size:13px;
-    padding:10px 14px;border-radius:999px;background:rgba(0,0,0,.28);color:#fff;border:1px solid rgba(255,255,255,.35);backdrop-filter:blur(4px)}
+    min-height:44px;padding:10px 16px;border-radius:999px;background:rgba(0,0,0,.28);color:#fff;
+    border:1px solid rgba(255,255,255,.35);backdrop-filter:blur(4px);cursor:pointer}
   .rulesBtn:active{transform:scale(.95)}
 
   /* rules modal */
-  .rulesOverlay{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:16px;
+  .rulesOverlay{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;
+    padding:16px 16px calc(16px + var(--sab));
     background:rgba(8,7,11,.8);backdrop-filter:blur(5px)}
   .rulesOverlay.show{display:flex}
-  .rulesModal{width:min(94vw,480px);max-height:88vh;overflow:auto;border-radius:24px;padding:18px;
+  .rulesModal{width:min(94vw,480px);border-radius:24px;padding:18px;
+    max-height:88vh;max-height:min(88dvh,88vh);
+    display:flex;flex-direction:column;
     background:linear-gradient(180deg,#26222f,#1b1825);border:1px solid var(--line2);box-shadow:0 24px 60px rgba(0,0,0,.6)}
   .rulesModal .rmTop{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
   .rulesModal .rmTop b{font-size:13px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
-  .rmClose{width:34px;height:34px;border-radius:50%;border:1px solid var(--line2);background:rgba(255,255,255,.06);color:var(--ink);font-size:16px;font-weight:800}
-  .rmPlay{display:block;text-align:center;margin-top:16px;padding:14px;border-radius:16px;font-weight:900;font-size:16px;
-    color:#1c1530;background:linear-gradient(180deg,#fff,#ecd9a6);box-shadow:0 6px 0 #b89a48}
+  .rmClose{width:44px;height:44px;border-radius:50%;border:1px solid var(--line2);background:rgba(255,255,255,.06);
+    color:var(--ink);display:grid;place-items:center;cursor:pointer}
+  /* 本文だけがスクロールし、「あそぶ」CTAは常に画面内 */
+  #rulesBody{overflow:auto;flex:1;min-height:0;overscroll-behavior:contain}
+  .rmPlay{display:block;text-align:center;margin-top:14px;padding:14px;border-radius:16px;font-weight:900;font-size:16px;
+    color:#1c1530;background:linear-gradient(180deg,#fff,#ecd9a6);box-shadow:0 6px 0 #b89a48;flex-shrink:0}
   .rmPlay:active{transform:translateY(3px);box-shadow:0 3px 0 #b89a48}
 
   footer{margin-top:34px;text-align:center;color:var(--muted);font-size:12px;font-weight:700;line-height:1.8}
-  footer .heart{color:var(--gold)}
 </style>
 </head>
 <body>
+<!-- @shared:icons -->
+<!-- @shared:confirm -->
+  <div class="bgfx" aria-hidden="true"></div>
   <div class="wrap">
     <div class="topbar">
       <div class="brandMini"><span class="dot"></span><span>あそびば</span></div>
-      <button class="iconbtn" id="soundBtn" aria-label="サウンド切替">🔊 サウンド</button>
+      <button class="iconbtn" id="soundBtn" aria-label="サウンド切替">
+        <svg class="ic"><use id="soundIc" href="#ic-sound-on"/></svg><span id="soundLbl">サウンド</span>
+      </button>
     </div>
 
     <section class="hero">
-      <div class="floaties"><span class="f1">🎲</span><span class="f2">🏇</span><span class="f3">🪙</span></div>
+      <div class="floaties" aria-hidden="true">
+        <svg class="f1"><use href="#ic-dice"/></svg>
+        <svg class="f2"><use href="#ic-star"/></svg>
+        <svg class="f3"><use href="#ic-flag"/></svg>
+      </div>
       <h1>あそびば</h1>
       <div class="romaji">Asobiba</div>
       <p>スマホでさっと、夫婦で・友だちと。<br>短時間で盛り上がるミニゲーム集。</p>
     </section>
 
     <div class="sectionLabel">遊べるゲーム</div>
-    <div class="grid" id="games"></div>
+
+    <!-- ゲーム一覧は静的HTML（検索・OGP・JS無効環境でも中身が見える） -->
+    <div class="grid" id="games">
+
+      <article class="tile t-uma feature">
+        <a class="tileMain" href="./games/uma-race/">
+          <div class="tileChips">
+            <span class="tileGenre">レース × 予想</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-globe"/></svg>オンライン対戦</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-users"/></svg>みんなで・CPU可</span>
+          </div>
+          <h2 class="tileTitle">うまうまレース</h2>
+          <p class="tileDesc">出目で馬を進め、配当を予想。最後まで逆転のある競馬ゲーム。</p>
+        </a>
+        <div class="tileFoot">
+          <a class="tilePlay" href="./games/uma-race/">あそぶ <svg class="ic"><use href="#ic-play"/></svg></a>
+          <button class="rulesBtn" type="button" data-rules="uma-race"><svg class="ic"><use href="#ic-book"/></svg> ルール</button>
+        </div>
+        <span class="tileEmblem" aria-hidden="true">
+          <!-- ゲーム内の駒と同じデフォルメ馬（1番・栗毛）。games/uma-race の horseSpriteSvg と同じ形。 -->
+          <svg viewBox="0 0 130 100">
+            <g transform="rotate(-5 66 50)">
+              <path d="M88 58c9 4 16 10 21 18" stroke="#a96a2f" stroke-width="11" stroke-linecap="round" fill="none"/>
+              <path d="M79 63c4 6 4 12 2 18" stroke="#a96a2f" stroke-width="10" stroke-linecap="round" fill="none"/>
+              <path d="M100 42c11-6 20 0 23 11-8-5-13-3-17 3z" fill="#7d4a1e"/>
+              <ellipse cx="70" cy="52" rx="33" ry="22" fill="#c9843f"/>
+              <path d="M56 55c14 5 27 4 38-1l-3 17c-11 4-23 5-34 2z" fill="#e53935"/>
+              <path d="M56 55c14 5 27 4 38-1l-1 5c-11 5-24 5-36 1z" fill="#a8271f" opacity=".55"/>
+              <path d="M48 61c-7 5-14 8-22 9" stroke="#c9843f" stroke-width="11" stroke-linecap="round" fill="none"/>
+              <path d="M58 66c-3 6-3 12 0 18" stroke="#c9843f" stroke-width="10" stroke-linecap="round" fill="none"/>
+              <path d="M44 40c-6-9-8-17-6-23 3-8 12-10 18-5 5 5 6 14 4 21z" fill="#c9843f"/>
+              <path d="M46 13c-6-2-12 1-13 8-1 6 1 12 4 18l6-3c-3-6-4-12-3-16 1-4 3-6 6-7z" fill="#7d4a1e"/>
+              <path d="M52 9c5-1 9 1 11 5-4-1-8 0-11 2z" fill="#7d4a1e"/>
+              <path d="M36 8c9-3 17 2 19 11 1 6-1 11-5 14l-4 3c-3 2-7 2-10 0-5-3-8-9-8-16 0-6 3-10 8-12z" fill="#c9843f"/>
+              <path d="M40 4c4-2 9 0 12 5 2 4 2 9 0 13-2-8-6-14-12-16z" fill="#fff" opacity=".62"/>
+              <ellipse cx="30" cy="28" rx="9" ry="7" fill="#fff" opacity=".42"/>
+              <circle cx="27" cy="28" r="1.7" fill="#7d4a1e"/>
+              <path d="M38 6c-1-5 1-8 4-8s5 4 4 8z" fill="#c9843f"/>
+              <path d="M48 5c1-5 4-7 6-6s3 5 1 9z" fill="#c9843f"/>
+              <circle cx="41" cy="19" r="4.6" fill="#2b2430"/>
+              <circle cx="42.6" cy="17.4" r="1.7" fill="#fff"/>
+              <path d="M72 30c9-3 17 3 18 12 0 5-2 9-5 11l-16-5c-2-8-1-16 3-18z" fill="#e53935"/>
+              <path d="M72 30c9-3 17 3 18 12l-9 1c-1-7-4-11-9-13z" fill="#a8271f"/>
+              <circle cx="73" cy="19" r="8" fill="#f5cfa8"/>
+              <path d="M65 17c0-6 4-10 9-10s9 4 9 10c0 1-1 2-2 2H67c-1 0-2-1-2-2z" fill="#e53935"/>
+              <path d="M82 16h7c1 0 1 2 0 2l-7 1z" fill="#a8271f"/>
+            </g>
+          </svg>
+        </span>
+      </article>
+
+      <article class="tile t-dice">
+        <a class="tileMain" href="./games/dice-climb/">
+          <div class="tileChips">
+            <span class="tileGenre">ダイス × 駆け引き</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-users"/></svg>CPUと1対1</span>
+          </div>
+          <h2 class="tileTitle">霧稜のクライム</h2>
+          <p class="tileDesc">4つのダイスを組み分けて霧の稜線を攻める。攻めるか、確保するか。</p>
+        </a>
+        <div class="tileFoot">
+          <a class="tilePlay" href="./games/dice-climb/">あそぶ <svg class="ic"><use href="#ic-play"/></svg></a>
+          <button class="rulesBtn" type="button" data-rules="dice-climb"><svg class="ic"><use href="#ic-book"/></svg> ルール</button>
+        </div>
+        <span class="tileEmblem" aria-hidden="true">
+          <svg viewBox="0 0 120 120">
+            <defs>
+              <linearGradient id="emDcA" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#8fb3d8"/><stop offset="1" stop-color="#2c4a6e"/>
+              </linearGradient>
+              <linearGradient id="emDcB" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#eef4fb"/><stop offset="1" stop-color="#5d84ad"/>
+              </linearGradient>
+            </defs>
+            <path d="M8 96 42 34l22 38 8-12 26 36z" fill="url(#emDcA)" opacity=".82"/>
+            <path d="M20 96 54 28l34 68z" fill="url(#emDcB)"/>
+            <path d="m47 42 7-14 8 16-5-3-5 5-5-4z" fill="#fff"/>
+            <rect x="6" y="66" width="108" height="9" rx="4.5" fill="#fff" opacity=".22"/>
+            <rect x="16" y="80" width="88" height="7" rx="3.5" fill="#fff" opacity=".14"/>
+            <path d="M54 28V15" stroke="#e7c66b" stroke-width="3" stroke-linecap="round"/>
+            <path d="M54 14h13l-4.5 4.5L67 23H54z" fill="#e7c66b"/>
+          </svg>
+        </span>
+      </article>
+
+      <article class="tile t-treasure">
+        <a class="tileMain" href="./games/treasure/">
+          <div class="tileChips">
+            <span class="tileGenre">カード × 押し引き</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-users"/></svg>CPUと1対1</span>
+          </div>
+          <h2 class="tileTitle">呪宝の蔵</h2>
+          <p class="tileDesc">呪われた財宝を押しつけ合う心理戦。チップで受け流し、損を最小に。</p>
+        </a>
+        <div class="tileFoot">
+          <a class="tilePlay" href="./games/treasure/">あそぶ <svg class="ic"><use href="#ic-play"/></svg></a>
+          <button class="rulesBtn" type="button" data-rules="treasure"><svg class="ic"><use href="#ic-book"/></svg> ルール</button>
+        </div>
+        <span class="tileEmblem" aria-hidden="true">
+          <svg viewBox="0 0 120 120">
+            <defs>
+              <linearGradient id="emTrA" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#f4d98a"/><stop offset="1" stop-color="#b8862e"/>
+              </linearGradient>
+              <linearGradient id="emTrB" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#ff8f8a"/><stop offset="1" stop-color="#a41e2f"/>
+              </linearGradient>
+              <radialGradient id="emTrG">
+                <stop offset="0" stop-color="#ffd97a" stop-opacity=".45"/><stop offset="1" stop-color="#ffd97a" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <circle cx="60" cy="58" r="52" fill="url(#emTrG)"/>
+            <ellipse cx="50" cy="92" rx="28" ry="9" fill="#8a6420"/>
+            <ellipse cx="50" cy="88" rx="28" ry="9" fill="url(#emTrA)"/>
+            <ellipse cx="57" cy="80" rx="25" ry="8.5" fill="#8a6420"/>
+            <ellipse cx="57" cy="76.5" rx="25" ry="8.5" fill="url(#emTrA)"/>
+            <circle cx="82" cy="54" r="21" fill="url(#emTrA)" stroke="#7c5a1c" stroke-width="2"/>
+            <circle cx="82" cy="54" r="13" fill="none" stroke="#7c5a1c" stroke-width="2" opacity=".55"/>
+            <path d="m30 42 10-13h15l10 13-17.5 21z" fill="url(#emTrB)" stroke="#5f1220" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M30 42h35M40 29l7.5 13L58 29M47.5 63V42" stroke="#fff" stroke-width="1.5" opacity=".38" fill="none"/>
+          </svg>
+        </span>
+      </article>
+
+      <article class="tile t-back10">
+        <a class="tileMain" href="./games/back10/">
+          <div class="tileChips">
+            <span class="tileGenre">協力 × カード</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-globe"/></svg>オンライン協力</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-users"/></svg>ひとりでも</span>
+          </div>
+          <h2 class="tileTitle">BACK10</h2>
+          <p class="tileDesc">数字の流れをみんなで捌く協力ゲーム。10戻しを決めて高得点へ。</p>
+        </a>
+        <div class="tileFoot">
+          <a class="tilePlay" href="./games/back10/">あそぶ <svg class="ic"><use href="#ic-play"/></svg></a>
+          <button class="rulesBtn" type="button" data-rules="back10"><svg class="ic"><use href="#ic-book"/></svg> ルール</button>
+        </div>
+        <span class="tileEmblem" aria-hidden="true">
+          <svg viewBox="0 0 120 120">
+            <defs>
+              <linearGradient id="emBkA" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#39e6d8"/><stop offset="1" stop-color="#2456c8"/>
+              </linearGradient>
+              <linearGradient id="emBkB" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0" stop-color="#0c1430"/><stop offset="1" stop-color="#1a3468"/>
+              </linearGradient>
+            </defs>
+            <path d="M60 16a44 44 0 0 1 42 32" fill="none" stroke="url(#emBkA)" stroke-width="9" stroke-linecap="round"/>
+            <path d="M107 40.5 106 60l-13-9z" fill="#39e6d8"/>
+            <path d="M60 104A44 44 0 0 1 18 72" fill="none" stroke="url(#emBkA)" stroke-width="9" stroke-linecap="round" opacity=".85"/>
+            <path d="M13 79.5 14 60l13 9z" fill="#39e6d8" opacity=".85"/>
+            <g transform="rotate(-9 60 60)">
+              <rect x="30" y="37" width="27" height="38" rx="6" fill="url(#emBkB)" stroke="#39e6d8" stroke-width="2.5"/>
+              <path d="m37 60 6.5-9 6.5 9" stroke="#7ef0e4" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+            <g transform="rotate(10 60 60)">
+              <rect x="60" y="45" width="27" height="38" rx="6" fill="url(#emBkB)" stroke="#8fb0ff" stroke-width="2.5"/>
+              <path d="m67 60 6.5 9 6.5-9" stroke="#a9c2ff" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+          </svg>
+        </span>
+      </article>
+
+      <article class="tile t-spy">
+        <a class="tileMain" href="./games/spy/">
+          <div class="tileChips">
+            <span class="tileGenre">心理戦 × カード</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-users"/></svg>CPUと1対1</span>
+          </div>
+          <h2 class="tileTitle">真贋の使者</h2>
+          <p class="tileDesc">密書のウソと読み合い。低く申告して通すか、押収で嘘を暴くか。</p>
+        </a>
+        <div class="tileFoot">
+          <a class="tilePlay" href="./games/spy/">あそぶ <svg class="ic"><use href="#ic-play"/></svg></a>
+          <button class="rulesBtn" type="button" data-rules="spy"><svg class="ic"><use href="#ic-book"/></svg> ルール</button>
+        </div>
+        <span class="tileEmblem" aria-hidden="true">
+          <svg viewBox="0 0 120 120">
+            <defs>
+              <linearGradient id="emSpA" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#f6ecd8"/><stop offset="1" stop-color="#d5c19c"/>
+              </linearGradient>
+              <radialGradient id="emSpB">
+                <stop offset="0" stop-color="#e0524a"/><stop offset="1" stop-color="#8e1f26"/>
+              </radialGradient>
+            </defs>
+            <g transform="rotate(-6 60 64)">
+              <rect x="16" y="34" width="88" height="58" rx="7" fill="url(#emSpA)" stroke="#8a7350" stroke-width="2"/>
+              <path d="M16 40 60 72l44-32v-1a7 7 0 0 0-7-7H23a7 7 0 0 0-7 7z" fill="#e8d9bb" stroke="#8a7350" stroke-width="2" stroke-linejoin="round"/>
+              <circle cx="60" cy="67" r="15" fill="url(#emSpB)" stroke="#5c1116" stroke-width="2"/>
+              <circle cx="60" cy="67" r="8.5" fill="none" stroke="#f3b8ae" stroke-width="2" opacity=".7"/>
+            </g>
+          </svg>
+        </span>
+      </article>
+
+    </div>
 
     <footer>
       <div>© あそびば</div>
-      <div>同じ画面で対戦・協力 / オンライン対応ゲームあり <span class="heart">♥</span></div>
+      <div>同じ画面で対戦・協力 / オンライン対応ゲームあり</div>
     </footer>
   </div>
 
   <div class="rulesOverlay" id="rulesOverlay">
     <div class="rulesModal">
-      <div class="rmTop"><b>遊び方</b><button class="rmClose" id="rmClose" aria-label="とじる">✕</button></div>
+      <div class="rmTop"><b>遊び方</b><button class="rmClose minh0" id="rmClose" aria-label="とじる"><svg class="ic"><use href="#ic-close"/></svg></button></div>
       <div id="rulesBody"></div>
       <a class="rmPlay" id="rmPlay" href="#">このゲームをあそぶ →</a>
     </div>
@@ -190,51 +438,7 @@
     import { renderRulesInto, RULES_CSS } from "./src/shared/rules.js";
     document.head.insertAdjacentHTML("beforeend", `<style>${RULES_CSS}</style>`);
 
-    const GAMES = [
-      {
-        slug: "uma-race", theme: "t-uma", emblem: "🏇", feature: true,
-        genre: "レース × 予想", title: "うまうまレース",
-        desc: "出目で馬を進め、配当を予想。最後まで逆転のある競馬ゲーム。オンライン対戦対応。",
-      },
-      {
-        slug: "dice-climb", theme: "t-dice", emblem: "🏔️",
-        genre: "ダイス × 駆け引き", title: "霧稜のクライム",
-        desc: "4つのダイスを組み分けて霧の稜線を攻める。攻めるか、ロープを確保するか。",
-      },
-      {
-        slug: "treasure", theme: "t-treasure", emblem: "🪙",
-        genre: "カード × 押し引き", title: "呪宝の蔵",
-        desc: "呪われた財宝を押しつけ合う心理戦。チップで受け流し、損を最小に。",
-      },
-      {
-        slug: "back10", theme: "t-back10", emblem: "🌊",
-        genre: "協力 × カード", title: "BACK10",
-        desc: "数字の流れをみんなで捌く協力ゲーム。10戻しを決めて高得点へ。オンライン協力対応。",
-      },
-      {
-        slug: "spy", theme: "t-spy", emblem: "✉️",
-        genre: "心理戦 × カード", title: "密書カードバトル",
-        desc: "密書のウソと読み合い。低く申告して通すか、押収で嘘を暴くか。",
-      },
-    ];
-
-    const root = document.getElementById("games");
-    root.innerHTML = GAMES.map(g => {
-      const cls = `tile ${g.theme}${g.feature ? " feature" : ""}${g.soon ? " soon" : ""}`;
-      const inner = `
-        <span class="tileGenre">${g.genre}</span>
-        <h2 class="tileTitle">${g.title}</h2>
-        <p class="tileDesc">${g.desc}</p>
-        ${g.soon
-          ? `<div class="tileFoot"><span class="tileSoon">近日登場</span></div>`
-          : `<div class="tileFoot"><span class="tilePlay">あそぶ →</span><button class="rulesBtn" data-rules="${g.slug}">ⓘ ルール</button></div>`}
-        <span class="tileEmblem">${g.emblem}</span>`;
-      return g.soon
-        ? `<div class="${cls}">${inner}</div>`
-        : `<a class="${cls}" href="./games/${g.slug}/" data-slug="${g.slug}">${inner}</a>`;
-    }).join("");
-
-    root.querySelectorAll("a.tile").forEach(a => {
+    document.querySelectorAll(".tileMain, .tilePlay").forEach(a => {
       a.addEventListener("pointerenter", () => sfx.hover());
       a.addEventListener("click", () => sfx.enter());
     });
@@ -250,15 +454,18 @@
       rulesBody.scrollTop = 0;
     }
     function closeRules() { rulesOverlay.classList.remove("show"); }
-    root.querySelectorAll(".rulesBtn").forEach(b => {
-      b.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); sfx.select(); openRules(b.dataset.rules); });
+    document.querySelectorAll(".rulesBtn").forEach(b => {
+      b.addEventListener("click", () => { sfx.select(); openRules(b.dataset.rules); });
     });
     rmPlay.addEventListener("click", () => sfx.enter());
     document.getElementById("rmClose").addEventListener("click", closeRules);
     rulesOverlay.addEventListener("click", (e) => { if (e.target === rulesOverlay) closeRules(); });
 
     const soundBtn = document.getElementById("soundBtn");
-    const paint = () => soundBtn.textContent = isSoundOn() ? "🔊 サウンド" : "🔈 ミュート";
+    const paint = () => {
+      document.getElementById("soundIc").setAttribute("href", isSoundOn() ? "#ic-sound-on" : "#ic-sound-off");
+      document.getElementById("soundLbl").textContent = isSoundOn() ? "サウンド" : "ミュート";
+    };
     paint();
     soundBtn.addEventListener("click", () => { toggleSound(); paint(); });
   </script>

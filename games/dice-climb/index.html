@@ -2,9 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#13243b">
 <title>霧稜のクライム — あそびば</title>
+<!-- @shared:base-css -->
 <style>
   :root{
     --slate-0:#0d1b2e;
@@ -25,7 +26,7 @@
     --bad:#ff7b6b;
     --ink:#0a1422;
     --shadow:0 6px 18px rgba(0,0,0,.35);
-    --safe-b:env(safe-area-inset-bottom);
+    --safe-b:var(--sab); /* 共通CSSのsafe-area変数 */
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;height:100%;}
@@ -64,7 +65,7 @@
   .topbar{
     position:relative;z-index:5;
     display:flex;align-items:center;gap:8px;
-    padding:calc(env(safe-area-inset-top) + 8px) 10px 8px;
+    padding:calc(var(--sat) + 8px) 10px 8px;
   }
   .pill{
     appearance:none;border:none;cursor:pointer;
@@ -78,11 +79,14 @@
   }
   .pill:active{transform:scale(.96);}
   .title{
-    flex:1;display:flex;flex-direction:column;line-height:1.05;padding-left:4px;
+    flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.05;padding-left:4px;
   }
-  .title .emblem{font-size:18px;font-weight:900;letter-spacing:.02em;
-    display:flex;align-items:center;gap:7px;}
-  .title .sub{font-size:11px;color:var(--glacier);opacity:.85;margin-top:2px;letter-spacing:.08em;}
+  /* 375px幅でも1行に収まるよう clamp で縮む。あふれたら省略記号 */
+  .title .emblem{font-size:clamp(13px,3.6vw,18px);font-weight:900;letter-spacing:.02em;
+    display:flex;align-items:center;gap:7px;white-space:nowrap;}
+  .title .emblem .tname{overflow:hidden;text-overflow:ellipsis;min-width:0;}
+  .title .sub{font-size:12px;color:var(--glacier);opacity:.85;margin-top:2px;letter-spacing:.08em;white-space:nowrap;}
+  @media (max-width:399px){ .title .sub{display:none;} }
   .iconbtn{
     appearance:none;border:1px solid rgba(255,255,255,.18);
     background:rgba(255,255,255,.08);
@@ -108,8 +112,10 @@
   .score.you .who{color:var(--gold);}
   .score.cpu .who{color:var(--cpu);}
   .flags{display:flex;gap:3px;font-size:16px;margin-left:auto;}
-  .flags .slot{opacity:.22;}
+  .flags .slot{opacity:.22;display:inline-flex;}
   .flags .slot.on{opacity:1;}
+  .score.you .flags{color:var(--gold);}
+  .score.cpu .flags{color:var(--cpu);}
 
   /* ===== mountain board ===== */
   .board-wrap{
@@ -133,7 +139,11 @@
   .col .summit{
     font-size:15px;margin-bottom:2px;height:20px;display:grid;place-items:center;
     filter:drop-shadow(0 1px 1px rgba(0,0,0,.5));
+    color:rgba(207,230,245,.7);
   }
+  .col.claimed-you .summit{color:var(--orange);}
+  .col.claimed-cpu .summit{color:var(--cpu);}
+  .s-ic{width:15px;height:15px;display:block;}
   .track{
     flex:1;width:100%;position:relative;
     display:flex;flex-direction:column-reverse;align-items:center;
@@ -219,7 +229,12 @@
   .die.faded{opacity:.9;}
 
   /* pairing choices */
-  .pairs{display:flex;flex-direction:column;gap:7px;margin-bottom:8px;}
+  /* 常時3行ぶんの高さを確保して「振る」のたびの盤面ジャンプを防ぐ */
+  .pairs{display:flex;flex-direction:column;gap:7px;margin-bottom:8px;min-height:184px;justify-content:center;}
+  .pairs-empty{
+    text-align:center;font-size:13px;font-weight:700;color:var(--glacier);opacity:.45;
+    border:1.5px dashed rgba(255,255,255,.16);border-radius:13px;padding:14px 8px;
+  }
   .pair{
     display:flex;align-items:center;justify-content:center;gap:10px;
     border-radius:13px;padding:9px 8px;cursor:pointer;
@@ -235,7 +250,7 @@
   .pair .sumchip.good{background:linear-gradient(180deg,var(--gold),var(--orange));color:var(--ink);border-color:var(--gold);}
   .pair .sumchip.no{opacity:.45;text-decoration:line-through;}
   .pair .plus{opacity:.6;font-size:13px;}
-  .pair .tag{font-size:11px;opacity:.7;margin-left:2px;}
+  .pair .tag{font-size:12px;opacity:.7;margin-left:2px;}
 
   /* action bar */
   .actions{display:flex;gap:10px;}
@@ -249,7 +264,16 @@
   .btn[disabled]{opacity:.32;cursor:default;filter:grayscale(.4);box-shadow:none;}
   .btn.roll{background:linear-gradient(180deg,var(--glacier),#9fc6e4);}
   .btn.bank{background:linear-gradient(180deg,var(--gold),var(--orange));}
-  .btn .small{display:block;font-size:11px;font-weight:700;opacity:.75;margin-top:1px;}
+  .btn .small{display:block;font-size:12px;font-weight:700;opacity:.75;margin-top:1px;}
+
+  /* 今ターンの仮進捗チップ（押し引きの判断材料。高さ固定でシフトしない） */
+  .turnchip{
+    display:flex;align-items:center;justify-content:center;gap:6px;
+    min-height:24px;margin-bottom:8px;
+    font-size:13px;font-weight:800;color:var(--glacier);
+  }
+  .turnchip .val{color:var(--gold);}
+  .turnchip.zero{opacity:.5;}
 
   /* ===== modal / overlay ===== */
   .overlay{
@@ -260,7 +284,8 @@
   .overlay.show{display:flex;animation:fade .25s ease;}
   @keyframes fade{from{opacity:0;}to{opacity:1;}}
   .card{
-    width:100%;max-width:420px;max-height:86vh;overflow:auto;
+    width:100%;max-width:420px;overflow:auto;
+    max-height:86vh;max-height:86dvh; /* fallback→dvh */
     background:linear-gradient(180deg,#1c3553,#13243b);
     border:1px solid rgba(255,255,255,.14);border-radius:20px;
     padding:20px;box-shadow:var(--shadow);
@@ -276,6 +301,8 @@
 
   /* result screen */
   .result .big{font-size:40px;text-align:center;margin:6px 0 2px;}
+  .result .big .win{color:var(--gold);}
+  .result .big .lose{color:var(--cpu);}
   .result .msg{text-align:center;font-size:15px;color:var(--glacier);margin-bottom:14px;}
   .result .row{display:flex;gap:10px;}
   .result .row .btn{font-size:16px;padding:14px;}
@@ -299,16 +326,20 @@
   .confetti{position:fixed;inset:0;z-index:55;pointer-events:none;overflow:hidden;display:none;}
   .confetti.show{display:block;}
   .conf{position:absolute;top:-20px;width:9px;height:14px;border-radius:2px;animation:fall linear forwards;}
-  @keyframes fall{to{transform:translateY(108vh) rotate(720deg);}}
+  @keyframes fall{to{transform:translateY(108vh) rotate(720deg);transform:translateY(108dvh) rotate(720deg);}}
 
   @media (max-height:620px){
     .die{width:42px;height:42px;}
     .btn{padding:12px 8px;font-size:16px;}
     .col .summit{font-size:13px;height:16px;}
+    .pairs{min-height:162px;}
+    .pair{padding:6px 8px;}
   }
 </style>
 </head>
 <body>
+<!-- @shared:icons -->
+<!-- @shared:confirm -->
 <div id="app">
   <div class="bg" id="bg">
     <svg class="peak back" viewBox="0 0 1000 300" preserveAspectRatio="none">
@@ -324,13 +355,13 @@
 
   <!-- top bar -->
   <div class="topbar">
-    <a class="pill" href="../../">← あそびば</a>
+    <a class="pill" id="backLink" href="../../"><svg class="ic"><use href="#ic-back"/></svg> あそびば</a>
     <div class="title">
-      <div class="emblem">🏔️ 霧稜のクライム</div>
+      <div class="emblem"><svg class="ic" style="color:var(--gold)"><use href="#ic-mountain"/></svg><span class="tname">霧稜のクライム</span></div>
       <div class="sub">ALPINE PUSH-YOUR-LUCK</div>
     </div>
-    <button class="iconbtn" id="soundBtn" title="サウンド">♪</button>
-    <button class="iconbtn" id="helpBtn" title="遊び方">？</button>
+    <button class="iconbtn minh0" id="soundBtn" title="サウンド"><svg class="ic"><use href="#ic-sound-on"/></svg></button>
+    <button class="iconbtn minh0" id="helpBtn" title="遊び方"><svg class="ic"><use href="#ic-help"/></svg></button>
   </div>
 
   <!-- scoreboard -->
@@ -355,9 +386,10 @@
     <div class="guide" id="guide">「振る」で挑戦開始！</div>
     <div class="dicerow" id="dicerow"></div>
     <div class="pairs" id="pairs"></div>
+    <div class="turnchip zero" id="turnChip">この手番 まだ0歩</div>
     <div class="actions">
-      <button class="btn roll" id="rollBtn">⛰️ 振る<span class="small">RISK IT</span></button>
-      <button class="btn bank" id="bankBtn" disabled>🧗 確定<span class="small">SECURE</span></button>
+      <button class="btn roll" id="rollBtn"><svg class="ic"><use href="#ic-dice"/></svg> 振る<span class="small">RISK IT</span></button>
+      <button class="btn bank" id="bankBtn" disabled><svg class="ic"><use href="#ic-check"/></svg> 確定<span class="small">SECURE</span></button>
     </div>
   </div>
 </div>
@@ -369,17 +401,17 @@
 <!-- help modal -->
 <div class="overlay" id="helpOverlay">
   <div class="card">
-    <h2>🏔️ 遊び方</h2>
+    <h2><svg class="ic" style="color:var(--gold)"><use href="#ic-mountain"/></svg> 遊び方</h2>
     <p>霧の稜線を越え、3つの山を<b>制覇</b>すれば勝ち。攻めるほど落ちる危険も増す——“引き際”の駆け引きです。</p>
     <h3>① 振る（サイコロ4個）</h3>
     <p>4個を2個ずつ3通りに分けられます。好きな組み合わせを選ぶと、その<b>合計値の山</b>を1歩ずつ登ります。</p>
     <h3>② 登る山は3つまで</h3>
     <p>1ターンで進められるのは最大3つの山。すでに登り始めた山か、まだ枠が空いていれば登れます。</p>
     <h3>③ 確定 or もう一度</h3>
-    <p><span class="accent">確定（🧗）</span>すると今ターンの前進が<b>ロープ確保＝永続</b>に。まだ攻めるなら続けて振れます。</p>
-    <h3>⚠️ 滑落（バスト）</h3>
+    <p><span class="accent">確定</span>すると今ターンの前進が<b>ロープ確保＝永続</b>に。まだ攻めるなら続けて振れます。</p>
+    <h3><svg class="ic"><use href="#ic-warn"/></svg> 滑落（バスト）</h3>
     <p>振った4個がどう分けても登れない時は<b>滑落</b>。今ターンの未確定ぶんは全部失います。</p>
-    <h3>🏁 制覇</h3>
+    <h3><svg class="ic"><use href="#ic-flag"/></svg> 制覇</h3>
     <p>頂上まで届いた山はあなたのもの。先に<b>3山</b>制覇した方の勝ち！</p>
     <div class="legend">
       <span><i class="sw" style="background:linear-gradient(180deg,#ff9d4d,#e07a2a)"></i>確保済</span>
@@ -393,12 +425,12 @@
 <!-- result modal -->
 <div class="overlay" id="resultOverlay">
   <div class="card result">
-    <div class="big" id="resultBig">🏁</div>
+    <div class="big" id="resultBig"><span class="win"><svg class="ic-lg"><use href="#ic-flag"/></svg></span></div>
     <h2 style="justify-content:center" id="resultTitle">登頂成功！</h2>
     <div class="msg" id="resultMsg"></div>
     <div class="row">
-      <button class="btn again" id="againBtn">🔁 もう一回</button>
-      <a class="btn home" id="homeBtn" href="../../" style="text-decoration:none;display:grid;place-items:center;">🏠 トップへ</a>
+      <button class="btn again" id="againBtn"><svg class="ic"><use href="#ic-restart"/></svg> もう一回</button>
+      <a class="btn home" id="homeBtn" href="../../" style="text-decoration:none;display:grid;place-items:center;"><span><svg class="ic"><use href="#ic-home"/></svg> トップへ</span></a>
     </div>
   </div>
 </div>
@@ -438,7 +470,7 @@
     buildBoard();
     render();
     renderDice(false);
-    pairsEl.innerHTML='';
+    renderPairs();
     setGuide('「振る」で挑戦開始！ 3つの山を制覇しよう。');
   }
 
@@ -446,8 +478,13 @@
   const $=id=>document.getElementById(id);
   const board=$('board'), dicerow=$('dicerow'), pairsEl=$('pairs');
   const rollBtn=$('rollBtn'), bankBtn=$('bankBtn'), guideEl=$('guide');
-  const toastEl=$('toast'), confettiEl=$('confetti');
+  const toastEl=$('toast'), confettiEl=$('confetti'), turnChip=$('turnChip');
   const helpOverlay=$('helpOverlay'), resultOverlay=$('resultOverlay');
+  // 共通スプライトのアイコンをHTML文字列で返す
+  const IC=n=>'<svg class="ic"><use href="#ic-'+n+'"/></svg>';
+  // 山頂表示（未制覇＝三角、制覇＝旗。色は .col のクラスで変わる）
+  const SUMMIT_TRI='<svg class="s-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 4.5 20.5 19.5H3.5z"/></svg>';
+  const SUMMIT_FLAG='<svg class="s-ic"><use href="#ic-flag"/></svg>';
 
   function colsAvailableFor(player){
     // columns not claimed by anyone
@@ -520,6 +557,7 @@
         track.appendChild(st);
       }
       // climbers
+      // TODO(icon): 盤面駒の絵文字（🧗/🐐）は今回は据え置き。SVG化するなら指示待ち
       const cyou=document.createElement('div');cyou.className='climber you';cyou.dataset.cl='you';cyou.textContent='🧗';
       const ccpu=document.createElement('div');ccpu.className='climber cpu';ccpu.dataset.cl='cpu';ccpu.textContent='🐐';
       track.appendChild(cyou);track.appendChild(ccpu);
@@ -555,9 +593,7 @@
       });
       // summit flag
       const summit=col.querySelector('.summit');
-      if(claimed[c]===YOU) summit.textContent='🏁';
-      else if(claimed[c]===CPU) summit.textContent='🚩';
-      else summit.textContent='⛰️';
+      summit.innerHTML = claimed[c]===-1 ? SUMMIT_TRI : SUMMIT_FLAG;
       col.classList.toggle('claimed-you',claimed[c]===YOU);
       col.classList.toggle('claimed-cpu',claimed[c]===CPU);
 
@@ -569,6 +605,7 @@
       col.classList.remove('usable','dimmed');
     });
     renderFlags();
+    updateTurnChip();
   }
 
   function placeClimber(col,who,pos,n){
@@ -577,9 +614,12 @@
     // show climber only if it has any presence on this column
     if(pos<=0){ cl.style.opacity='0'; return; }
     cl.style.opacity='1';
+    // ステップ要素の実位置基準で置く（短い山でもバーからズレない）
+    const idx=Math.min(pos,n)-1;
+    const step=track.querySelector('.step[data-i="'+idx+'"]');
+    if(!step){ cl.style.bottom='2px'; return; }
     const h=track.clientHeight||1;
-    const frac=Math.min(pos,n)/n;
-    const bottom = 2 + frac*(h-18);
+    const bottom=h-step.offsetTop-step.offsetHeight; // 到達ステップの下端に駒の足元を合わせる
     cl.style.bottom=bottom+'px';
   }
 
@@ -588,8 +628,8 @@
     const cpuN=COLS.filter(c=>claimed[c]===CPU).length;
     let yh='',ch='';
     for(let i=0;i<WIN_CLAIMS;i++){
-      yh+='<span class="slot'+(i<youN?' on':'')+'">🏁</span>';
-      ch+='<span class="slot'+(i<cpuN?' on':'')+'">🚩</span>';
+      yh+='<span class="slot'+(i<youN?' on':'')+'">'+IC('flag')+'</span>';
+      ch+='<span class="slot'+(i<cpuN?' on':'')+'">'+IC('flag')+'</span>';
     }
     $('youFlags').innerHTML=yh;
     $('cpuFlags').innerHTML=ch;
@@ -616,9 +656,23 @@
   /* ===================== PAIRINGS UI ===================== */
   function renderPairs(){
     pairsEl.innerHTML='';
-    if(phase!=='choose' || turn!==YOU){ clearUsableHL(); return; }
+    if(phase!=='choose' || turn!==YOU){
+      clearUsableHL();
+      // 選択肢が無い間も高さを保つプレースホルダ（盤面が跳ねない）
+      const ph=document.createElement('div');
+      ph.className='pairs-empty';
+      if(phase==='over'){ ph.style.visibility='hidden'; }
+      else ph.textContent = turn===YOU ? '「振る」とペア候補がここに並ぶ' : 'CPUが登攀中…';
+      pairsEl.appendChild(ph);
+      return;
+    }
+    // 同じ内容の選択肢は1行にまとめる（例: 6+6 が2行並ぶのを防ぐ）
+    const seen=new Set();
     pairings.forEach((p,pi)=>{
       const us=usableSumsOfPairing(p);
+      const key=p.sums.map((s,i)=>s+':'+(us[i]?1:0)).sort().join('|');
+      if(seen.has(key)) return;
+      seen.add(key);
       const playable=us.some(Boolean);
       const row=document.createElement('div');
       row.className='pair'+(playable?'':' dead');
@@ -709,7 +763,7 @@
     let reachedSummit=advanced.filter(s=>(perm[YOU][s]+temp[s])>=LENGTHS[s]);
     updateButtons();
     if(reachedSummit.length){
-      setGuide('🏔️ '+reachedSummit.join('・')+' が頂上目前！ <span class="accent">確定</span>で制覇');
+      setGuide(IC('mountain')+' '+reachedSummit.join('・')+' が頂上目前！ <span class="accent">確定</span>で制覇');
     }else{
       setGuide('続けて<span class="accent">振る</span>？ それとも<span class="accent">確定</span>で確保？');
     }
@@ -740,14 +794,13 @@
     if(player===YOU) activeYou.clear(); else cpuActive.clear();
     hasRolledThisTurn=false;
     render();
-    if(player===YOU){
-      beep(440,0.08);setTimeout(()=>beep(660,0.1),90);
-      showToast('🧗 ロープ確保！','bank');
-    }
+    // 確保の演出はCPU側でも見せる（誰が何をしたか明示）
+    beep(440,0.08);setTimeout(()=>beep(660,0.1),90);
+    showToast(IC('check')+' '+(player===YOU?'ロープ確保！':'CPUがロープ確保'),'bank');
     if(claimedNow.length){
-      const summitToast=claimedNow.map(c=>c).join('・')+' 制覇！';
+      const summitToast=(player===YOU?'あなたが ':'CPUが ')+claimedNow.map(c=>c).join('・')+' を制覇！';
       setTimeout(()=>{
-        showToast('🏁 '+summitToast,'claim');
+        showToast(IC('flag')+' '+summitToast,'claim');
         if(player===YOU) confettiBurst();
         sfxSummit();
       },player===YOU?420:150);
@@ -768,11 +821,10 @@
     hasRolledThisTurn=false;
     phase='idle';
     render();
-    if(player===YOU){
-      showToast('💥 滑落！ 今回の前進は消滅','bust');
-      sfxBust();
-      shakeBoard();
-    }
+    // 滑落の演出もCPU側で見せる（誰が滑落したか明示）
+    showToast(IC('warn')+' '+(player===YOU?'滑落！ 今回の前進は消滅':'CPUが滑落！ 前進を失った'),'bust');
+    sfxBust();
+    shakeBoard();
     setTimeout(()=>endTurn(), 1000);
   }
 
@@ -781,14 +833,14 @@
     temp={};
     if(turn===YOU){
       turn=CPU;phase='idle';
-      render();updateButtons();
-      setGuide('CPU（🐐）が登攀中…');
+      render();updateButtons();renderPairs();
+      setGuide('CPUが登攀中…');
       busy=true;
       setTimeout(cpuTurn, 700);
     }else{
       turn=YOU;phase='idle';
       busy=false;
-      render();updateButtons();
+      render();updateButtons();renderPairs();
       setGuide('あなたの番。「振る」で挑戦！');
     }
   }
@@ -831,7 +883,7 @@
         if(decideBank){
           bank(CPU);
         }else{
-          setGuide('CPU（🐐）が更に上へ…');
+          setGuide('CPUが更に上へ…');
           cpuStep(pushCount+1);
         }
       }, 650);
@@ -902,6 +954,20 @@
     guideEl.innerHTML=html;
     guideEl.classList.toggle('warn',!!warn);
   }
+
+  // 今ターンの仮進捗チップ（「この手番 +n歩（山 …）」を常時表示）
+  function updateTurnChip(){
+    const total=Object.values(temp).reduce((a,b)=>a+b,0);
+    const who = turn===CPU ? 'CPU：' : '';
+    if(total<=0){
+      turnChip.classList.add('zero');
+      turnChip.textContent=who+'この手番 まだ0歩';
+    }else{
+      const cols=Object.keys(temp).filter(k=>temp[k]>0).map(Number).sort((a,b)=>a-b);
+      turnChip.classList.remove('zero');
+      turnChip.innerHTML=who+'この手番 <span class="val">+'+total+'歩</span>（山 '+cols.join('・')+'）';
+    }
+  }
   let flashT=null;
   function flashGuide(msg){
     const prev=guideEl.innerHTML;
@@ -932,7 +998,7 @@
   let toastT=null;
   function showToast(msg,cls){
     toastEl.className='toast '+(cls||'');
-    toastEl.textContent=msg;
+    toastEl.innerHTML=msg; // アイコンSVGを含むため（渡すのは内部文字列のみ）
     void toastEl.offsetWidth;
     toastEl.classList.add('show');
     clearTimeout(toastT);
@@ -981,17 +1047,17 @@
   /* ===================== RESULT ===================== */
   function endGame(winner){
     phase='over';updateButtons();
-    clearUsableHL();pairsEl.innerHTML='';
+    clearUsableHL();renderPairs();
     const youCols=COLS.filter(c=>claimed[c]===YOU);
     const cpuCols=COLS.filter(c=>claimed[c]===CPU);
     if(winner===YOU){
-      $('resultBig').textContent='🏁🎉';
+      $('resultBig').innerHTML='<span class="win"><svg class="ic-lg"><use href="#ic-trophy"/></svg></span>';
       $('resultTitle').textContent='登頂成功！';
       $('resultMsg').innerHTML='霧の稜線を制し、<b>'+youCols.join('・')+'</b> の頂に旗を立てた！';
       confettiBurst();sfxSummit();
-      setGuide('🏆 あなたの勝ち！');
+      setGuide(IC('trophy')+' あなたの勝ち！');
     }else{
-      $('resultBig').textContent='🐐🏔️';
+      $('resultBig').innerHTML='<span class="lose"><svg class="ic-lg"><use href="#ic-mountain"/></svg></span>';
       $('resultTitle').textContent='惜敗…';
       $('resultMsg').innerHTML='CPUが先に <b>'+cpuCols.join('・')+'</b> を制覇。次は引き際を見極めて！';
       sfxBust();
@@ -1014,8 +1080,21 @@
   $('soundBtn').addEventListener('click',()=>{
     soundOn=!soundOn;
     $('soundBtn').classList.toggle('off',!soundOn);
-    $('soundBtn').textContent=soundOn?'♪':'🔇';
+    $('soundBtn').innerHTML=IC(soundOn?'sound-on':'sound-off');
     if(soundOn){ac();beep(660,0.06);}
+  });
+  // 進行中にトップへ戻る＝進捗が消える操作なので確認を1枚挟む
+  $('backLink').addEventListener('click',(e)=>{
+    const started = hasRolledThisTurn || Object.keys(temp).length>0 ||
+      COLS.some(c=>perm[YOU][c]>0||perm[CPU][c]>0||claimed[c]!==-1);
+    if(phase==='over' || !started) return; // 進捗が無ければそのまま遷移
+    e.preventDefault();
+    asobibaConfirm({
+      title:'ゲームを中断してあそびばへ戻る',
+      note:'進行中のゲームは保存されません',
+      okLabel:'戻る', cancelLabel:'つづける',
+      danger:true,
+    }).then((ok)=>{ if(ok) location.href='../../'; });
   });
   // unlock audio on first interaction
   document.addEventListener('pointerdown',()=>ac(),{once:true});

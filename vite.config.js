@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
-import { resolve, dirname } from "node:path";
+import { resolve, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readdirSync, existsSync, cpSync } from "node:fs";
+import { readdirSync, existsSync, cpSync, readFileSync } from "node:fs";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -26,15 +26,42 @@ function copyGameAssets() {
     closeBundle() {
       for (const slug of slugs) {
         const src = resolve(gamesDir, slug, "assets");
-        if (existsSync(src)) cpSync(src, resolve(root, "dist/games", slug, "assets"), { recursive: true });
+        // "_" で始まるものは作業用（_art-brief の元データ、_retired-realistic の旧素材など）。
+        // 公開物に混ぜると dist が数MB単位で膨らむので除外する。
+        if (existsSync(src)) cpSync(src, resolve(root, "dist/games", slug, "assets"), {
+          recursive: true,
+          filter: (s) => !basename(s).startsWith("_"),
+        });
       }
+    },
+  };
+}
+
+// 共通部品（src/shared/）を、各ページ内のマーカーコメントの位置へインライン展開する。
+// dev サーバでもビルドでも同じように効く。ゲームHTMLは配布時も1ファイル自己完結のまま。
+//   <!-- @shared:base-css --> → base-mobile.css を <style> で
+//   <!-- @shared:icons -->    → icons.svg（SVGスプライト）をそのまま
+//   <!-- @shared:confirm -->  → confirm.js（確認シート/トースト）を <script> で
+function injectShared() {
+  const read = (f) => readFileSync(resolve(root, "src/shared", f), "utf8");
+  return {
+    name: "inject-shared",
+    transformIndexHtml: {
+      order: "pre",
+      handler(html) {
+        // split/join は1パス置換なので、展開内容にマーカー文字列が含まれても再帰しない
+        return html
+          .split("<!-- @shared:base-css -->").join(`<style>\n${read("base-mobile.css")}\n</style>`)
+          .split("<!-- @shared:icons -->").join(read("icons.svg"))
+          .split("<!-- @shared:confirm -->").join(`<script>\n${read("confirm.js")}\n</script>`);
+      },
     },
   };
 }
 
 export default defineConfig({
   base: "./",
-  plugins: [copyGameAssets()],
+  plugins: [injectShared(), copyGameAssets()],
   build: {
     target: "esnext",
     rollupOptions: { input },

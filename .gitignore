@@ -3,3 +3,9 @@ dist/
 .DS_Store
 .env
 *.local
+
+# 画像生成AIから受け取った元データ（1枚1MB超）。トリミング・圧縮済みのものが
+# games/uma-race/assets/ に入っているので、リポジトリには元データを持たない。
+# 作り直すときのために手元には残してある。
+games/uma-race/assets/_art-brief/[A-D]-*.png
+games/uma-race/assets/_art-brief/preview-*.jpg

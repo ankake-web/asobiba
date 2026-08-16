@@ -1,0 +1,32 @@
+/* ============================================================
+   あそびば共通モバイル基盤（base-mobile.css）
+   各ページの <!-- @shared:base-css --> の位置に、ビルド/開発サーバが
+   <style> として自動展開する（vite.config.js の inject-shared プラグイン）。
+   ここに書けるのは「全ゲームに安全に効く」ものだけ。
+   ゲーム固有の色・レイアウトは各ゲームのHTML内に書くこと。
+   ============================================================ */
+
+:root{
+  /* ノッチ・ホームバーを避ける余白。各ゲームは env() を直書きせずこれを使う */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+html{ -webkit-text-size-adjust:100%; }
+
+/* ダブルタップズーム等の300ms遅延・誤操作を抑止 */
+button, [role="button"], select, input, label, a{ touch-action: manipulation; }
+
+/* タップ領域の下限 44px（Apple HIG）。
+   レイアウト上どうしても小さくしたい要素だけ .minh0 で解除する */
+button, [role="button"]{ min-height:44px; }
+.minh0{ min-height:0 !important; min-width:0 !important; }
+
+:focus-visible{ outline:2px solid currentColor; outline-offset:2px; border-radius:4px; }
+
+/* 共通SVGアイコン（<!-- @shared:icons --> のスプライトを <use> で参照）
+   例: <svg class="ic"><use href="#ic-menu"/></svg> */
+.ic{ width:1.15em; height:1.15em; display:inline-block; vertical-align:-0.18em; }
+.ic-lg{ width:1.6em; height:1.6em; vertical-align:-0.35em; }

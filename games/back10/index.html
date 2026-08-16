@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <title>BACK10 — FLOW</title>
+<!-- @shared:base-css -->
 <style>
 :root{
   /* base */
@@ -135,7 +136,7 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
 .topbar{
   position:sticky; top:0; z-index:50;
   display:flex; align-items:center; gap:10px;
-  padding:calc(8px + env(safe-area-inset-top)) max(12px,env(safe-area-inset-left)) 8px max(12px,env(safe-area-inset-right));
+  padding:calc(8px + var(--sat)) max(12px,var(--sal)) 8px max(12px,var(--sar));
   margin:0 0 12px;
   background:linear-gradient(180deg, rgba(10,18,38,.92), rgba(10,18,38,.62) 70%, transparent);
   backdrop-filter:blur(10px);
@@ -181,6 +182,7 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
   position:relative;
   overflow:hidden;
   min-height:calc(100vh - 150px);
+  min-height:calc(100dvh - 150px);
   padding:18px 16px 22px;
 }
 /* flowing stream accent behind hero */
@@ -286,7 +288,7 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
   border-radius:14px;background:var(--panel2);
   box-shadow:0 6px 16px rgba(0,0,0,.35);
   padding:6px 4px 7px;text-align:center;
-  font-size:11px;font-weight:700;color:var(--muted);
+  font-size:12px;font-weight:700;color:var(--muted);
   transition:outline .15s, box-shadow .15s;
 }
 .playerChip.active{outline:2px solid var(--aqua);box-shadow:0 0 18px rgba(56,225,214,.35)}
@@ -437,14 +439,14 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
 /* ===== ACTION BAR ===== */
 .actionBar{
   position:fixed;left:0;right:0;bottom:0;z-index:40;
-  padding:10px max(10px,env(safe-area-inset-left)) calc(10px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-right));
+  padding:10px max(10px,var(--sal)) calc(10px + var(--sab)) max(10px,var(--sar));
   background:linear-gradient(180deg, transparent, rgba(8,14,32,.92) 30%);
   border-top:1px solid var(--glass-border);
   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
 }
 .actionInner{
   max-width:980px;margin:0 auto;display:grid;
-  grid-template-columns:1.35fr 1fr 52px 52px;gap:8px;
+  grid-template-columns:1fr 56px;gap:8px;
 }
 .actionInner button{width:100%;min-height:50px}
 
@@ -478,7 +480,7 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
   z-index:100;padding:18px;background:rgba(4,8,20,.72);backdrop-filter:blur(6px);
 }
 .modalCard,.resultCard{
-  width:min(94vw,640px);max-height:88vh;overflow:auto;padding:24px;
+  width:min(94vw,640px);max-height:88vh;max-height:88dvh;overflow:auto;padding:24px;
   background:linear-gradient(180deg, rgba(22,36,74,.96), rgba(13,22,48,.96));
   border:1px solid var(--glass-border);border-radius:26px;
   box-shadow:0 24px 70px rgba(0,0,0,.6), 0 1px 0 var(--glass-hi) inset;
@@ -503,7 +505,7 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
   background:rgba(8,15,34,.55);border:1px solid var(--glass-border);
   border-radius:16px;padding:10px 6px;text-align:center;
 }
-.metric span{display:block;font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.1em}
+.metric span{display:block;font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.1em}
 .metric b{display:block;font-size:24px;font-weight:900;color:var(--ink);font-variant-numeric:tabular-nums}
 .playerCard{
   margin:8px 0;padding:12px;background:rgba(8,15,34,.5);
@@ -512,7 +514,7 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
 .rankingTable{width:100%;border-collapse:collapse;font-size:14px;color:var(--ink)}
 .rankingTable th,.rankingTable td{padding:9px 8px;border-bottom:1px solid rgba(120,160,230,.15);text-align:left}
 .rankingTable th{color:var(--muted);font-weight:800;font-size:12px;letter-spacing:.06em}
-.confetti{position:fixed;top:-10px;width:10px;height:16px;z-index:130;animation:fall 2.6s linear forwards}
+.confetti{position:fixed;top:-10px;width:10px;height:16px;z-index:130;pointer-events:none;animation:fall 2.6s linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.15}}
 
 /* ===== RESPONSIVE ===== */
@@ -535,7 +537,7 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
   .home{padding:14px 12px 18px}
   .logo{font-size:clamp(46px,15vw,72px)}
   .tagline{font-size:13px}
-  .subtagline{font-size:10px;letter-spacing:.14em}
+  .subtagline{font-size:11px;letter-spacing:.14em}
   .modeCard{min-height:108px;padding:15px}
   .modeCardTitle{font-size:27px}
   .modeCardSub{font-size:13px}
@@ -555,12 +557,12 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
   .pileValue{font-size:34px}
   .sideInfo{padding:7px;border-radius:14px;gap:6px}
   .scoreBig{font-size:26px;text-align:center}
-  .scoreList{font-size:10px;line-height:1.45}
+  .scoreList{font-size:11px;line-height:1.45}
   .deckNumber{font-size:30px}
   .handWrap{margin-top:8px;padding:8px;border-radius:15px;min-height:146px}
   .handCards{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;grid-auto-rows:64px}
   .card{height:64px;font-size:24px;border-radius:12px}
-  .actionInner{grid-template-columns:1.35fr 1fr 48px 48px;gap:6px}
+  .actionInner{grid-template-columns:1fr 52px;gap:6px}
   .actionInner button{min-height:48px;font-size:14px;padding:8px 6px}
   .resultGrid{grid-template-columns:repeat(2,1fr)}
 }
@@ -590,11 +592,50 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
   .pileMarkTop{left:6px;top:6px}
   .pileMarkBottom{right:6px;bottom:6px}
 }
+
+/* ===== 出せる場札のハイライト／出せない手札の減光 ===== */
+.pile.playable{
+  border-color:rgba(56,225,214,.75);
+  box-shadow:var(--glow-aqua);
+}
+.pile.back10able{
+  border-color:rgba(255,191,77,.85);
+  box-shadow:var(--glow-amber);
+  animation:back10Pulse 1.1s ease-in-out infinite;
+}
+@keyframes back10Pulse{
+  50%{box-shadow:0 0 0 2px rgba(255,191,77,.7), 0 0 34px rgba(255,191,77,.6)}
+}
+.pile.back10able::after{
+  content:"BACK10";
+  position:absolute;left:50%;transform:translateX(-50%);z-index:3;
+  font-size:11px;font-weight:900;letter-spacing:.05em;line-height:1;
+  color:#2a1500;background:linear-gradient(180deg,#ffd98f,#ffbf4d);
+  border-radius:999px;padding:3px 8px;pointer-events:none;
+  box-shadow:0 0 12px rgba(255,191,77,.55);
+}
+.pile.up.back10able::after{bottom:7px}
+.pile.down.back10able::after{top:7px}
+.card.dead:not(.selected){opacity:.38;filter:grayscale(.5)}
+
+/* ===== 山札の残量ミニバー ===== */
+.deckBar{
+  margin-top:6px;height:6px;border-radius:999px;
+  background:rgba(120,160,230,.16);overflow:hidden;
+}
+.deckBar i{
+  display:block;height:100%;width:100%;border-radius:999px;
+  background:linear-gradient(90deg,var(--aqua),var(--lime));
+  box-shadow:0 0 8px rgba(139,227,107,.45);
+  transition:width .3s ease;
+}
 </style>
 </head>
 <body>
+<!-- @shared:icons -->
+<!-- @shared:confirm -->
 <div class="topbar">
-  <a class="backLink" href="../../">← あそびば</a>
+  <a class="backLink" href="../../"><svg class="ic"><use href="#ic-back"/></svg> あそびば</a>
   <div class="topTitle">
     <svg class="topEmblem" viewBox="0 0 40 40" aria-hidden="true">
       <defs><linearGradient id="emb" x1="0" y1="0" x2="1" y2="1">
@@ -606,9 +647,9 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
     <span class="name">BACK10</span>
   </div>
   <div class="topCtl">
-    <button class="softpink" onclick="toggleBgm()" aria-label="BGM"><span class="bi">♪</span><span class="bl">BGM</span></button>
-    <button class="ghost" onclick="showRules()" aria-label="ルール"><span class="bi">📖</span><span class="bl">ルール</span></button>
-    <button class="ghost" onclick="openRankings()" aria-label="ランキング"><span class="bi">🏆</span><span class="bl">ランキング</span></button>
+    <button class="softpink" onclick="toggleBgm()" aria-label="BGM"><span class="bi"><svg class="ic"><use href="#ic-music"/></svg></span><span class="bl">BGM</span></button>
+    <button class="ghost" onclick="showRules()" aria-label="ルール"><span class="bi"><svg class="ic"><use href="#ic-book"/></svg></span><span class="bl">ルール</span></button>
+    <button class="ghost" onclick="openRankings()" aria-label="ランキング"><span class="bi"><svg class="ic"><use href="#ic-trophy"/></svg></span><span class="bl">ランキング</span></button>
   </div>
 </div>
 
@@ -705,6 +746,7 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
           <div class="deckInfo">
             <div class="small" style="text-align:center">山札</div>
             <div id="deckCount" class="deckNumber">0</div>
+            <div class="deckBar"><i id="deckBarFill"></i></div>
           </div>
         </div>
       </div>
@@ -719,9 +761,7 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
 <div id="actionBar" class="actionBar" style="display:none">
   <div class="actionInner">
     <button class="primary" onclick="endTurn()">ターン終了</button>
-    <button class="warn" onclick="forceGiveUp()">ギブアップ</button>
-    <button class="ghost" onclick="showRules()">？</button>
-    <button class="softpink" onclick="toggleBgm()">♪</button>
+    <button class="ghost" onclick="openMenu()" aria-label="メニュー"><svg class="ic ic-lg"><use href="#ic-menu"/></svg></button>
   </div>
 </div>
 
@@ -735,7 +775,7 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
       <li>BACK10：上向きはちょうど10小さい数字、下向きはちょうど10大きい数字を出せます。</li>
       <li>山札がある間は最低2枚、山札切れ後は最低1枚出します。</li>
       <li>1枚10点。1ターン2枚×1.0、3枚×1.5、4枚×2.0、5枚以上×3.0。</li>
-      <li>出せない場を選ぶとMISSで-50点です。</li>
+      <li>手札を選ぶと、出せる場が光ります。出せない場には出せません。</li>
       <li>終了時の残り枚数＝手札＋山札。0枚+10000、1〜4枚+8000、5〜9枚+5000。</li>
       <li>6000点以上でCLEAR。6000点を超えても自動終了しません。</li>
     </ul>
@@ -743,14 +783,12 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
   </div>
 </div>
 
-<div id="giveupModal" class="modalOverlay">
-  <div class="modalCard">
-    <div style="text-align:center" id="giveupMascot"></div>
-    <div class="confirmText">ほんとにギブアップする？</div>
-    <div class="small" style="text-align:center">今のスコアで結果を見るよ。</div>
-    <div class="row" style="justify-content:center;margin-top:16px">
-      <button class="ghost" onclick="closeModal('giveupModal')">まだ続ける</button>
-      <button class="warn" onclick="confirmGiveUp()">結果を見る</button>
+<div id="menuModal" class="modalOverlay">
+  <div class="modalCard" style="max-width:380px">
+    <h2>メニュー</h2>
+    <div class="row" style="flex-direction:column;align-items:stretch">
+      <button class="warn" onclick="forceGiveUp()"><svg class="ic"><use href="#ic-flag"/></svg> ギブアップ</button>
+      <button class="ghost" onclick="closeModal('menuModal')"><svg class="ic"><use href="#ic-close"/></svg> とじる</button>
     </div>
   </div>
 </div>
@@ -826,7 +864,7 @@ let bgmTimer = null;
 
 Object.assign(window,{
   quickSolo, showCoopSetup, createCoopRoom, joinCoopRoom,
-  startOnlineGame, selectCard, playPile, endTurn, forceGiveUp, confirmGiveUp, resetSameRoom,
+  startOnlineGame, selectCard, playPile, endTurn, openMenu, forceGiveUp, confirmGiveUp, resetSameRoom,
   goHome, copyRoom, showRules, closeModal, openRankings, loadRankings, toggleBgm
 });
 
@@ -878,7 +916,6 @@ function chickSVG(size=58){ return nodeEmblem(size, "#ffbf4d", "rgba(255,191,77,
 function mountMascots(){
   $("homeMascotLeft").innerHTML = streamEmblem(60, "#38e1d6", "#7ff3ea");
   $("homeMascotRight").innerHTML = streamEmblem(60, "#8be36b", "#bdf3a6");
-  $("giveupMascot").innerHTML = nodeEmblem(72, "#ff6b8a", "rgba(255,107,138,.16)");
 }
 function avatarHTML(name,size=28){
   const i=(name.codePointAt(0)||65)%4;
@@ -1025,25 +1062,34 @@ function renderAll(){
     </div>`;
   }).join("");
   $("deckCount").textContent = game.deck.length;
+  // 山札の残量ミニバー（全98枚が満タン）
+  $("deckBarFill").style.width = Math.max(0, Math.min(100, game.deck.length / 98 * 100)) + "%";
   $("scoreNow").textContent = totalScore(game);
   $("back10Now").textContent = game.back10Total || 0;
   $("turnPlayNow").textContent = game.playedThisTurn || 0;
 
-  $("piles").innerHTML = game.piles.map((p,i)=>`
-    <div class="pile ${p.type}" onclick="playPile(${i})">
+  const hand = game.hands?.[myId] || [];
+  // 選択中カードが出せる場を毎描画で判定（.playable / BACK10は.back10able）
+  const selCard = (mine && selectedIndex!==null) ? hand[selectedIndex] : undefined;
+  $("piles").innerHTML = game.piles.map((p,i)=>{
+    const ok = selCard!==undefined && canPlay(selCard,p);
+    const hint = ok ? (isBack10(selCard,p) ? "back10able" : "playable") : "";
+    return `
+    <div class="pile ${p.type} ${hint}" onclick="playPile(${i})">
       <span class="pileMark pileMarkTop p${i+1}">${["A","B","C","D"][i]}</span>
       <span class="pileArrow ${p.type === 'up' ? 'up' : 'down'}"></span>
       <div class="pileValue p${i+1}">${p.value}</div>
       <span class="pileMark pileMarkBottom p${i+1}">${["A","B","C","D"][i]}</span>
     </div>
-  `).join("");
+  `;}).join("");
 
-  const hand = game.hands?.[myId] || [];
   const visibleSlots = Math.max(8, handSize(game.playerCount || 1));
   $("hand").innerHTML = Array.from({length:visibleSlots},(_,i)=>{
     if(i < hand.length){
       const n = hand[i];
-      return `<div class="card ${selectedIndex===i ? 'selected' : ''} ${mine ? '' : 'locked'}" onclick="selectCard(${i})">${n}</div>`;
+      // どの場にも出せない札は減光（.dead）
+      const dead = !game.piles.some(p=>canPlay(n,p));
+      return `<div class="card ${selectedIndex===i ? 'selected' : ''} ${mine ? '' : 'locked'} ${dead ? 'dead' : ''}" onclick="selectCard(${i})">${n}</div>`;
     }
     return `<div class="card cardEmpty" aria-hidden="true"></div>`;
   }).join("");
@@ -1061,15 +1107,9 @@ async function playPile(i){
   const pileBefore = game.piles[i];
 
   if(!canPlay(card,pileBefore)){
-    const g = cloneGame(game);
-    g.scoreBase = Math.max(0,(g.scoreBase||0)-50);
-    if(g.stats?.[myId]){
-      g.stats[myId].score = Math.max(0,(g.stats[myId].score||0)-50);
-      g.stats[myId].penalty = (g.stats[myId].penalty||0)+1;
-    }
+    // 出せない場へのタップはノーペナルティ（ローカル判定のみ・Firebaseへは何も書かない）
     playPenalty();
-    showToast("MISS -50","miss");
-    await saveGame(g);
+    asobibaToast("そこには出せない",{kind:"warn"});
     return;
   }
 
@@ -1129,13 +1169,23 @@ async function endTurn(){
   g.turnBack10 = 0;
   await saveGame(g);
 }
-function forceGiveUp(){
+function openMenu(){
   if(!game || game.status!=="playing") return;
-  $("giveupModal").style.display = "flex";
+  $("menuModal").style.display = "flex";
   resumeAudio();
 }
+function forceGiveUp(){
+  if(!game || game.status!=="playing") return;
+  closeModal("menuModal");
+  asobibaConfirm({
+    title:"ギブアップする？",
+    lines:[["現在のスコア", String(totalScore(game))]],
+    note:"今のスコアで結果画面へ進みます。この操作は取り消せません",
+    okLabel:"ギブアップ", cancelLabel:"まだ続ける",
+    danger:true
+  }).then((ok)=>{ if(ok) confirmGiveUp(); });
+}
 async function confirmGiveUp(){
-  closeModal("giveupModal");
   if(!game || game.status!=="playing") return;
   const g = cloneGame(game);
   if(g.playedThisTurn>0) applyTurnScore(g,myId);
@@ -1210,7 +1260,7 @@ function showResult(result){
   $("playerStats").innerHTML = Object.entries(result.stats||{}).map(([pid,s])=>{
     const nm = players[pid]?.name || pid;
     return `<div class="playerCard"><b>${escapeHtml(nm)}</b><br>
-    出した枚数：${s.cards||0} / BACK10：${s.back10||0} / MISS：${s.penalty||0}<br>
+    出した枚数：${s.cards||0} / BACK10：${s.back10||0}<br>
     個人得点：${s.score||0} / 最大コンボ：${s.maxCombo||0}</div>`;
   }).join("");
 
@@ -1230,7 +1280,7 @@ function goHome(){
   roomId=""; myId=""; game=null; selectedIndex=null; localMode=false;
   $("coopSetup").style.display="none";
   $("resultOverlay").style.display="none";
-  $("giveupModal").style.display="none";
+  $("menuModal").style.display="none";
   document.body.dataset.resultShown="";
   showScreen("homeScreen");
 }
@@ -1264,7 +1314,7 @@ async function loadRankings(mode,period){
   rows.sort((a,b)=>{ if((b.score||0)!==(a.score||0)) return (b.score||0)-(a.score||0); return (a.timeSec||999999)-(b.timeSec||999999); });
   const top = rows.slice(0,10);
   if(top.length===0){ body.innerHTML="まだ記録がありません。1ゲーム終了すると表示されます。"; return; }
-  const scope = online ? "" : ` <span style="font-weight:700;font-size:11px;opacity:.7">（この端末の記録）</span>`;
+  const scope = online ? "" : ` <span style="font-weight:700;font-size:12px;opacity:.7">（この端末の記録）</span>`;
   let html = `<div style="font-weight:1000;margin-bottom:8px">${mode==="solo"?"ひとり":"みんな"} / ${period==="daily"?"今日":"今月"}${scope}</div>`;
   html += `<table class="rankingTable"><tr><th>#</th><th>名前</th><th>Score</th><th>残り</th><th>B10</th></tr>`;
   top.forEach((r,i)=>{ html += `<tr><td>${i+1}</td><td>${escapeHtml(r.playerName||"Player")}</td><td>${r.score}</td><td>${r.remaining}</td><td>${r.back10Total}</td></tr>`; });
