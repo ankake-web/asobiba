@@ -38,6 +38,24 @@
 
 - `npm run build` が通ること（マーカー展開・HTML構文はここで落ちる）。
 - 見た目の確認は Playwright で iPhone 13 相当（375×812）のスクショを撮る
-  （スクリプト例はセッションのスクラッチパッドか `_audit-2026-08-15/` 参照）。
-- オンライン機能（うまうま=Firebase umauma-737d6 / BACK10=Firebase thegameonline）は
-  localhost だと App Check の警告が出るが**正常**（本番ドメインでは出ない）。
+  （スクリプトはセッションのスクラッチパッドに置く。監査レポートは `docs/` 参照
+  ※旧 `../_audit-2026-08-15/` は2026-08-17整理でレポート3本を docs/ へ移設し、スクショは削除済み）。
+## 既知の問題: うまうまレースの App Check が本番で効いていない
+
+2026-08-16、本番（https://ankake-web.github.io/asobiba/）で実測して判明。
+**localhost だけの現象だと思っていたが誤りで、本番でも失敗している。**
+
+- 症状: reCAPTCHA の `pat?k=6LeJi_os...` が **401**、App Check の
+  `exchangeRecaptchaV3Token` が **403** を返す。
+- 影響: `games/uma-race/index.html` の App Check 初期化が try/catch で握りつぶされるため、
+  **ゲームは正常に動く**（匿名認証もFirestoreの読み書きも成功し、オンライン対戦できる）。
+  ただし **App Check による不正アクセス防止が効いていない**状態。守りは Firestore ルールだけ。
+- 原因: reCAPTCHA v3 のサイトキーの許可ドメインに `ankake-web.github.io` が未登録。
+  （旧 umarace リポの独自ドメインしか登録されていないと思われる）
+- 直し方（ブラウザ作業。コードの修正は不要）:
+  1. https://www.google.com/recaptcha/admin でサイトキー `6LeJi_os...` を開き、
+     ドメインに `ankake-web.github.io` を追加
+  2. Firebase Console → プロジェクト `umauma-737d6` → App Check でリクエストが
+     検証済みになるか確認
+- BACK10（`thegameonline`）は App Check も匿名認証も使っていないので、この問題はない
+  （代わりに守りが Firestore ルールだけなので、ルールの確認は別途しておくとよい）。
