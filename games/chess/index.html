@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1b171b">
+<title>チェス — あそびば</title>
+<meta name="description" content="象牙と墨の盤で指す世界の定番。キャスリング・アンパッサン・プロモーション対応。CPU対戦（強さ2段階）・この端末で交代・オンライン対戦。">
+<!-- 書体: 本文/UI = Zen Kaku Gothic New、題字 = Shippori Mincho B1、数字 = Rajdhani（共通CSSの --font-ui / --font-display / このページの --font-num） -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Shippori+Mincho+B1:wght@700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+<!-- @shared:base-css -->
+<style>
+  /* ============================================================
+     世界観: 象牙 × 墨のモノトーン ＋ 真鍮の差し色（accent #8c7b6b）
+     ============================================================ */
+  :root{
+    --accent:#8c7b6b;
+    --brass-0:#6f6052; --brass-1:#8c7b6b; --brass-2:#b39a7c; --brass-hi:#d9c19c;
+    --room-0:#141114; --room-1:#1b171b; --room-2:#252026; --room-3:#2f292f;
+    --ivory:#f1e9da; --ivory-2:#dccfb9; --ivory-dim:#a69c8e;
+    --sumi:#1c181a; --sumi-2:#34302f;
+    --sq-l:#e7dcc6; --sq-d:#8c7b6b;
+    --hair:rgba(241,233,218,.16);
+    --danger:#c9463f;
+    --topbar-h:56px;
+    --font-num:"Rajdhani",var(--font-ui);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--font-ui);font-weight:500;
+    color:var(--ivory);
+    background:
+      radial-gradient(120% 70% at 50% -10%,rgba(140,123,107,.26),transparent 60%),
+      radial-gradient(90% 50% at 50% 110%,rgba(217,193,156,.10),transparent 60%),
+      linear-gradient(180deg,var(--room-1),var(--room-0));
+    min-height:100vh;min-height:100dvh;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* 紙のざらつき（ごく薄く） */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.05;
+    background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:200px 200px;
+  }
+  button,input,select{font-family:var(--font-ui);font-size:inherit}
+  input{
+    width:100%;border:1px solid var(--hair);border-radius:14px;padding:12px 14px;
+    background:rgba(241,233,218,.06);color:var(--ivory);font-weight:600;
+  }
+  input::placeholder{color:var(--ivory-dim);font-weight:500}
+  input:focus{outline:2px solid rgba(179,154,124,.75);outline-offset:1px}
+  b,strong{font-weight:700}
+
+  /* ---------- トップバー（他ゲーム同形: 戻るピル／タイトル＋エンブレム／アイコン2個） ---------- */
+  .asobibaTop{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    height:calc(var(--topbar-h) + var(--sat));padding:var(--sat) 10px 0;
+    display:flex;align-items:center;gap:8px;
+    background:linear-gradient(180deg,rgba(37,32,38,.96),rgba(27,23,27,.9));
+    border-bottom:1px solid rgba(179,154,124,.5);
+    box-shadow:0 6px 18px rgba(0,0,0,.35);backdrop-filter:blur(8px);
+  }
+  .asobibaTop .backPill{
+    display:inline-flex;align-items:center;gap:6px;text-decoration:none;white-space:nowrap;
+    padding:8px 13px;border-radius:999px;min-height:40px;
+    background:linear-gradient(180deg,#f8f1e3,#dfd2bb);color:var(--sumi);
+    font-weight:700;font-size:13px;border:1px solid rgba(255,255,255,.5);
+    box-shadow:0 3px 10px rgba(0,0,0,.25);
+  }
+  .asobibaTop .backPill:active{transform:translateY(1px)}
+  .asobibaTop .topTitle{
+    flex:1;min-width:0;display:flex;align-items:center;gap:8px;
+    color:var(--ivory);font-family:var(--font-display);font-weight:800;letter-spacing:.12em;font-size:18px;
+    font-feature-settings:"palt";text-shadow:0 1px 0 rgba(0,0,0,.4);
+    overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+  }
+  .asobibaTop .topEmblem{flex:0 0 auto;width:30px;height:30px;display:grid;place-items:center;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
+  .asobibaTop .topEmblem svg{width:30px;height:30px}
+  .asobibaTop .topCtl{display:flex;gap:6px;flex:0 0 auto}
+  .asobibaTop .topCtl button{
+    width:44px;height:44px;padding:0;border-radius:50%;display:grid;place-items:center;cursor:pointer;
+    background:linear-gradient(180deg,rgba(248,241,227,.96),rgba(223,210,187,.92));
+    color:var(--sumi);border:1px solid rgba(255,255,255,.5);box-shadow:0 3px 9px rgba(0,0,0,.25);
+  }
+  .asobibaTop .topCtl .ic{width:20px;height:20px;vertical-align:middle}
+
+  /* ---------- 画面の器 ---------- */
+  #app{position:relative;z-index:1;max-width:560px;margin:0 auto;padding:calc(var(--topbar-h) + var(--sat) + 10px) 12px calc(24px + var(--sab))}
+  .screen{display:none}
+  .screen.active{display:block}
+  .panel{
+    background:linear-gradient(180deg,rgba(241,233,218,.07),rgba(241,233,218,.035));
+    border:1px solid var(--hair);border-radius:20px;padding:14px;
+    box-shadow:0 10px 30px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .panel + .panel{margin-top:12px}
+  .sectionLabel{font-size:12px;letter-spacing:.18em;color:var(--ivory-dim);font-weight:700;margin:0 0 8px 2px;text-transform:uppercase}
+  .small{font-size:13px;color:var(--ivory-dim);font-weight:500;line-height:1.55}
+  .tiny{font-size:12px;color:var(--ivory-dim);font-weight:500;line-height:1.5}
+
+  /* ボタン3役: 主=象牙 / 副=面+縁 / 危険=朱 */
+  .btn{
+    appearance:none;border:none;cursor:pointer;border-radius:16px;min-height:50px;padding:12px 18px;
+    font-weight:700;font-size:16px;letter-spacing:.02em;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    transition:transform .08s ease,filter .15s ease,opacity .15s ease;
+  }
+  .btn:active{transform:translateY(1px) scale(.99)}
+  .btn:disabled{opacity:.4;cursor:default;filter:grayscale(.3)}
+  .btn.primary{background:linear-gradient(180deg,#fbf5e8,#dccfb6);color:var(--sumi);box-shadow:0 6px 0 var(--brass-0),0 10px 22px rgba(0,0,0,.35)}
+  .btn.primary:active{box-shadow:0 4px 0 var(--brass-0),0 6px 14px rgba(0,0,0,.3)}
+  .btn.secondary{background:rgba(241,233,218,.08);color:var(--ivory);border:1px solid rgba(241,233,218,.3)}
+  .btn.danger{background:linear-gradient(180deg,#d85a52,#b03a33);color:#fff;box-shadow:0 5px 0 #6d211c}
+  .btn.block{width:100%}
+  .btn.sm{min-height:44px;padding:8px 14px;font-size:14px;border-radius:13px}
+  .row{display:flex;gap:10px}
+  .row > *{flex:1}
+
+  /* ---------- 駒（フラットSVGシルエット。形は PIECE_SVG に集約） ---------- */
+  .piece{display:block;width:100%;height:100%;overflow:visible}
+  .piece *{stroke-width:3.6;stroke-linejoin:round;stroke-linecap:round}
+  .piece.w *{fill:#f3eadb;stroke:#1e1a1c}
+  .piece.b *{fill:#211c1f;stroke:#ece2d0}
+  .piece.w .d{fill:#1e1a1c}
+  .piece.b .d{fill:#ece2d0}
+  .piece .ln{fill:none}
+
+  /* ---------- ホーム ---------- */
+  .hero{position:relative;padding:18px 6px 10px;display:flex;align-items:center;gap:14px}
+  .hero .emb{width:76px;height:76px;flex:0 0 auto;filter:drop-shadow(0 8px 14px rgba(0,0,0,.45))}
+  .hero h1{margin:0;font-family:var(--font-display);font-weight:800;font-size:34px;letter-spacing:.2em;line-height:1.1;font-feature-settings:"palt";color:var(--ivory);text-shadow:0 2px 0 rgba(0,0,0,.4)}
+  .hero .sub{font-family:var(--font-num);font-weight:600;font-size:13px;letter-spacing:.32em;color:var(--brass-hi);margin-top:4px}
+  .hero .lead{margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--ivory-2)}
+  .pieceRow{display:grid;grid-template-columns:repeat(6,1fr);justify-items:center;gap:6px 0;margin:4px 0 14px;padding:10px 8px;border-radius:16px;background:rgba(0,0,0,.22);border:1px solid var(--hair)}
+  .pieceRow .pp{width:38px;height:38px}
+  .nameRow{display:flex;align-items:center;gap:10px}
+  .nameRow label{font-size:13px;font-weight:700;color:var(--ivory-dim);white-space:nowrap}
+  .modeList{display:grid;gap:8px;margin-top:4px}
+  .modeCard{
+    appearance:none;cursor:pointer;text-align:left;width:100%;
+    display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:12px;
+    padding:12px 14px;border-radius:16px;min-height:64px;
+    background:rgba(241,233,218,.05);border:1px solid var(--hair);color:var(--ivory);
+    transition:border-color .15s ease,background .15s ease;
+  }
+  .modeCard .mic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(179,154,124,.18);color:var(--brass-hi)}
+  .modeCard .mic .ic{width:22px;height:22px}
+  .modeCard .mt{font-weight:700;font-size:16px;line-height:1.2}
+  .modeCard .ms{font-size:12px;color:var(--ivory-dim);margin-top:3px;font-weight:500}
+  .modeCard .chk{width:22px;height:22px;border-radius:50%;border:2px solid rgba(241,233,218,.35);display:grid;place-items:center}
+  .modeCard .chk::after{content:"";width:10px;height:10px;border-radius:50%;background:transparent}
+  .modeCard.on{border-color:var(--brass-2);background:rgba(179,154,124,.14)}
+  .modeCard.on .chk{border-color:var(--brass-2)}
+  .modeCard.on .chk::after{background:var(--brass-hi)}
+  .optBox{margin-top:12px;padding-top:12px;border-top:1px dashed var(--hair)}
+  .optRow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+  .optRow:first-child{margin-top:0}
+  .optRow .lbl{font-size:13px;font-weight:700;color:var(--ivory-2)}
+  .seg{display:inline-flex;background:rgba(0,0,0,.28);border-radius:12px;padding:3px;border:1px solid var(--hair)}
+  .seg button{
+    appearance:none;border:none;cursor:pointer;border-radius:9px;min-height:38px;padding:0 14px;
+    background:transparent;color:var(--ivory-dim);font-weight:700;font-size:13px;
+  }
+  .seg button.on{background:linear-gradient(180deg,#fbf5e8,#dccfb6);color:var(--sumi)}
+  .seg.stones button{padding:0 10px;display:inline-flex;align-items:center;gap:5px}
+  .miniK{width:16px;height:16px;display:inline-block;flex:0 0 auto}
+  .notice{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(179,154,124,.16);border:1px solid rgba(179,154,124,.45);font-size:13px;line-height:1.5}
+  .notice.warn{background:rgba(201,70,63,.14);border-color:rgba(201,70,63,.5)}
+  .codeInput{font-family:var(--font-num);font-size:24px;font-weight:700;letter-spacing:.4em;text-align:center;padding:10px}
+  .howRow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+  .howStep{position:relative;padding:12px 8px 10px;border-radius:14px;background:rgba(0,0,0,.22);border:1px solid var(--hair);text-align:center;min-width:0}
+  .howStep .n{position:absolute;top:6px;left:9px;font-family:var(--font-num);font-size:12px;font-weight:700;color:var(--brass-hi);letter-spacing:.1em}
+  .howStep .ic{width:24px;height:24px;color:var(--brass-hi);margin-top:6px}
+  .howStep b{display:block;font-size:12.5px;margin-top:6px;line-height:1.35}
+  .howStep span.t{display:block;font-size:12px;color:var(--ivory-dim);margin-top:4px;line-height:1.4}
+  .homeFooter{text-align:center;margin-top:18px;font-family:var(--font-num);font-size:12px;letter-spacing:.3em;color:var(--ivory-dim)}
+
+  /* ---------- ロビー（オンライン） ---------- */
+  .codeBig{font-family:var(--font-num);font-size:52px;font-weight:700;letter-spacing:.3em;text-align:center;line-height:1;color:var(--ivory);text-shadow:0 3px 0 rgba(0,0,0,.45);margin:6px 0 2px;padding-left:.3em}
+  .seats{display:grid;gap:8px;margin-top:8px}
+  .seat{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.22);border:1px solid var(--hair);min-height:56px}
+  .seat .kp{width:30px;height:30px}
+  .seat .sname{font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px;min-width:0}
+  .seat .sname span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .seat .ssub{font-size:12px;color:var(--ivory-dim);font-weight:500;margin-top:2px}
+  .seat.empty{border-style:dashed;color:var(--ivory-dim)}
+  .badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(241,233,218,.12);color:var(--ivory-2);letter-spacing:.04em;white-space:nowrap}
+  .badge.host{background:rgba(242,193,78,.18);color:#f2c14e}
+  .badge.cpu{background:rgba(179,154,124,.22);color:var(--brass-hi)}
+  .badge.away{background:rgba(201,70,63,.2);color:#ff9d97}
+  .badge .ic{width:13px;height:13px}
+
+  /* ---------- 対局 ---------- */
+  .pbar{display:grid;gap:6px;margin-bottom:8px}
+  .pcard{
+    min-width:0;
+    display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;
+    padding:7px 10px;border-radius:14px;background:rgba(0,0,0,.24);border:1px solid var(--hair);min-height:54px;
+    transition:border-color .25s ease,box-shadow .25s ease;
+  }
+  .pcard.turn{border-color:var(--brass-2);box-shadow:0 0 0 1px rgba(179,154,124,.5),0 0 18px rgba(179,154,124,.3)}
+  .pcard > div{min-width:0}
+  .pcard .pk{width:34px;height:34px;flex:0 0 auto}
+  .pcard .pn{font-size:13px;font-weight:700;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:5px}
+  .pcard .caps{display:flex;align-items:center;gap:1px;min-height:16px;margin-top:3px;flex-wrap:wrap}
+  .pcard .caps .cp{width:15px;height:15px;flex:0 0 auto}
+  .pcard .caps .adv{font-family:var(--font-num);font-size:13px;font-weight:700;color:var(--brass-hi);margin-left:4px;line-height:1}
+  .pcard .ps{font-size:11px;color:var(--ivory-dim);font-weight:600;white-space:nowrap;text-align:right;min-width:52px}
+  .pcard.turn .ps{color:var(--brass-hi)}
+  .pcard .ps.chk{color:#ff9d97}
+
+  .boardWrap{position:relative;width:min(100%,440px);margin:0 auto}
+  .boardFrame{
+    padding:8px;border-radius:14px;
+    background:
+      linear-gradient(180deg,rgba(255,255,255,.07),transparent 30%),
+      linear-gradient(180deg,#3a3134,#2a2427 60%,#1f1a1c);
+    box-shadow:0 18px 40px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -2px 0 rgba(0,0,0,.45);
+    border:1px solid rgba(179,154,124,.6);
+  }
+  .board{
+    display:grid;grid-template-columns:repeat(8,1fr);
+    border:2px solid var(--brass-0);border-radius:4px;overflow:hidden;
+    box-shadow:inset 0 2px 6px rgba(0,0,0,.5);
+  }
+  .cell{
+    appearance:none;border:none;padding:0;margin:0;cursor:pointer;position:relative;
+    aspect-ratio:1/1;display:block;background:var(--sq-l);
+  }
+  .cell.dark{background:var(--sq-d)}
+  .cell .coord{position:absolute;font-family:var(--font-num);font-size:9px;font-weight:700;line-height:1;pointer-events:none;opacity:.75;letter-spacing:0}
+  .cell .coord.r{top:2px;left:3px}
+  .cell .coord.f{bottom:1px;right:3px}
+  .cell .coord{color:var(--sq-d)}
+  .cell.dark .coord{color:var(--sq-l)}
+  /* ハイライト */
+  .cell.last::before{content:"";position:absolute;inset:0;background:rgba(201,158,88,.5);pointer-events:none}
+  .cell.dark.last::before{background:rgba(240,208,150,.42)}
+  .cell.sel::before{content:"";position:absolute;inset:0;background:rgba(217,193,156,.75);box-shadow:inset 0 0 0 3px var(--brass-hi);pointer-events:none}
+  .cell.check::before{content:"";position:absolute;inset:0;background:radial-gradient(circle,rgba(214,62,52,.95) 0,rgba(214,62,52,.55) 45%,rgba(214,62,52,.15) 75%,transparent 100%);pointer-events:none}
+  .cell.legal::after{content:"";position:absolute;width:30%;height:30%;left:35%;top:35%;border-radius:50%;background:rgba(28,24,26,.35);animation:dotIn .2s ease both;pointer-events:none;z-index:3}
+  .cell.legal.cap::after{width:100%;height:100%;left:0;top:0;background:transparent;box-shadow:inset 0 0 0 4px rgba(28,24,26,.38);border-radius:0}
+  .cell.dark.legal::after{background:rgba(241,233,218,.45)}
+  .cell.dark.legal.cap::after{background:transparent;box-shadow:inset 0 0 0 4px rgba(241,233,218,.5)}
+  @keyframes dotIn{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+  .cell .pc{position:absolute;inset:7%;pointer-events:none;z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+  .cell .pc.slide{animation:slideIn .28s cubic-bezier(.2,.8,.3,1) both}
+  @keyframes slideIn{from{transform:translate(var(--dx,0),var(--dy,0))}to{transform:none}}
+  .cell .pc.pop{animation:popIn .3s cubic-bezier(.2,.9,.3,1.3) both}
+  @keyframes popIn{from{transform:scale(.3)}to{transform:none}}
+  .board.locked .cell{cursor:default}
+
+  /* プロモーション選択（盤の上にポップ） */
+  .promoPop{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:20;display:none;
+    padding:10px;border-radius:16px;background:linear-gradient(180deg,#2e282d,#1e1a1e);border:1px solid rgba(179,154,124,.7);
+    box-shadow:0 18px 40px rgba(0,0,0,.6);
+  }
+  .promoPop.show{display:block;animation:promoIn .18s ease both}
+  @keyframes promoIn{from{transform:translate(-50%,-42%);opacity:0}to{transform:translate(-50%,-50%);opacity:1}}
+  .promoPop .pt{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--brass-hi);text-align:center;margin:0 0 6px}
+  .promoPop .pgrid{display:flex;gap:6px}
+  .promoPop .pbtn{width:60px;height:60px;padding:8px;border-radius:12px;border:1px solid var(--hair);background:var(--sq-l);cursor:pointer;display:grid;place-items:center}
+  .promoPop .pbtn:nth-child(even){background:var(--sq-d)}
+  .promoPop .pbtn:active{transform:scale(.96)}
+  .promoPop .pcancel{margin-top:8px;width:100%;min-height:44px;border-radius:10px;border:1px solid var(--hair);background:transparent;color:var(--ivory-dim);font-weight:700;font-size:12px;cursor:pointer}
+
+  .turnBanner{
+    margin:12px auto 0;max-width:440px;padding:11px 14px;border-radius:14px;text-align:center;
+    font-weight:700;font-size:15px;background:rgba(0,0,0,.28);border:1px solid var(--hair);
+    display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px;
+  }
+  .turnBanner.mine{background:rgba(179,154,124,.22);border-color:rgba(179,154,124,.6)}
+  .turnBanner.check{background:rgba(201,70,63,.2);border-color:rgba(201,70,63,.6)}
+  .turnBanner .miniK{width:18px;height:18px}
+  .turnBanner .dots::after{content:"…";animation:think 1.2s steps(3,end) infinite}
+  @keyframes think{0%{content:"."}33%{content:".."}66%{content:"..."}}
+  .subInfo{margin:8px auto 0;max-width:440px;display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--ivory-dim);font-weight:600;padding:0 4px}
+  .subInfo .chip{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .subInfo .ic{width:14px;height:14px}
+  .movesBox{margin:10px auto 0;max-width:440px;border-radius:14px;background:rgba(0,0,0,.22);border:1px solid var(--hair)}
+  .movesBox summary{list-style:none;cursor:pointer;padding:10px 14px;min-height:44px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--ivory-2)}
+  .movesBox summary::-webkit-details-marker{display:none}
+  .movesBox summary .ic{width:16px;height:16px;color:var(--brass-hi)}
+  .movesBox summary .arrow{margin-left:auto;transition:transform .2s ease}
+  .movesBox[open] summary .arrow{transform:rotate(180deg)}
+  .movesBox .mlist{display:flex;flex-wrap:wrap;gap:4px 10px;padding:0 14px 12px;font-family:var(--font-num);font-size:14px;font-weight:600;color:var(--ivory-2);line-height:1.5;max-height:150px;overflow:auto}
+  .movesBox .mlist .mn{color:var(--ivory-dim);margin-right:4px}
+  .movesBox .mlist .empty{font-family:var(--font-ui);font-size:12px;color:var(--ivory-dim);font-weight:500}
+
+  /* ---------- オーバーレイ（遊び方 / メニュー / 結果） ---------- */
+  .overlay{position:fixed;inset:0;z-index:80;display:none;align-items:flex-end;justify-content:center;background:rgba(8,6,9,.72);backdrop-filter:blur(3px)}
+  .overlay.show{display:flex}
+  @media(min-width:600px){.overlay{align-items:center}}
+  .sheet{
+    width:100%;max-width:480px;max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);overflow:auto;
+    background:linear-gradient(180deg,#2a242a,#1b171b);color:var(--ivory);
+    border:1px solid rgba(179,154,124,.55);border-bottom:none;border-radius:22px 22px 0 0;
+    padding:18px 18px calc(16px + var(--sab));box-shadow:0 -18px 50px rgba(0,0,0,.6);
+    animation:sheetIn .2s ease both;
+  }
+  @media(min-width:600px){.sheet{border-radius:22px;border-bottom:1px solid rgba(179,154,124,.55);padding-bottom:18px}}
+  @keyframes sheetIn{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+  .sheet h2{margin:0 0 10px;font-family:var(--font-display);font-weight:800;font-size:20px;letter-spacing:.1em;display:flex;align-items:center;gap:8px;font-feature-settings:"palt"}
+  .sheet p{margin:8px 0;font-size:14px;line-height:1.65;color:var(--ivory-2)}
+  .rule{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.22);border:1px solid var(--hair);font-size:13.5px;line-height:1.6}
+  .rule b{color:#fff}
+  .pieceGuide{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:10px}
+  .pieceGuide .pg{display:grid;grid-template-columns:34px 1fr;align-items:center;gap:8px;padding:6px 10px;border-radius:10px;background:rgba(0,0,0,.22);border:1px solid var(--hair);min-height:54px}
+  .pieceGuide .pg .pp{width:30px;height:30px}
+  .pieceGuide .pg b{display:block;font-size:13px;line-height:1.2}
+  .pieceGuide .pg span{display:block;font-size:12px;color:var(--ivory-dim);line-height:1.35;margin-top:2px}
+  .menuList{display:grid;gap:8px;margin-top:6px}
+  .menuList .btn{justify-content:flex-start;gap:12px}
+  .menuList .btn .ic{width:20px;height:20px}
+
+  .resultHead{text-align:center;padding:6px 0 2px}
+  .resultHead .rt{font-family:var(--font-display);font-weight:800;font-size:clamp(22px,7vw,28px);letter-spacing:.12em;font-feature-settings:"palt";text-shadow:0 2px 0 rgba(0,0,0,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .resultHead .rs{font-size:13px;color:var(--ivory-dim);margin-top:4px;font-weight:600}
+  .resultScore{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin:14px 0 6px}
+  .rsc{display:grid;justify-items:center;gap:6px;padding:12px 8px;border-radius:16px;background:rgba(0,0,0,.25);border:1px solid var(--hair)}
+  .rsc.win{border-color:#f2c14e;box-shadow:0 0 0 1px rgba(242,193,78,.4),0 0 22px rgba(242,193,78,.25)}
+  .rsc .pk{width:44px;height:44px}
+  .rsc .num{font-family:var(--font-num);font-size:28px;font-weight:700;line-height:1}
+  .rsc .num small{font-size:12px;color:var(--ivory-dim);font-weight:600;margin-left:2px}
+  .rsc .nm{font-size:13px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rsc .crown{color:#f2c14e;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;min-height:16px}
+  .rsc .crown .ic{width:16px;height:16px}
+  .vs{font-family:var(--font-num);font-weight:700;font-size:13px;letter-spacing:.2em;color:var(--ivory-dim);padding-left:.2em}
+  .resultNote{font-size:12.5px;color:var(--ivory-dim);text-align:center;min-height:18px;margin-top:8px}
+  .resultBtns{display:grid;grid-template-columns:1fr 1.3fr;gap:10px;margin-top:12px}
+
+  /* 紙吹雪（勝利時） */
+  .confetti{position:fixed;inset:0;pointer-events:none;z-index:81;overflow:hidden}
+  .confetti i{position:absolute;top:-12px;width:8px;height:14px;border-radius:2px;animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.9}}
+
+  @media(max-width:360px){
+    .hero h1{font-size:30px}
+    .codeBig{font-size:44px}
+    .pieceGuide{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+<!-- @shared:icons -->
+<!-- @shared:confirm -->
+<!-- このページ専用アイコン（24×24 viewBox・共通スプライトと同流儀） -->
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+<defs>
+<symbol id="ic-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></symbol>
+<symbol id="ic-swap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4"/></symbol>
+<symbol id="ic-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7L12 19"/></symbol>
+<symbol id="ic-castle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V9h3V6h2v3h4V6h2v3h3v12z"/><path d="M10 21v-5h4v5"/></symbol>
+<symbol id="ic-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+<symbol id="ic-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="ic-rotate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></symbol>
+<symbol id="ic-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V5z"/></symbol>
+<symbol id="ic-balance" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 21h14M6 7l-3 7h6zM18 7l-3 7h6zM4 7h16"/></symbol>
+</defs>
+</svg>
+
+<header class="asobibaTop">
+  <a class="backPill" href="../../"><svg class="ic"><use href="#ic-back"/></svg> あそびば</a>
+  <div class="topTitle">
+    <span class="topEmblem"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="4" y="4" width="40" height="40" rx="7" fill="#e7dcc6" stroke="#b39a7c" stroke-width="3"/><path d="M24 5.5v37M5.5 24h37" stroke="#8c7b6b" stroke-width="0" /><rect x="5.5" y="5.5" width="18.5" height="18.5" fill="#8c7b6b"/><rect x="24" y="24" width="18.5" height="18.5" fill="#8c7b6b"/><path d="M22.5 13h3v3h3v3h-3v4h-3v-4h-3v-3h3zM19 24h10l2.5 11h-15z M16 35h16v3H16z" fill="#f3eadb" stroke="#1e1a1c" stroke-width="1.4" stroke-linejoin="round"/></svg></span>
+    <span>チェス</span>
+  </div>
+  <div class="topCtl">
+    <button id="topHelp" type="button" title="遊び方" aria-label="遊び方"><svg class="ic"><use href="#ic-help"/></svg></button>
+    <button id="topMenu" type="button" title="メニュー" aria-label="メニュー"><svg class="ic"><use href="#ic-menu"/></svg></button>
+  </div>
+</header>
+
+<main id="app">
+  <!-- ===== ホーム: 名前 → モード → 開始 ===== -->
+  <section id="homeScreen" class="screen active">
+    <div class="hero">
+      <svg class="emb" viewBox="0 0 48 48" aria-hidden="true"><rect x="4" y="4" width="40" height="40" rx="7" fill="#e7dcc6" stroke="#b39a7c" stroke-width="3"/><rect x="5.5" y="5.5" width="18.5" height="18.5" fill="#8c7b6b"/><rect x="24" y="24" width="18.5" height="18.5" fill="#8c7b6b"/><path d="M22.5 13h3v3h3v3h-3v4h-3v-4h-3v-3h3zM19 24h10l2.5 11h-15z M16 35h16v3H16z" fill="#f3eadb" stroke="#1e1a1c" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      <div>
+        <h1>チェス</h1>
+        <div class="sub">CHESS</div>
+        <p class="lead">象牙と墨の盤で、キングを追い詰める。世界でいちばん遊ばれている盤上ゲーム。</p>
+      </div>
+    </div>
+    <div class="pieceRow" id="pieceRow" aria-hidden="true"></div>
+
+    <div class="panel">
+      <p class="sectionLabel">Player</p>
+      <div class="nameRow">
+        <label for="nameInput">名前</label>
+        <input id="nameInput" maxlength="12" placeholder="名前を入力" autocomplete="off">
+      </div>
+      <div id="inviteNotice" class="notice" hidden></div>
+    </div>
+
+    <div class="panel">
+      <p class="sectionLabel">Mode</p>
+      <div class="modeList" role="radiogroup" aria-label="あそび方">
+        <button class="modeCard on" data-mode="cpu" role="radio" aria-checked="true" type="button">
+          <span class="mic"><svg class="ic"><use href="#ic-cpu"/></svg></span>
+          <span><span class="mt">CPUと対戦</span><span class="ms" style="display:block">強さ2段階。ひとりで腕試し</span></span>
+          <span class="chk"></span>
+        </button>
+        <button class="modeCard" data-mode="local" role="radio" aria-checked="false" type="button">
+          <span class="mic"><svg class="ic"><use href="#ic-swap"/></svg></span>
+          <span><span class="mt">この端末で交代</span><span class="ms" style="display:block">1台を回して2人で</span></span>
+          <span class="chk"></span>
+        </button>
+        <button class="modeCard" data-mode="online" role="radio" aria-checked="false" type="button">
+          <span class="mic"><svg class="ic"><use href="#ic-globe"/></svg></span>
+          <span><span class="mt">オンライン対戦</span><span class="ms" style="display:block">部屋を作る / コードで参加</span></span>
+          <span class="chk"></span>
+        </button>
+      </div>
+
+      <!-- CPU設定 -->
+      <div id="optCpu" class="optBox">
+        <div class="optRow">
+          <span class="lbl">CPUの強さ</span>
+          <span class="seg" id="levelSeg">
+            <button type="button" data-level="1" class="minh0">やさしい</button>
+            <button type="button" data-level="2" class="minh0 on">ふつう</button>
+          </span>
+        </div>
+        <div class="optRow">
+          <span class="lbl">あなたの色</span>
+          <span class="seg stones" id="colorSeg">
+            <button type="button" data-seat="0" class="minh0 on"><span class="miniK" data-piece="wk"></span>白</button>
+            <button type="button" data-seat="1" class="minh0"><span class="miniK" data-piece="bk"></span>黒</button>
+            <button type="button" data-seat="2" class="minh0">ランダム</button>
+          </span>
+        </div>
+        <p class="tiny" style="margin:10px 0 0">白が先手。やさしい＝1手先だけ読んでときどき迷う、ふつう＝2手先と駒の取り合いを読む入門級。</p>
+        <button id="startCpu" class="btn primary block" style="margin-top:14px" type="button"><svg class="ic"><use href="#ic-play"/></svg> 対局をはじめる</button>
+      </div>
+
+      <!-- ローカル交代 -->
+      <div id="optLocal" class="optBox" hidden>
+        <p class="small" style="margin:0 0 4px">白が先手。手番の人に端末を渡しながら進めます。メニューの「盤の向きを反転」で黒側から見られます。</p>
+        <button id="startLocal" class="btn primary block" style="margin-top:12px" type="button"><svg class="ic"><use href="#ic-play"/></svg> 対局をはじめる</button>
+      </div>
+
+      <!-- オンライン -->
+      <div id="optOnline" class="optBox" hidden>
+        <div class="optRow">
+          <span class="lbl">CPUを入れるときの強さ</span>
+          <span class="seg" id="levelSegOnline">
+            <button type="button" data-level="1" class="minh0">やさしい</button>
+            <button type="button" data-level="2" class="minh0 on">ふつう</button>
+          </span>
+        </div>
+        <button id="createRoomBtn" class="btn primary block" style="margin-top:12px" type="button"><svg class="ic"><use href="#ic-globe"/></svg> 部屋を作る</button>
+        <div class="row" style="margin-top:10px;align-items:stretch">
+          <input id="codeInput" class="codeInput" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="0000" aria-label="部屋コード">
+          <button id="joinRoomBtn" class="btn secondary" type="button" style="flex:1.2">コードで参加</button>
+        </div>
+        <p class="tiny" style="margin:10px 0 0">部屋を作った人が白（先手）。相手に4桁コードか招待URLを送ってください。対局中に抜けた席はCPUが引き継ぎます。</p>
+        <div id="onlineNotice" class="notice warn" hidden></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="sectionLabel">How to play</p>
+      <div class="howRow">
+        <div class="howStep"><span class="n">01</span><svg class="ic"><use href="#ic-king"/></svg><b>キングを詰める</b><span class="t">相手のキングが逃げられなければ勝ち</span></div>
+        <div class="howStep"><span class="n">02</span><svg class="ic"><use href="#ic-castle"/></svg><b>特殊ルール全部入り</b><span class="t">キャスリング・アンパッサン・プロモーション</span></div>
+        <div class="howStep"><span class="n">03</span><svg class="ic"><use href="#ic-balance"/></svg><b>引き分けも判定</b><span class="t">ステイルメイト・50手・3回同形・駒不足</span></div>
+      </div>
+    </div>
+    <div class="homeFooter">ASOBIBA · CHESS</div>
+  </section>
+
+  <!-- ===== ロビー（オンライン） ===== -->
+  <section id="lobbyScreen" class="screen">
+    <div class="panel" style="text-align:center">
+      <p class="sectionLabel">Room code</p>
+      <div class="codeBig" id="lobbyCode">----</div>
+      <p class="tiny" style="margin:6px 0 12px">このコードを相手に伝えるか、招待URLを送ってください</p>
+      <div class="row">
+        <button id="copyUrlBtn" class="btn secondary sm" type="button"><svg class="ic"><use href="#ic-link"/></svg> 招待URLをコピー</button>
+        <button id="shareBtn" class="btn secondary sm" type="button" hidden><svg class="ic"><use href="#ic-envelope"/></svg> 共有</button>
+      </div>
+    </div>
+    <div class="panel">
+      <p class="sectionLabel">Players</p>
+      <div class="seats" id="seats"></div>
+      <div id="lobbyStatus" class="small" style="margin-top:12px;text-align:center"></div>
+      <div class="row" style="margin-top:12px">
+        <button id="addCpuBtn" class="btn secondary" type="button" hidden><svg class="ic"><use href="#ic-cpu"/></svg> CPUを入れる</button>
+        <button id="startOnlineBtn" class="btn primary" type="button" hidden><svg class="ic"><use href="#ic-play"/></svg> 対局開始</button>
+      </div>
+      <button id="leaveLobbyBtn" class="btn danger block sm" style="margin-top:10px" type="button"><svg class="ic"><use href="#ic-exit"/></svg> 退出</button>
+    </div>
+  </section>
+
+  <!-- ===== 対局 ===== -->
+  <section id="playScreen" class="screen">
+    <div class="pbar">
+      <div class="pcard" id="pcardTop">
+        <span class="pk" id="pkTop"></span>
+        <div><div class="pn" id="pnTop">—</div><div class="caps" id="capsTop"></div></div>
+        <div class="ps" id="psTop"></div>
+      </div>
+    </div>
+
+    <div class="boardWrap">
+      <div class="boardFrame">
+        <div class="board" id="board" role="grid" aria-label="チェス盤"></div>
+      </div>
+      <div class="promoPop" id="promoPop" role="dialog" aria-label="プロモーションの駒を選ぶ">
+        <p class="pt">PROMOTION — 昇格する駒</p>
+        <div class="pgrid" id="promoGrid"></div>
+        <button class="pcancel" id="promoCancel" type="button">やめる</button>
+      </div>
+    </div>
+
+    <div class="pbar" style="margin:8px 0 0">
+      <div class="pcard" id="pcardBottom">
+        <span class="pk" id="pkBottom"></span>
+        <div><div class="pn" id="pnBottom">—</div><div class="caps" id="capsBottom"></div></div>
+        <div class="ps" id="psBottom"></div>
+      </div>
+    </div>
+
+    <div class="turnBanner" id="turnBanner"></div>
+    <div class="subInfo">
+      <span class="chip" id="infoMoves"><svg class="ic"><use href="#ic-clock"/></svg> 0手目</span>
+      <span class="chip" id="infoMode"></span>
+      <span class="chip" id="infoFifty" title="ポーンが動かず駒も取られていない手数（100で引き分け）">進行なし 0</span>
+    </div>
+    <details class="movesBox" id="movesBox">
+      <summary><svg class="ic"><use href="#ic-list"/></svg> <span id="movesSummary">棋譜</span><svg class="ic arrow"><use href="#ic-chev"/></svg></summary>
+      <div class="mlist" id="movesList"></div>
+    </details>
+  </section>
+</main>
+
+<!-- 遊び方 -->
+<div class="overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="sheet">
+    <h2 id="helpTitle"><svg class="ic"><use href="#ic-book"/></svg> チェス — 遊び方</h2>
+    <p>8×8の盤で白と黒が交互に駒を動かします。<b>白が先手</b>。相手の<b>キングを詰めた（チェックメイト）</b>ら勝ち。</p>
+    <div class="pieceGuide" id="pieceGuide"></div>
+    <div class="rule"><b>チェック</b>：キングが取られそうな状態。必ず守る手を指します（キングのマスが赤く光ります）。逃げ場が無ければ<b>チェックメイト</b>で負け。</div>
+    <div class="rule"><b>キャスリング</b>：キングとルークが一度も動いておらず、間が空いていて、チェックされておらず、通過するマスも攻撃されていない時だけ、キングを2マス横に動かしてルークを飛び越えさせます（キングをタップ→2マス先のドット）。</div>
+    <div class="rule"><b>アンパッサン</b>：相手のポーンが2マス進んだ直後に限り、横に並んだ自分のポーンで斜め前に取れます。</div>
+    <div class="rule"><b>プロモーション</b>：ポーンが最奥まで進むと、クイーン・ルーク・ビショップ・ナイトのどれかに昇格（その場で選択）。</div>
+    <div class="rule"><b>引き分け</b>：動ける手が無いのにチェックでない<b>ステイルメイト</b>／ポーンも動かず駒も取られず<b>50手</b>／同じ局面が<b>3回</b>／どちらも詰ませられない<b>駒不足</b>。</div>
+    <p class="tiny" style="margin-top:10px">操作：自分の駒をタップ→行き先のドットをタップ。最後に動いた駒のマスは真鍮色で光ります。棋譜は盤の下で折りたたみ表示。オンライン対戦：ホストが部屋を作り、相手は4桁コードか招待URLで参加。対局中に退出した席はCPUが代わりに指します。</p>
+    <button class="btn secondary block" id="helpClose" type="button" style="margin-top:12px">とじる</button>
+  </div>
+</div>
+
+<!-- メニュー -->
+<div class="overlay" id="menuOverlay" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+  <div class="sheet">
+    <h2 id="menuTitle"><svg class="ic"><use href="#ic-menu"/></svg> メニュー</h2>
+    <div class="menuList">
+      <button class="btn secondary" id="menuSound" type="button"><svg class="ic"><use href="#ic-sound-on"/></svg> <span>サウンド ON</span></button>
+      <button class="btn secondary" id="menuHelp" type="button"><svg class="ic"><use href="#ic-help"/></svg> 遊び方</button>
+      <button class="btn secondary" id="menuFlip" type="button" hidden><svg class="ic"><use href="#ic-rotate"/></svg> 盤の向きを反転</button>
+      <button class="btn secondary" id="menuResign" type="button" hidden><svg class="ic"><use href="#ic-flag"/></svg> 投了する</button>
+      <button class="btn danger" id="menuHome" type="button" hidden><svg class="ic"><use href="#ic-exit"/></svg> <span id="menuHomeLabel">ホームへ戻る</span></button>
+    </div>
+    <button class="btn secondary block" id="menuClose" type="button" style="margin-top:12px">とじる</button>
+  </div>
+</div>
+
+<!-- 結果 -->
+<div class="overlay" id="resultOverlay" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+  <div class="sheet">
+    <div class="resultHead"><div class="rt" id="resultTitle">白の勝ち</div><div class="rs" id="resultSub"></div></div>
+    <div class="resultScore">
+      <div class="rsc" id="rscW"><span class="pk" id="rpkW"></span><span class="num" id="resW">0<small>取得</small></span><span class="nm" id="resNameW">白</span><span class="crown" id="crownW"></span></div>
+      <span class="vs">VS</span>
+      <div class="rsc" id="rscB"><span class="pk" id="rpkB"></span><span class="num" id="resB">0<small>取得</small></span><span class="nm" id="resNameB">黒</span><span class="crown" id="crownB"></span></div>
+    </div>
+    <div class="resultNote" id="resultNote"></div>
+    <div class="resultBtns">
+      <button class="btn secondary" id="resultHome" type="button"><svg class="ic"><use href="#ic-home"/></svg> ホームへ</button>
+      <button class="btn primary" id="resultAgain" type="button"><svg class="ic"><use href="#ic-restart"/></svg> もう一度</button>
+    </div>
+  </div>
+</div>
+
+<!-- @shared:online -->
+<script type="module">
+/* ============================================================
+   1. ルールエンジン（純粋関数・DOM非依存）
+      tests/chess.test.mjs が @engine-begin 〜 @engine-end を切り出して node で検証する。
+      契約: initialState / legalMoves / applyMove / cpuMove / isOver / result / publicView
+      seat0 = 白(先手) / seat1 = 黒。盤は 64 要素の配列（idx0 = a8、idx63 = h1）。
+      駒は FEN と同じ1文字（大文字=白 "PNBRQK"、小文字=黒 "pnbrqk"、空は ""）。
+      move = {from, to, promo:""|"q"|"r"|"b"|"n"} | {resign:true}
+      ※ state は Firestore にそのまま入るので「配列の中に配列」「undefined」を作らない。
+   ============================================================ */
+/* @engine-begin */
+const Engine = (() => {
+  const FILES = "abcdefgh";
+  const VAL = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
+  const PROMO_TYPES = ["q", "r", "b", "n"];
+  const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+  const REASON = { checkmate: "チェックメイト", stalemate: "ステイルメイト", resign: "投了", fifty: "50手ルール", threefold: "3回同形", material: "駒不足" };
+  const sqName = (i) => FILES[i & 7] + (8 - (i >> 3));
+  const sqIdx = (n) => FILES.indexOf(n[0]) + (8 - Number(n[1])) * 8;
+  const colorOf = (pc) => (!pc ? -1 : pc === pc.toUpperCase() ? 0 : 1);
+  const typeOf = (pc) => pc.toLowerCase();
+  const mk = (type, color) => (color === 0 ? type.toUpperCase() : type);
+  const inb = (r, c) => r >= 0 && r < 8 && c >= 0 && c < 8;
+  const KN = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+  const KG = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+  const BD = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+  const RD = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+  // キャスリング: 権利キー → キングの from/to、ルークの from/to、空いているべきマス、攻撃されていてはいけないマス
+  const CASTLE = {
+    K: { color: 0, kf: 60, kt: 62, rf: 63, rt: 61, empty: [61, 62], pass: [60, 61, 62] },
+    Q: { color: 0, kf: 60, kt: 58, rf: 56, rt: 59, empty: [57, 58, 59], pass: [60, 59, 58] },
+    k: { color: 1, kf: 4, kt: 6, rf: 7, rt: 5, empty: [5, 6], pass: [4, 5, 6] },
+    q: { color: 1, kf: 4, kt: 2, rf: 0, rt: 3, empty: [1, 2, 3], pass: [4, 3, 2] },
+  };
+  const ROOK_HOME = { 63: "K", 56: "Q", 7: "k", 0: "q" }; // ルークの初期位置 → 権利キー
+
+  /* ---- FEN ---- */
+  function parseFen(fen) {
+    const [pl, t, cs = "-", ep = "-", hm = "0", fm = "1"] = String(fen).trim().split(/\s+/);
+    const board = [];
+    for (const ch of pl) {
+      if (ch === "/") continue;
+      if (/\d/.test(ch)) for (let i = 0; i < Number(ch); i++) board.push("");
+      else board.push(ch);
+    }
+    if (board.length !== 64) throw new Error("FEN が不正です");
+    return { board, turn: t === "b" ? 1 : 0,
+      castling: { K: cs.includes("K"), Q: cs.includes("Q"), k: cs.includes("k"), q: cs.includes("q") },
+      ep: ep !== "-" ? sqIdx(ep) : -1, halfmove: Number(hm) || 0, fullmove: Number(fm) || 1 };
+  }
+  function fenBoard(board) {
+    let s = "";
+    for (let r = 0; r < 8; r++) {
+      let e = 0;
+      for (let c = 0; c < 8; c++) { const p = board[r * 8 + c]; if (!p) e++; else { if (e) { s += e; e = 0; } s += p; } }
+      if (e) s += e;
+      if (r < 7) s += "/";
+    }
+    return s;
+  }
+  const castleStr = (cs) => ((cs.K ? "K" : "") + (cs.Q ? "Q" : "") + (cs.k ? "k" : "") + (cs.q ? "q" : "")) || "-";
+  function fenOf(pos) {
+    return `${fenBoard(pos.board)} ${pos.turn ? "b" : "w"} ${castleStr(pos.castling)} ${pos.ep >= 0 ? sqName(pos.ep) : "-"} ${pos.halfmove || 0} ${pos.fullmove || 1}`;
+  }
+
+  /* ---- 攻撃判定 ---- */
+  function isAttacked(board, idx, by) {
+    const r = idx >> 3, c = idx & 7;
+    const pr = by === 0 ? r + 1 : r - 1, pp = mk("p", by);
+    if (pr >= 0 && pr < 8) { if (c > 0 && board[pr * 8 + c - 1] === pp) return true; if (c < 7 && board[pr * 8 + c + 1] === pp) return true; }
+    const n = mk("n", by), k = mk("k", by), b = mk("b", by), rk = mk("r", by), q = mk("q", by);
+    for (const [dr, dc] of KN) { const rr = r + dr, cc = c + dc; if (inb(rr, cc) && board[rr * 8 + cc] === n) return true; }
+    for (const [dr, dc] of KG) { const rr = r + dr, cc = c + dc; if (inb(rr, cc) && board[rr * 8 + cc] === k) return true; }
+    for (const [dr, dc] of BD) { let rr = r + dr, cc = c + dc; while (inb(rr, cc)) { const p = board[rr * 8 + cc]; if (p) { if (p === b || p === q) return true; break; } rr += dr; cc += dc; } }
+    for (const [dr, dc] of RD) { let rr = r + dr, cc = c + dc; while (inb(rr, cc)) { const p = board[rr * 8 + cc]; if (p) { if (p === rk || p === q) return true; break; } rr += dr; cc += dc; } }
+    return false;
+  }
+  const kingSq = (board, color) => board.indexOf(mk("k", color));
+  function inCheck(board, color) { const ks = kingSq(board, color); return ks >= 0 && isAttacked(board, ks, 1 - color); }
+
+  /* ---- 手の生成（擬似合法 → 合法） ---- */
+  function pseudoMoves(pos, color, capturesOnly = false) {
+    const { board } = pos; const out = [];
+    const push = (from, to, o) => out.push({
+      from, to, piece: board[from],
+      capture: o && o.ep ? mk("p", 1 - color) : (board[to] || ""),
+      promo: (o && o.promo) || "", castle: (o && o.castle) || "", ep: !!(o && o.ep), double: !!(o && o.double),
+    });
+    for (let i = 0; i < 64; i++) {
+      const p = board[i]; if (!p || colorOf(p) !== color) continue;
+      const t = typeOf(p), r = i >> 3, c = i & 7;
+      if (t === "p") {
+        const dir = color === 0 ? -1 : 1, startRow = color === 0 ? 6 : 1, lastRow = color === 0 ? 0 : 7;
+        const r1 = r + dir;
+        if (!capturesOnly && inb(r1, c) && !board[r1 * 8 + c]) {
+          if (r1 === lastRow) for (const pr of PROMO_TYPES) push(i, r1 * 8 + c, { promo: pr });
+          else { push(i, r1 * 8 + c); if (r === startRow && !board[(r + 2 * dir) * 8 + c]) push(i, (r + 2 * dir) * 8 + c, { double: true }); }
+        }
+        for (const dc of [-1, 1]) {
+          const cc = c + dc; if (!inb(r1, cc)) continue;
+          const to = r1 * 8 + cc, tp = board[to];
+          if (tp && colorOf(tp) !== color) { if (r1 === lastRow) for (const pr of PROMO_TYPES) push(i, to, { promo: pr }); else push(i, to); }
+          else if (!tp && to === pos.ep) push(i, to, { ep: true });
+        }
+      } else if (t === "n" || t === "k") {
+        for (const [dr, dc] of (t === "n" ? KN : KG)) {
+          const rr = r + dr, cc = c + dc; if (!inb(rr, cc)) continue;
+          const to = rr * 8 + cc, tp = board[to];
+          if (!tp) { if (!capturesOnly) push(i, to); } else if (colorOf(tp) !== color) push(i, to);
+        }
+        if (t === "k" && !capturesOnly) {
+          for (const key of (color === 0 ? ["K", "Q"] : ["k", "q"])) {
+            if (!pos.castling[key]) continue;
+            const cd = CASTLE[key];
+            if (i !== cd.kf || board[cd.rf] !== mk("r", color)) continue;
+            if (cd.empty.some((s) => board[s])) continue;
+            if (cd.pass.some((s) => isAttacked(board, s, 1 - color))) continue;
+            push(i, cd.kt, { castle: key });
+          }
+        }
+      } else {
+        const dirs = t === "b" ? BD : t === "r" ? RD : KG;
+        for (const [dr, dc] of dirs) {
+          let rr = r + dr, cc = c + dc;
+          while (inb(rr, cc)) {
+            const to = rr * 8 + cc, tp = board[to];
+            if (!tp) { if (!capturesOnly) push(i, to); } else { if (colorOf(tp) !== color) push(i, to); break; }
+            rr += dr; cc += dc;
+          }
+        }
+      }
+    }
+    return out;
+  }
+  function makeBoard(board, m) {
+    const b = board.slice(); const p = b[m.from]; const color = colorOf(p);
+    b[m.to] = m.promo ? mk(m.promo, color) : p; b[m.from] = "";
+    if (m.ep) b[m.to + (color === 0 ? 8 : -8)] = "";
+    if (m.castle) { const cd = CASTLE[m.castle]; b[cd.rt] = b[cd.rf]; b[cd.rf] = ""; }
+    return b;
+  }
+  function legalFrom(pos, color, capturesOnly = false) {
+    return pseudoMoves(pos, color, capturesOnly).filter((m) => !inCheck(makeBoard(pos.board, m), color));
+  }
+  // 局面（board/turn/castling/ep/halfmove/fullmove）に手を適用
+  function applyPos(pos, m) {
+    const color = colorOf(m.piece);
+    const board = makeBoard(pos.board, m);
+    const castling = { K: pos.castling.K, Q: pos.castling.Q, k: pos.castling.k, q: pos.castling.q };
+    if (typeOf(m.piece) === "k") { if (color === 0) { castling.K = false; castling.Q = false; } else { castling.k = false; castling.q = false; } }
+    if (ROOK_HOME[m.from]) castling[ROOK_HOME[m.from]] = false;
+    if (ROOK_HOME[m.to]) castling[ROOK_HOME[m.to]] = false;
+    const ep = m.double ? (m.from + m.to) / 2 : -1;
+    const halfmove = (typeOf(m.piece) === "p" || m.capture) ? 0 : (pos.halfmove || 0) + 1;
+    return { board, turn: 1 - color, castling, ep, halfmove, fullmove: (pos.fullmove || 1) + (color === 1 ? 1 : 0) };
+  }
+  // 同形判定のキー（盤・手番・キャスリング権・実際に取れるアンパッサン）
+  function posKey(pos) {
+    let epRel = "-";
+    if (pos.ep >= 0) {
+      const color = pos.turn, pr = color === 0 ? (pos.ep >> 3) + 1 : (pos.ep >> 3) - 1, c = pos.ep & 7, pp = mk("p", color);
+      if (pr >= 0 && pr < 8 && ((c > 0 && pos.board[pr * 8 + c - 1] === pp) || (c < 7 && pos.board[pr * 8 + c + 1] === pp))) epRel = sqName(pos.ep);
+    }
+    return fenBoard(pos.board) + " " + (pos.turn ? "b" : "w") + " " + castleStr(pos.castling) + " " + epRel;
+  }
+  function insufficient(board) {
+    const pieces = [];
+    for (let i = 0; i < 64; i++) { const p = board[i]; if (p && typeOf(p) !== "k") pieces.push({ t: typeOf(p), sq: i }); }
+    if (!pieces.length) return true;
+    if (pieces.length === 1 && (pieces[0].t === "n" || pieces[0].t === "b")) return true;
+    if (pieces.every((p) => p.t === "b")) {
+      const col = ((pieces[0].sq >> 3) + (pieces[0].sq & 7)) & 1;
+      if (pieces.every((p) => (((p.sq >> 3) + (p.sq & 7)) & 1) === col)) return true;
+    }
+    return false;
+  }
+  function materialOf(board) {
+    const m = [0, 0];
+    for (const p of board) if (p) m[colorOf(p)] += VAL[typeOf(p)];
+    return m;
+  }
+  // SAN（簡易: 駒文字・曖昧性解消・x・昇格・O-O。+/# は applyMove が付ける）
+  function sanOf(m, legal) {
+    if (m.castle) return (m.castle === "K" || m.castle === "k") ? "O-O" : "O-O-O";
+    const t = typeOf(m.piece), dest = sqName(m.to);
+    if (t === "p") return (m.capture ? FILES[m.from & 7] + "x" : "") + dest + (m.promo ? "=" + m.promo.toUpperCase() : "");
+    const others = legal.filter((x) => x.piece === m.piece && x.to === m.to && x.from !== m.from);
+    let dis = "";
+    if (others.length) {
+      const sameFile = others.some((x) => (x.from & 7) === (m.from & 7)), sameRank = others.some((x) => (x.from >> 3) === (m.from >> 3));
+      dis = !sameFile ? FILES[m.from & 7] : (!sameRank ? String(8 - (m.from >> 3)) : sqName(m.from));
+    }
+    return t.toUpperCase() + dis + (m.capture ? "x" : "") + dest;
+  }
+
+  /* ---- 契約 API ---- */
+  function initialState(settings = {}, players = [], rng = Math.random) {
+    const pos = parseFen(settings.fen || START_FEN);
+    const s = {
+      board: pos.board, turn: pos.turn, castling: pos.castling, ep: pos.ep, halfmove: pos.halfmove, fullmove: pos.fullmove,
+      moves: 0, lastMove: null, history: [], posKeys: [], captured: { w: [], b: [] },
+      check: false, over: false, result: null, resigned: null, cpuLevel: Number(settings.cpuLevel) || 2,
+    };
+    s.posKeys = [posKey(s)];
+    s.check = inCheck(s.board, s.turn);
+    return s;
+  }
+  function legalMoves(state, seat) {
+    if (state.over || state.turn !== seat) return [];
+    return legalFrom(state, seat);
+  }
+  function applyMove(state, move, seat) {
+    if (state.over) throw new Error("終局しています");
+    if (move && move.resign) { // 投了は手番に関係なくできる
+      if (seat !== 0 && seat !== 1) throw new Error("席が不正です");
+      return { ...state, over: true, resigned: seat, result: { winner: 1 - seat, reason: "resign" } };
+    }
+    if (seat !== state.turn) throw new Error("手番ではありません");
+    const legal = legalFrom(state, seat);
+    const m = legal.find((x) => x.from === move.from && x.to === move.to && x.promo === (move.promo || ""));
+    if (!m) {
+      if (legal.some((x) => x.from === move.from && x.to === move.to && x.promo)) throw new Error("プロモーションの駒を選んでください");
+      throw new Error("その手は指せません");
+    }
+    const pos = applyPos(state, m);
+    const opp = 1 - seat;
+    const oppLegal = legalFrom(pos, opp);
+    const check = inCheck(pos.board, opp);
+    let san = sanOf(m, legal);
+    if (!oppLegal.length && check) san += "#"; else if (check) san += "+";
+    const posKeys = [...state.posKeys, posKey(pos)];
+    const captured = { w: state.captured.w.slice(), b: state.captured.b.slice() };
+    if (m.capture) captured[seat === 0 ? "w" : "b"].push(typeOf(m.capture));
+    const next = {
+      ...state, board: pos.board, turn: opp, castling: pos.castling, ep: pos.ep, halfmove: pos.halfmove, fullmove: pos.fullmove,
+      moves: state.moves + 1,
+      lastMove: { from: m.from, to: m.to, seat, piece: m.piece, capture: m.capture, promo: m.promo, castle: m.castle, ep: m.ep, san },
+      history: [...state.history, san], posKeys, captured, check, over: false, result: null,
+    };
+    const last = posKeys[posKeys.length - 1];
+    if (!oppLegal.length) { next.over = true; next.result = check ? { winner: seat, reason: "checkmate" } : { winner: null, reason: "stalemate" }; }
+    else if (next.halfmove >= 100) { next.over = true; next.result = { winner: null, reason: "fifty" }; }
+    else if (posKeys.filter((k) => k === last).length >= 3) { next.over = true; next.result = { winner: null, reason: "threefold" }; }
+    else if (insufficient(pos.board)) { next.over = true; next.result = { winner: null, reason: "material" }; }
+    return next;
+  }
+  function isOver(state) { return !!state.over; }
+  function result(state) {
+    const r = state.result || { winner: null, reason: "" };
+    const names = ["白", "黒"];
+    const label = REASON[r.reason] || "";
+    const summary = r.winner == null ? `引き分け — ${label}` : `${names[r.winner]}の勝ち — ${label}`;
+    return { winner: r.winner, reason: r.reason, reasonLabel: label, summary, resigned: state.resigned, material: materialOf(state.board) };
+  }
+  function publicView(state, seat) { return state; } // チェスに隠し情報は無い
+
+  /* ---- CPU: 駒価値＋位置表（PST）。やさしい=1手読み＋乱数 / ふつう=2手読み αβ＋取り合いの静止探索 ---- */
+  const PST = {
+    p: [0, 0, 0, 0, 0, 0, 0, 0, 50, 50, 50, 50, 50, 50, 50, 50, 10, 10, 20, 30, 30, 20, 10, 10, 5, 5, 10, 25, 25, 10, 5, 5, 0, 0, 0, 20, 20, 0, 0, 0, 5, -5, -10, 0, 0, -10, -5, 5, 5, 10, 10, -20, -20, 10, 10, 5, 0, 0, 0, 0, 0, 0, 0, 0],
+    n: [-50, -40, -30, -30, -30, -30, -40, -50, -40, -20, 0, 0, 0, 0, -20, -40, -30, 0, 10, 15, 15, 10, 0, -30, -30, 5, 15, 20, 20, 15, 5, -30, -30, 0, 15, 20, 20, 15, 0, -30, -30, 5, 10, 15, 15, 10, 5, -30, -40, -20, 0, 5, 5, 0, -20, -40, -50, -40, -30, -30, -30, -30, -40, -50],
+    b: [-20, -10, -10, -10, -10, -10, -10, -20, -10, 0, 0, 0, 0, 0, 0, -10, -10, 0, 5, 10, 10, 5, 0, -10, -10, 5, 5, 10, 10, 5, 5, -10, -10, 0, 10, 10, 10, 10, 0, -10, -10, 10, 10, 10, 10, 10, 10, -10, -10, 5, 0, 0, 0, 0, 5, -10, -20, -10, -10, -10, -10, -10, -10, -20],
+    r: [0, 0, 0, 0, 0, 0, 0, 0, 5, 10, 10, 10, 10, 10, 10, 5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, 0, 0, 0, 5, 5, 0, 0, 0],
+    q: [-20, -10, -10, -5, -5, -10, -10, -20, -10, 0, 0, 0, 0, 0, 0, -10, -10, 0, 5, 5, 5, 5, 0, -10, -5, 0, 5, 5, 5, 5, 0, -5, 0, 0, 5, 5, 5, 5, 0, -5, -10, 5, 5, 5, 5, 5, 0, -10, -10, 0, 5, 0, 0, 0, 0, -10, -20, -10, -10, -5, -5, -10, -10, -20],
+    k: [-30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -20, -30, -30, -40, -40, -30, -30, -20, -10, -20, -20, -20, -20, -20, -20, -10, 20, 20, 0, 0, 0, 0, 20, 20, 20, 30, 10, 0, 0, 10, 30, 20],
+    ke: [-50, -40, -30, -20, -20, -30, -40, -50, -30, -20, -10, 0, 0, -10, -20, -30, -30, -10, 20, 30, 30, 20, -10, -30, -30, -10, 30, 40, 40, 30, -10, -30, -30, -10, 30, 40, 40, 30, -10, -30, -30, -10, 20, 30, 30, 20, -10, -30, -30, -30, 0, 0, 0, 0, -30, -30, -50, -30, -30, -30, -30, -30, -30, -50],
+  };
+  const MATE = 100000;
+  function evaluate(pos, color) {
+    let s = 0, heavy = 0;
+    for (let i = 0; i < 64; i++) { const p = pos.board[i]; if (!p) continue; const t = typeOf(p); if (t !== "k" && t !== "p") heavy += VAL[t]; }
+    const endgame = heavy <= 1300;
+    for (let i = 0; i < 64; i++) {
+      const p = pos.board[i]; if (!p) continue;
+      const t = typeOf(p), c = colorOf(p);
+      const sq = c === 0 ? i : ((7 - (i >> 3)) * 8 + (i & 7));
+      const v = VAL[t] + (t === "k" ? (endgame ? PST.ke : PST.k) : PST[t])[sq];
+      s += c === color ? v : -v;
+    }
+    return s;
+  }
+  const capVal = (m) => (m.capture ? VAL[typeOf(m.capture)] : 0) + (m.promo ? VAL[m.promo] : 0);
+  function quiesce(pos, color, alpha, beta, depth) {
+    const stand = evaluate(pos, color);
+    if (depth <= 0) return stand;
+    if (stand >= beta) return beta;
+    if (stand > alpha) alpha = stand;
+    const caps = legalFrom(pos, color, true).sort((a, b) => capVal(b) - capVal(a));
+    for (const m of caps) {
+      const v = -quiesce(applyPos(pos, m), 1 - color, -beta, -alpha, depth - 1);
+      if (v >= beta) return beta;
+      if (v > alpha) alpha = v;
+    }
+    return alpha;
+  }
+  function search(pos, color, depth, alpha, beta, ply) {
+    if (depth <= 0) {
+      if (inCheck(pos.board, color) && !legalFrom(pos, color).length) return -MATE + ply;
+      return quiesce(pos, color, alpha, beta, 4);
+    }
+    const moves = legalFrom(pos, color);
+    if (!moves.length) return inCheck(pos.board, color) ? -MATE + ply : 0;
+    moves.sort((a, b) => capVal(b) - capVal(a));
+    let best = -Infinity;
+    for (const m of moves) {
+      const v = -search(applyPos(pos, m), 1 - color, depth - 1, -beta, -alpha, ply + 1);
+      if (v > best) best = v;
+      if (v > alpha) alpha = v;
+      if (alpha >= beta) break;
+    }
+    return best;
+  }
+  function cpuMove(state, seat, rng = Math.random) {
+    if (state.over || state.turn !== seat) return null;
+    const moves = legalFrom(state, seat);
+    if (!moves.length) return null;
+    for (let i = moves.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [moves[i], moves[j]] = [moves[j], moves[i]]; }
+    const level = state.cpuLevel || 2;
+    let best = null, bestV = -Infinity;
+    for (const m of moves) {
+      const np = applyPos(state, m);
+      let v;
+      if (level <= 1) { // やさしい: 指した直後の形だけ見る（相手の応手は読まない）＋大きめの乱数
+        const oppMoves = legalFrom(np, 1 - seat);
+        v = !oppMoves.length ? (inCheck(np.board, 1 - seat) ? MATE : 0) : evaluate(np, seat);
+        v += rng() * 160 - 80;
+      } else { // ふつう: 自分の手→相手の応手（2手）＋取り合いの静止探索、同点は乱数
+        v = -search(np, 1 - seat, 1, -Infinity, Infinity, 1) + rng() * 12;
+      }
+      if (v > bestV) { bestV = v; best = m; }
+    }
+    return { from: best.from, to: best.to, promo: best.promo || "" };
+  }
+
+  return { initialState, legalMoves, applyMove, cpuMove, isOver, result, publicView,
+    parseFen, fenOf, posKey, isAttacked, inCheck, legalFrom, applyPos, evaluate, insufficient, materialOf,
+    sqName, sqIdx, colorOf, typeOf, VAL, START_FEN, REASON };
+})();
+/* @engine-end */
+
+/* ============================================================
+   2. オンライン接続（AsobibaOnline の薄いラッパ）
+      部屋の作成/参加/追従、自分の手の送信、ホストによるCPU駆動、退出
+   ============================================================ */
+const SLUG = "chess";
+const Online = {
+  ready: false, code: "", unsub: null, cpuScheduledFor: -1,
+  async ensure() {
+    if (this.ready) return true;
+    if (!window.AsobibaOnline) { showOnlineNotice("オンライン部品が読み込めませんでした。ローカルモードで遊べます。"); return false; }
+    try { await AsobibaOnline.init({ slug: SLUG }); this.ready = true; return true; }
+    catch (e) { showOnlineNotice("オンラインは使えません：" + (e.message || e)); return false; }
+  },
+  async create(name, cpuLevel) {
+    const code = await AsobibaOnline.createRoom({ name, maxPlayers: 2, minPlayers: 2, settings: { cpuLevel }, initialState: null });
+    this.open(code);
+  },
+  async join(code, name) {
+    await AsobibaOnline.joinRoom(code, { name });
+    this.open(code);
+  },
+  open(code) {
+    this.close();
+    this.code = code;
+    this.cpuScheduledFor = -1;
+    try { history.replaceState(null, "", "#" + code); } catch (e) { /* file:// など */ }
+    this.unsub = AsobibaOnline.subscribe(code, (r, err) => onRoom(r, err));
+  },
+  close() {
+    if (this.unsub) { this.unsub(); this.unsub = null; }
+    this.code = "";
+    try { if (location.hash) history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* noop */ }
+  },
+  mySeat(r) { const me = AsobibaOnline.me(r); return me ? me.seat : -1; },
+  seatPlayer(r, seat) { return r.players.find((p) => p.seat === seat) || null; },
+  // 自分の手（純粋関数で次の state。手番でなければ何もしない）
+  move(move) {
+    return AsobibaOnline.update(this.code, (r) => {
+      if (r.status !== "playing" || !r.state || r.state.over) return null;
+      const seat = this.mySeat(r);
+      if (seat < 0) return null;
+      if (!move.resign && r.state.turn !== seat) return null; // 投了だけは手番に関係なく送れる
+      r.state = Engine.applyMove(r.state, move, seat);
+      if (r.state.over) r.status = "ended";
+      return r;
+    });
+  },
+  // ホストだけが CPU 席を動かす（600〜1200ms 後に update。version 単位で1回だけ）
+  maybeDriveCpu(r) {
+    if (!AsobibaOnline.isHost(r) || r.status !== "playing" || !r.state || r.state.over) return;
+    const p = this.seatPlayer(r, r.state.turn);
+    if (!p || !p.cpu) return;
+    if (this.cpuScheduledFor === r.version) return;
+    this.cpuScheduledFor = r.version;
+    const v = r.version;
+    setTimeout(async () => {
+      try {
+        await AsobibaOnline.update(this.code, (rr) => {
+          if (rr.version !== v || rr.status !== "playing" || !rr.state || rr.state.over) return null;
+          if (!AsobibaOnline.isHost(rr)) return null;
+          const cp = this.seatPlayer(rr, rr.state.turn);
+          if (!cp || !cp.cpu) return null;
+          const mv = Engine.cpuMove(rr.state, rr.state.turn, Math.random);
+          if (!mv) return null;
+          rr.state = Engine.applyMove(rr.state, mv, rr.state.turn);
+          if (rr.state.over) rr.status = "ended";
+          return rr;
+        });
+      } catch (e) { console.warn("cpu move failed", e); }
+    }, 600 + Math.random() * 600);
+  },
+  async start(r) {
+    await AsobibaOnline.start(this.code, (rr) => Engine.initialState(rr.settings || {}, rr.players));
+  },
+  async rematch() {
+    await AsobibaOnline.update(this.code, (rr) => {
+      if (!AsobibaOnline.isHost(rr)) throw new Error("もう一度はホストが押します");
+      if (rr.status === "playing" && rr.state && !rr.state.over) return null;
+      // 色を入れ替えて再戦
+      rr.players.forEach((p) => { p.seat = p.seat === 0 ? 1 : 0; });
+      rr.state = Engine.initialState(rr.settings || {}, rr.players);
+      rr.status = "playing";
+      return rr;
+    });
+  },
+  async leave() {
+    if (!this.code) return;
+    const code = this.code;
+    try { await AsobibaOnline.leave(code); } catch (e) { console.warn(e); }
+    this.close();
+  },
+};
+
+/* ============================================================
+   3. UI描画（画面遷移・ホーム・ロビー・盤面・結果）
+   ============================================================ */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+const COLOR_NAME = ["白", "黒"];
+const LEVEL_NAME = { 1: "やさしい", 2: "ふつう" };
+const PIECE_NAME = { k: "キング", q: "クイーン", r: "ルーク", b: "ビショップ", n: "ナイト", p: "ポーン" };
+const PIECE_MOVE = { k: "全方向に1マス", q: "縦横斜めに何マスでも", r: "縦横に何マスでも", b: "斜めに何マスでも", n: "桂馬跳び（飛び越え可）", p: "前に1マス（初回2マス）、斜め前で取る" };
+const NAME_KEY = "asobiba.name";
+const SOUND_KEY = "asobiba.chess.sound";
+const FILES = "abcdefgh";
+
+// ---- 駒の形（フラットSVGシルエット・viewBox 0 0 100 100）。後で画像に差し替える時はここだけ直す ----
+// 色は CSS（.piece.w / .piece.b）。.d = 目など「縁の色で塗る点」、.ln = 線だけ（塗りなし）
+const PIECE_SVG = {
+  k: '<path d="M46 6h8v8h8v8h-8v10h-8V22h-8v-8h8z"/><path d="M33 34h34v7H33z"/><path d="M38 41h24l6 39H32z"/><path d="M25 80h50v9H25z"/>',
+  q: '<path d="M24 52 18 24l12 16 6-28 8 28 6-28 6 28 12-16-6 28z"/><circle cx="18" cy="22" r="4"/><circle cx="36" cy="10" r="4"/><circle cx="50" cy="8" r="4"/><circle cx="64" cy="10" r="4"/><circle cx="82" cy="22" r="4"/><path d="M36 54h28l7 26H29z"/><path d="M25 80h50v9H25z"/>',
+  r: '<path d="M30 38V14h10v8h6v-8h8v8h6v-8h10v24z"/><path d="M34 38h32l3 42H31z"/><path d="M25 80h50v9H25z"/>',
+  b: '<circle cx="50" cy="11" r="4.5"/><path d="M50 17c-13 9-18 21-14 33h28c4-12-1-24-14-33z"/><path class="ln" d="M44 38l11-11"/><path d="M38 52h24l7 28H31z"/><path d="M25 80h50v9H25z"/>',
+  n: '<path d="M26 82c10-7 16-15 16-24l-8 4-6-4-6-10 4-8 8-6 6-12 6 6 6-10 4 10c12 4 20 16 20 36v18z"/><circle class="d" cx="40" cy="38" r="3"/><circle class="d" cx="27" cy="46" r="1.8"/><path d="M22 82h56v7H22z"/>',
+  p: '<circle cx="50" cy="27" r="11"/><path d="M40 43h20l2 9H38z"/><path d="M37 52h26l8 28H29z"/><path d="M25 80h50v9H25z"/>',
+};
+const pieceSvg = (pc, cls = "") => `<svg class="piece ${Engine.colorOf(pc) === 0 ? "w" : "b"} ${cls}" viewBox="0 0 100 100" aria-hidden="true">${PIECE_SVG[Engine.typeOf(pc)]}</svg>`;
+
+// ---- アプリ状態 ----
+let mode = "cpu";            // "cpu" | "local" | "online"
+let cpuLevel = 2;
+let colorChoice = 0;         // CPU戦の色: 0 白 / 1 黒 / 2 ランダム
+let myColorSeat = 0;         // CPU戦で自分が持つ色（seat）
+let game = null;             // ローカル2モードの engine state
+let room = null;             // オンラインの Room
+let busy = false;            // 送信中・アニメ中の入力ロック
+let soundOn = true;
+let cpuTimer = null;
+let prevBoard = null;        // 盤面の差分アニメ用
+let lastMovesSeen = -1;      // 通知・結果表示の重複防止
+let resultShownKey = "";
+let flipped = false;         // 盤の向き（true = 黒が手前）
+let userFlip = false;        // メニューから反転した分
+let selected = -1;           // 選択中のマス（盤 idx）
+let legalCache = [];         // 選択中の駒の合法手
+let pendingPromo = null;     // {from,to} プロモーション選択待ち
+const cells = [];            // 表示順（k=0..63）のセル
+
+// ---- 画面遷移 ----
+function showScreen(id) {
+  ["homeScreen", "lobbyScreen", "playScreen"].forEach((x) => $(x).classList.toggle("active", x === id));
+  const inGame = id === "playScreen";
+  $("menuResign").hidden = !inGame;
+  $("menuFlip").hidden = !inGame;
+  $("menuHome").hidden = id === "homeScreen";
+  $("menuHomeLabel").textContent = id === "lobbyScreen" ? "部屋を出る" : "ホームへ戻る";
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+function openOverlay(id) { $(id).classList.add("show"); }
+function closeOverlay(id) { $(id).classList.remove("show"); }
+function showOnlineNotice(text) { const n = $("onlineNotice"); n.textContent = text; n.hidden = !text; }
+
+// ---- 名前 ----
+function myName() {
+  const v = $("nameInput").value.trim().slice(0, 12);
+  try { localStorage.setItem(NAME_KEY, v); } catch (e) { /* noop */ }
+  return v || "名無し";
+}
+try { $("nameInput").value = localStorage.getItem(NAME_KEY) || ""; } catch (e) { /* noop */ }
+
+// ---- サウンド（小さなWebAudio。指す/取る/チェック/終局） ----
+let actx = null;
+function ac() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; } } if (actx && actx.state === "suspended") actx.resume(); return actx; }
+function blip(freq, dur = 0.06, type = "sine", vol = 0.12, when = 0) {
+  if (!soundOn) return;
+  const c = ac(); if (!c) return;
+  const o = c.createOscillator(), g = c.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, c.currentTime + when);
+  g.gain.exponentialRampToValueAtTime(vol, c.currentTime + when + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + when + dur);
+  o.connect(g).connect(c.destination);
+  o.start(c.currentTime + when); o.stop(c.currentTime + when + dur + 0.02);
+}
+const sfx = {
+  move() { blip(480, 0.05, "triangle", 0.12); blip(240, 0.07, "sine", 0.07, 0.01); },
+  capture() { blip(200, 0.1, "square", 0.06); blip(140, 0.14, "sine", 0.1, 0.02); },
+  check() { blip(880, 0.08, "square", 0.05); blip(1100, 0.12, "square", 0.05, 0.1); },
+  castle() { blip(520, 0.05, "triangle", 0.1); blip(660, 0.06, "triangle", 0.1, 0.12); },
+  win() { [523, 659, 784, 1047].forEach((f, i) => blip(f, 0.18, "triangle", 0.12, i * 0.12)); },
+  lose() { [392, 330, 262].forEach((f, i) => blip(f, 0.22, "sine", 0.1, i * 0.16)); },
+  draw() { [440, 440].forEach((f, i) => blip(f, 0.16, "sine", 0.08, i * 0.2)); },
+};
+try { soundOn = localStorage.getItem(SOUND_KEY) !== "0"; } catch (e) { /* noop */ }
+function renderSoundBtn() {
+  $("menuSound").innerHTML = `<svg class="ic"><use href="#${soundOn ? "ic-sound-on" : "ic-sound-off"}"/></svg> <span>サウンド ${soundOn ? "ON" : "OFF"}</span>`;
+}
+
+// ---- 盤面DOM（64マスを一度だけ生成。表示位置 k と盤 idx の対応は flipped で切替） ----
+const boardIdx = (k) => (flipped ? 63 - k : k);
+const dispK = (i) => (flipped ? 63 - i : i);
+(function buildBoard() {
+  const b = $("board");
+  for (let k = 0; k < 64; k++) {
+    const c = document.createElement("button");
+    c.type = "button"; c.className = "cell minh0"; c.dataset.k = k; c.setAttribute("role", "gridcell");
+    c.innerHTML = '<span class="coord r"></span><span class="coord f"></span>';
+    c.addEventListener("click", () => onCellTap(boardIdx(k)));
+    b.appendChild(c); cells.push(c);
+  }
+  renderCoords();
+})();
+function renderCoords() {
+  cells.forEach((c, k) => {
+    const i = boardIdx(k), r = k >> 3, col = k & 7;
+    c.classList.toggle("dark", (((i >> 3) + (i & 7)) & 1) === 1);
+    c.setAttribute("aria-label", Engine.sqName(i));
+    c.querySelector(".coord.r").textContent = col === 0 ? String(8 - (i >> 3)) : "";
+    c.querySelector(".coord.f").textContent = r === 7 ? FILES[i & 7] : "";
+  });
+}
+// 静的な駒プレビュー（ホーム・遊び方・色選択）
+(function buildStatic() {
+  $("pieceRow").innerHTML = ["K", "Q", "R", "B", "N", "P", "p", "n", "b", "r", "q", "k"].map((p) => `<span class="pp">${pieceSvg(p)}</span>`).join("");
+  $("pieceGuide").innerHTML = ["k", "q", "r", "b", "n", "p"].map((t) => `<div class="pg"><span class="pp">${pieceSvg(t.toUpperCase())}</span><div><b>${PIECE_NAME[t]}</b><span>${PIECE_MOVE[t]}</span></div></div>`).join("");
+  document.querySelectorAll("[data-piece]").forEach((el) => { const v = el.dataset.piece; el.innerHTML = pieceSvg(v[0] === "w" ? v[1].toUpperCase() : v[1]); });
+})();
+
+// ---- 現在の state と席情報（3モード共通の見方） ----
+function curState() { return mode === "online" ? (room && room.state) : game; }
+function seatInfo(seat) {
+  if (mode === "online") {
+    const p = room ? Online.seatPlayer(room, seat) : null;
+    const me = room ? Online.mySeat(room) : -1;
+    return { name: p ? p.name : "（空席）", cpu: !!(p && p.cpu), mine: p ? (seat === me && !p.cpu) : false, away: p ? AsobibaOnline.isAway(p) : false, host: !!(p && room && room.hostUid === p.uid) };
+  }
+  if (mode === "cpu") {
+    if (seat === myColorSeat) return { name: myName(), cpu: false, mine: true, away: false };
+    return { name: "CPU", cpu: true, mine: false, away: false };
+  }
+  return { name: `${COLOR_NAME[seat]}の人`, cpu: false, mine: true, away: false };
+}
+function bottomSeat() { // 画面下に自分（online/cpu）、ローカルは白
+  if (mode === "online") { const s = room ? Online.mySeat(room) : -1; return s >= 0 ? s : 0; }
+  if (mode === "cpu") return myColorSeat;
+  return 0;
+}
+function applyOrientation() {
+  const want = (bottomSeat() === 1) !== userFlip;
+  if (want !== flipped) { flipped = want; renderCoords(); prevBoard = null; }
+}
+
+// ---- 盤面描画（差分でアニメ） ----
+function renderBoard(state, { hard = false } = {}) {
+  const board = state.board;
+  if (hard || !prevBoard) { prevBoard = new Array(64).fill(""); cells.forEach((c) => { const s = c.querySelector(".pc"); if (s) s.remove(); }); }
+  const lm = state.lastMove;
+  // 動いた駒（＋キャスリングのルーク）に「滑り」アニメ
+  const slides = {};
+  if (lm && !hard) {
+    slides[lm.to] = lm.from;
+    if (lm.castle) { const ks = lm.castle === "K" || lm.castle === "k"; slides[lm.to + (ks ? -1 : 1)] = lm.to + (ks ? 1 : -2); }
+  }
+  for (let i = 0; i < 64; i++) {
+    const v = board[i], p = prevBoard[i], cell = cells[dispK(i)];
+    if (v === p) continue;
+    let pc = cell.querySelector(".pc");
+    if (!v) { if (pc) pc.remove(); continue; }
+    if (!pc) { pc = document.createElement("div"); pc.className = "pc"; cell.appendChild(pc); }
+    pc.innerHTML = pieceSvg(v);
+    pc.className = "pc";
+    if (slides[i] != null) {
+      const kf = dispK(slides[i]), kt = dispK(i);
+      pc.style.setProperty("--dx", `${((kf & 7) - (kt & 7)) * 100}%`);
+      pc.style.setProperty("--dy", `${((kf >> 3) - (kt >> 3)) * 100}%`);
+      pc.classList.add("slide");
+    } else if (!hard) { pc.classList.add("pop"); }
+  }
+  prevBoard = board.slice();
+  // ハイライト: 最終手・チェック
+  const kingSq = state.check ? board.indexOf(state.turn === 0 ? "K" : "k") : -1;
+  cells.forEach((c, k) => {
+    const i = boardIdx(k);
+    c.classList.toggle("last", !!lm && (i === lm.from || i === lm.to));
+    c.classList.toggle("check", i === kingSq);
+  });
+}
+function renderSelection(state) {
+  const canTap = !busy && state && !state.over && seatInfo(state.turn).mine;
+  if (!canTap) { selected = -1; legalCache = []; }
+  const targets = new Map();
+  for (const m of legalCache) targets.set(m.to, m.capture ? "cap" : "dot");
+  cells.forEach((c, k) => {
+    const i = boardIdx(k);
+    c.classList.toggle("sel", i === selected);
+    const t = targets.get(i);
+    c.classList.toggle("legal", !!t);
+    c.classList.toggle("cap", t === "cap");
+  });
+  $("board").classList.toggle("locked", !canTap);
+}
+function capsHtml(state, seat) {
+  const mine = state.captured[seat === 0 ? "w" : "b"], theirs = state.captured[seat === 0 ? "b" : "w"];
+  const order = { q: 0, r: 1, b: 2, n: 3, p: 4 };
+  const val = (arr) => arr.reduce((a, t) => a + Engine.VAL[t], 0);
+  const diff = Math.round((val(mine) - val(theirs)) / 100);
+  const html = mine.slice().sort((a, b) => order[a] - order[b]).map((t) => `<span class="cp">${pieceSvg(seat === 0 ? t : t.toUpperCase())}</span>`).join("");
+  return html + (diff > 0 ? `<span class="adv">+${diff}</span>` : "");
+}
+function renderPlayers(state) {
+  const bottom = bottomSeat(), top = 1 - bottom;
+  const put = (side, seat) => {
+    const info = seatInfo(seat);
+    $("pk" + side).innerHTML = pieceSvg(seat === 0 ? "K" : "k");
+    let badges = "";
+    if (info.cpu) badges += ` <span class="badge cpu">${LEVEL_NAME[(mode === "online" && room && room.settings && room.settings.cpuLevel) || cpuLevel] || "CPU"}</span>`;
+    if (mode === "online" && info.host) badges += ' <span class="badge host"><svg class="ic"><use href="#ic-crown"/></svg></span>';
+    if (info.away) badges += ' <span class="badge away">離脱中</span>';
+    $("pn" + side).innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis">${esc(info.name)}</span><span class="badge" style="padding:2px 7px">${COLOR_NAME[seat]}</span>${badges}`;
+    $("caps" + side).innerHTML = capsHtml(state, seat);
+    let status = "", chk = false;
+    if (!state.over && state.turn === seat) {
+      status = info.mine ? (mode === "local" ? "手番" : "あなたの番") : (info.cpu ? "考え中…" : "相手の番");
+      if (state.check) { status = "チェック！"; chk = true; }
+    }
+    const ps = $("ps" + side); ps.textContent = status; ps.classList.toggle("chk", chk);
+    $("pcard" + side).classList.toggle("turn", !state.over && state.turn === seat);
+  };
+  put("Top", top); put("Bottom", bottom);
+}
+function renderBanner(state) {
+  const el = $("turnBanner");
+  if (state.over) {
+    const r = Engine.result(state);
+    el.className = "turnBanner";
+    el.innerHTML = `<svg class="ic"><use href="#ic-flag"/></svg> 終局 — ${esc(r.summary)}`;
+    return;
+  }
+  const info = seatInfo(state.turn);
+  const king = `<span class="miniK">${pieceSvg(state.turn === 0 ? "K" : "k")}</span>`;
+  el.className = "turnBanner" + (info.mine ? " mine" : "") + (state.check ? " check" : "");
+  const who = mode === "local" ? esc(info.name) : "あなた";
+  if (info.mine) el.innerHTML = state.check ? `${king} チェック！ ${who}のキングを守る手を` : `${king} ${who}の番 — 駒をタップ`;
+  else if (info.cpu) el.innerHTML = `${king} ${esc(info.name)} が<span class="dots">考え中</span>`;
+  else if (info.away) el.innerHTML = `${king} ${esc(info.name)} は離脱中… 戻るまで待っています`;
+  else el.innerHTML = `${king} ${esc(info.name)} の番${state.check ? "（チェック中）" : ""}<span class="dots"></span>`;
+}
+function renderInfo(state) {
+  $("infoMoves").innerHTML = `<svg class="ic"><use href="#ic-clock"/></svg> ${state.moves}手目`;
+  $("infoFifty").textContent = `進行なし ${state.halfmove}/100`;
+  let m = "";
+  if (mode === "cpu") m = `<svg class="ic"><use href="#ic-cpu"/></svg> CPU ${LEVEL_NAME[cpuLevel]}`;
+  else if (mode === "local") m = `<svg class="ic"><use href="#ic-swap"/></svg> 交代プレイ`;
+  else m = `<svg class="ic"><use href="#ic-globe"/></svg> 部屋 ${esc(Online.code)}`;
+  $("infoMode").innerHTML = m;
+  // 棋譜
+  const h = state.history;
+  $("movesSummary").textContent = h.length ? `棋譜（${h.length}手）` : "棋譜";
+  if (!h.length) { $("movesList").innerHTML = '<span class="empty">まだ手がありません</span>'; return; }
+  let out = "";
+  for (let i = 0; i < h.length; i += 2) out += `<span><span class="mn">${(i >> 1) + 1}.</span>${esc(h[i])}${h[i + 1] ? " " + esc(h[i + 1]) : ""}</span>`;
+  $("movesList").innerHTML = out;
+  const box = $("movesList"); box.scrollTop = box.scrollHeight;
+}
+function renderPlay(state, opts = {}) {
+  applyOrientation();
+  renderBoard(state, opts);
+  renderPlayers(state);
+  renderBanner(state);
+  renderInfo(state);
+  renderSelection(state);
+}
+
+// state が進んだ時の共通処理（音・チェック通知・終局）。ローカル/オンライン両方から呼ぶ
+function afterStateChange(state, { animate = true } = {}) {
+  if (state.moves !== lastMovesSeen || state.over) {
+    if (animate && state.lastMove && state.moves !== lastMovesSeen) {
+      const lm = state.lastMove;
+      if (lm.castle) sfx.castle(); else if (lm.capture) sfx.capture(); else sfx.move();
+      if (state.check && !state.over) setTimeout(() => sfx.check(), 180);
+      if (lm.promo) asobibaToast(`${COLOR_NAME[lm.seat]}のポーンが${PIECE_NAME[lm.promo]}に昇格`, { ms: 1600 });
+      else if (lm.ep) asobibaToast("アンパッサン！", { ms: 1400 });
+      else if (lm.castle) asobibaToast("キャスリング", { ms: 1200 });
+    }
+    lastMovesSeen = state.moves;
+  }
+  if (state.over) {
+    const key = `${mode}:${Online.code}:${state.moves}:${state.resigned}:${state.history.length}`;
+    if (resultShownKey !== key) { resultShownKey = key; setTimeout(() => showResult(state), animate ? 900 : 200); }
+  }
+}
+
+// ---- マスをタップ ----
+async function onCellTap(idx) {
+  const state = curState();
+  if (!state || state.over || busy) return;
+  const info = seatInfo(state.turn);
+  if (!info.mine) { asobibaToast(info.cpu ? "CPUが考え中です" : "相手の番です", { kind: "warn" }); return; }
+  closePromo();
+  const pc = state.board[idx];
+  // 行き先をタップ
+  if (selected >= 0) {
+    const ms = legalCache.filter((m) => m.to === idx);
+    if (ms.length) {
+      if (ms[0].promo) { openPromo(selected, idx, state.turn); return; }
+      await sendMove({ from: selected, to: idx, promo: "" });
+      return;
+    }
+    if (idx === selected) { selected = -1; legalCache = []; renderSelection(state); return; }
+  }
+  // 自分の駒を選ぶ
+  if (pc && Engine.colorOf(pc) === state.turn) {
+    selected = idx;
+    legalCache = Engine.legalMoves(state, state.turn).filter((m) => m.from === idx);
+    renderSelection(state);
+    if (!legalCache.length) asobibaToast(`この${PIECE_NAME[Engine.typeOf(pc)]}は今は動けません`, { kind: "warn", ms: 1400 });
+    return;
+  }
+  if (selected >= 0) { selected = -1; legalCache = []; renderSelection(state); }
+  else if (pc) asobibaToast("相手の駒です", { kind: "warn", ms: 1200 });
+}
+function openPromo(from, to, seat) {
+  pendingPromo = { from, to };
+  $("promoGrid").innerHTML = ["q", "r", "b", "n"].map((t) => `<button type="button" class="pbtn" data-promo="${t}" aria-label="${PIECE_NAME[t]}">${pieceSvg(seat === 0 ? t.toUpperCase() : t)}</button>`).join("");
+  $("promoGrid").querySelectorAll("[data-promo]").forEach((b) => b.addEventListener("click", async () => {
+    const p = pendingPromo; if (!p) return;
+    closePromo();
+    await sendMove({ from: p.from, to: p.to, promo: b.dataset.promo });
+  }));
+  $("promoPop").classList.add("show");
+}
+function closePromo() { pendingPromo = null; $("promoPop").classList.remove("show"); }
+$("promoCancel").addEventListener("click", () => { closePromo(); const s = curState(); if (s) renderSelection(s); });
+async function sendMove(move) {
+  const state = curState();
+  if (!state) return;
+  ac();
+  selected = -1; legalCache = [];
+  if (mode === "online") {
+    busy = true; renderSelection(state);
+    try { await Online.move(move); }
+    catch (e) { asobibaToast(e.message || "送信に失敗しました", { kind: "warn" }); }
+    busy = false;
+    if (room && room.state) renderSelection(room.state);
+    return;
+  }
+  localApply(move);
+}
+function localApply(move) {
+  const seat = game.turn;
+  try { game = Engine.applyMove(game, move, seat); }
+  catch (e) { asobibaToast(e.message, { kind: "warn" }); renderSelection(game); return; }
+  busy = true;
+  renderPlay(game);
+  afterStateChange(game);
+  setTimeout(() => { busy = false; renderSelection(game); maybeCpuLocal(); }, 360);
+}
+function maybeCpuLocal() {
+  clearTimeout(cpuTimer);
+  if (mode !== "cpu" || !game || game.over) return;
+  if (!seatInfo(game.turn).cpu) return;
+  const snapshotMoves = game.moves;
+  cpuTimer = setTimeout(() => {
+    if (!game || game.over || game.moves !== snapshotMoves || mode !== "cpu") return;
+    const mv = Engine.cpuMove(game, game.turn, Math.random);
+    if (mv) localApply(mv);
+  }, 650 + Math.random() * 500);
+}
+
+// ---- 対局開始（ローカル） ----
+function startLocalGame(kind) {
+  mode = kind;
+  Online.close();
+  room = null;
+  if (kind === "cpu") myColorSeat = colorChoice === 2 ? (Math.random() < 0.5 ? 0 : 1) : colorChoice;
+  game = Engine.initialState({ cpuLevel }, []);
+  prevBoard = null; lastMovesSeen = -1; resultShownKey = ""; busy = false; selected = -1; legalCache = []; userFlip = false;
+  closePromo();
+  closeOverlay("resultOverlay");
+  showScreen("playScreen");
+  renderPlay(game, { hard: true });
+  if (kind === "cpu" && colorChoice === 2) asobibaToast(`あなたは${COLOR_NAME[myColorSeat]}（${myColorSeat === 0 ? "先手" : "後手"}）`, { ms: 1800 });
+  maybeCpuLocal();
+}
+
+// ---- オンライン: 部屋の更新を受け取る ----
+function onRoom(r, err) {
+  if (err) { asobibaToast(err.message, { kind: "warn", ms: 3200 }); if (/準備ができていません/.test(err.message)) showOnlineNotice(err.message); return; }
+  if (!r) { asobibaToast("部屋が閉じられました", { kind: "warn" }); Online.close(); room = null; goHome(); return; }
+  const prev = room; room = r;
+  if (r.status === "lobby") { closeOverlay("resultOverlay"); renderLobby(r); if (!$("lobbyScreen").classList.contains("active")) showScreen("lobbyScreen"); return; }
+  // playing / ended
+  const newGame = !prev || prev.status === "lobby" || !prev.state || (r.state && prev.state && r.state.moves < prev.state.moves);
+  if (newGame) { prevBoard = null; lastMovesSeen = -1; resultShownKey = ""; selected = -1; legalCache = []; userFlip = false; closePromo(); closeOverlay("resultOverlay"); }
+  if (!$("playScreen").classList.contains("active")) showScreen("playScreen");
+  if (r.state) {
+    renderPlay(r.state, { hard: newGame });
+    afterStateChange(r.state, { animate: !newGame });
+  }
+  Online.maybeDriveCpu(r);
+}
+function renderLobby(r) {
+  $("lobbyCode").textContent = r.code;
+  const me = Online.mySeat(r);
+  const isHost = AsobibaOnline.isHost(r);
+  const seatsEl = $("seats");
+  seatsEl.innerHTML = [0, 1].map((seat) => {
+    const p = Online.seatPlayer(r, seat);
+    const king = `<span class="kp">${pieceSvg(seat === 0 ? "K" : "k")}</span>`;
+    if (!p) return `<div class="seat empty">${king}<div><div class="sname"><span>（空席）</span></div><div class="ssub">${COLOR_NAME[seat]}・${seat ? "後手" : "先手"}</div></div><span></span></div>`;
+    const badges = [
+      r.hostUid === p.uid ? '<span class="badge host"><svg class="ic"><use href="#ic-crown"/></svg>ホスト</span>' : "",
+      p.cpu ? `<span class="badge cpu">${LEVEL_NAME[(r.settings && r.settings.cpuLevel) || 2]}</span>` : "",
+      !p.cpu && AsobibaOnline.isAway(p) ? '<span class="badge away">離脱中</span>' : "",
+      p.seat === me ? '<span class="badge">あなた</span>' : "",
+    ].filter(Boolean).join(" ");
+    const remove = isHost && p.cpu ? `<button class="btn secondary sm minh0" data-remove="${esc(p.uid)}" type="button" style="min-height:36px;padding:4px 10px;font-size:12px">外す</button>` : "";
+    return `<div class="seat">${king}<div><div class="sname"><span>${esc(p.name)}</span>${badges}</div><div class="ssub">${COLOR_NAME[seat]}・${seat ? "後手" : "先手"}</div></div>${remove}</div>`;
+  }).join("");
+  seatsEl.querySelectorAll("[data-remove]").forEach((b) => b.addEventListener("click", async () => {
+    try { await AsobibaOnline.removeCpu(Online.code, b.dataset.remove); } catch (e) { asobibaToast(e.message, { kind: "warn" }); }
+  }));
+  const n = r.players.length;
+  $("addCpuBtn").hidden = !(isHost && n < 2);
+  $("startOnlineBtn").hidden = !isHost;
+  $("startOnlineBtn").disabled = n < 2;
+  $("lobbyStatus").textContent = isHost
+    ? (n < 2 ? "相手の参加を待っています。来ないときは CPU を入れて始められます。" : "そろいました。「対局開始」で始めます。")
+    : "ホストが対局を開始するのを待っています…";
+  $("shareBtn").hidden = !navigator.share;
+}
+
+// ---- 結果 ----
+function showResult(state) {
+  const r = Engine.result(state);
+  const capVal = (arr) => Math.round(arr.reduce((a, t) => a + Engine.VAL[t], 0) / 100);
+  const cw = capVal(state.captured.w), cb = capVal(state.captured.b);
+  const nameW = seatInfo(0).name, nameB = seatInfo(1).name;
+  $("rpkW").innerHTML = pieceSvg("K"); $("rpkB").innerHTML = pieceSvg("k");
+  $("resW").innerHTML = `${cw}<small>取得</small>`; $("resB").innerHTML = `${cb}<small>取得</small>`;
+  $("resNameW").textContent = nameW; $("resNameB").textContent = nameB;
+  $("rscW").classList.toggle("win", r.winner === 0); $("rscB").classList.toggle("win", r.winner === 1);
+  $("crownW").innerHTML = r.winner === 0 ? '<svg class="ic"><use href="#ic-crown"/></svg>WIN' : "";
+  $("crownB").innerHTML = r.winner === 1 ? '<svg class="ic"><use href="#ic-crown"/></svg>WIN' : "";
+  let title, sub = "";
+  if (r.winner == null) { title = "引き分け"; sub = `${r.reasonLabel} ・ ${state.moves}手`; }
+  else {
+    const wi = seatInfo(r.winner);
+    const iPlay = mode === "cpu" || (mode === "online" && Online.mySeat(room) >= 0);
+    title = mode === "local" ? `${COLOR_NAME[r.winner]}の勝ち` : (wi.mine ? "あなたの勝ち" : (iPlay ? "あなたの負け" : `${wi.name}の勝ち`));
+    sub = `${r.reasonLabel}${r.resigned != null ? `（${COLOR_NAME[r.resigned]}が投了）` : ""} ・ ${wi.name}（${COLOR_NAME[r.winner]}） ・ ${state.moves}手`;
+  }
+  $("resultTitle").textContent = title;
+  $("resultSub").textContent = sub;
+  const mine = r.winner != null && seatInfo(r.winner).mine && mode !== "local";
+  if (mode === "online") {
+    const host = AsobibaOnline.isHost(room);
+    $("resultAgain").hidden = !host;
+    $("resultNote").textContent = host ? "「もう一度」で色を入れ替えて再戦（相手も同じ部屋のまま）" : "ホストが「もう一度」を押すと再戦が始まります";
+  } else { $("resultAgain").hidden = false; $("resultNote").textContent = mode === "cpu" ? "もう一度で同じ設定で再戦" : ""; }
+  openOverlay("resultOverlay");
+  if (r.winner == null) { sfx.draw(); return; }
+  if (mode === "local" || mine) { sfx.win(); confetti(); } else sfx.lose();
+}
+function confetti() {
+  const box = document.createElement("div"); box.className = "confetti";
+  const cols = ["#f1e9da", "#b39a7c", "#f2c14e", "#d9c19c", "#8c7b6b"];
+  for (let i = 0; i < 70; i++) {
+    const p = document.createElement("i");
+    p.style.left = Math.random() * 100 + "vw"; p.style.background = cols[i % cols.length];
+    p.style.animationDuration = 1.6 + Math.random() * 1.4 + "s"; p.style.animationDelay = Math.random() * 0.6 + "s";
+    p.style.transform = `rotate(${Math.random() * 360}deg)`; box.appendChild(p);
+  }
+  document.body.appendChild(box); setTimeout(() => box.remove(), 3400);
+}
+
+// ---- ホームへ（確認は呼び出し側） ----
+function goHome() {
+  clearTimeout(cpuTimer);
+  Online.close();
+  room = null; game = null; busy = false; selected = -1; legalCache = []; userFlip = false;
+  closePromo();
+  closeOverlay("resultOverlay"); closeOverlay("menuOverlay");
+  showScreen("homeScreen");
+}
+function scoreLine(state) {
+  const [mw, mb] = Engine.materialOf(state.board);
+  return `白 ${Math.round(mw / 100)} – ${Math.round(mb / 100)} 黒（駒の価値）`;
+}
+async function confirmAndGoHome() {
+  const state = curState();
+  if (mode === "online" && Online.code) {
+    const playing = room && room.status === "playing" && state && !state.over;
+    const ok = await asobibaConfirm({
+      title: playing ? "対局中に部屋を出る" : "部屋を出る",
+      lines: playing ? [["あなたの席", "CPUが引き継ぐ"], ["現在", `${state.moves}手目`], ["駒", scoreLine(state)]] : [],
+      note: playing ? "相手はCPU相手に続けられます。同じコードで戻れば席に復帰できます。" : "",
+      okLabel: "出る", danger: true,
+    });
+    if (!ok) return;
+    await Online.leave();
+    goHome(); return;
+  }
+  if (state && !state.over && $("playScreen").classList.contains("active")) {
+    const ok = await asobibaConfirm({ title: "対局をやめてホームへ", lines: [["現在", `${state.moves}手目`], ["駒", scoreLine(state)]], note: "この対局は保存されません。", okLabel: "やめる", danger: true });
+    if (!ok) return;
+  }
+  goHome();
+}
+async function resign() {
+  const state = curState();
+  if (!state || state.over) return;
+  const seat = mode === "local" ? state.turn : (mode === "cpu" ? myColorSeat : Online.mySeat(room));
+  if (seat < 0 || (mode !== "local" && !seatInfo(seat).mine)) return;
+  const ok = await asobibaConfirm({
+    title: `${mode === "local" ? COLOR_NAME[seat] + "が" : ""}投了する`,
+    lines: [["現在", `${state.moves}手目`], ["駒", scoreLine(state)], ["結果", `${COLOR_NAME[1 - seat]}の勝ちになる`]],
+    okLabel: "投了する", danger: true,
+  });
+  if (!ok) return;
+  closeOverlay("menuOverlay");
+  if (mode === "online") { try { await Online.move({ resign: true }); } catch (e) { asobibaToast(e.message, { kind: "warn" }); } return; }
+  clearTimeout(cpuTimer);
+  game = Engine.applyMove(game, { resign: true }, seat);
+  renderPlay(game); afterStateChange(game, { animate: false });
+}
+
+// ---- ホームのイベント ----
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll(".modeCard").forEach((c) => { const on = c.dataset.mode === m; c.classList.toggle("on", on); c.setAttribute("aria-checked", on ? "true" : "false"); });
+  $("optCpu").hidden = m !== "cpu"; $("optLocal").hidden = m !== "local"; $("optOnline").hidden = m !== "online";
+}
+document.querySelectorAll(".modeCard").forEach((c) => c.addEventListener("click", () => setMode(c.dataset.mode)));
+function bindSeg(id, attr, onPick) {
+  $(id).querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+    $(id).querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+    onPick(Number(b.dataset[attr]));
+  }));
+}
+const syncLevelSegs = (lv) => ["levelSeg", "levelSegOnline"].forEach((id) => $(id).querySelectorAll("button").forEach((x) => x.classList.toggle("on", Number(x.dataset.level) === lv)));
+bindSeg("levelSeg", "level", (v) => { cpuLevel = v; syncLevelSegs(v); });
+bindSeg("levelSegOnline", "level", (v) => { cpuLevel = v; syncLevelSegs(v); });
+bindSeg("colorSeg", "seat", (v) => { colorChoice = v; });
+$("startCpu").addEventListener("click", () => { myName(); startLocalGame("cpu"); });
+$("startLocal").addEventListener("click", () => startLocalGame("local"));
+$("createRoomBtn").addEventListener("click", async () => {
+  const name = myName();
+  showOnlineNotice("");
+  $("createRoomBtn").disabled = true;
+  try {
+    if (!(await Online.ensure())) return;
+    await Online.create(name, cpuLevel);
+  } catch (e) { asobibaToast(e.message || "部屋を作れませんでした", { kind: "warn", ms: 2600 }); }
+  finally { $("createRoomBtn").disabled = false; }
+});
+$("joinRoomBtn").addEventListener("click", async () => {
+  const name = myName();
+  const code = $("codeInput").value.trim();
+  if (!/^\d{4}$/.test(code)) { asobibaToast("4桁のコードを入れてください", { kind: "warn" }); $("codeInput").focus(); return; }
+  showOnlineNotice("");
+  $("joinRoomBtn").disabled = true;
+  try {
+    if (!(await Online.ensure())) return;
+    await Online.join(code, name);
+  } catch (e) { asobibaToast(e.message || "参加できませんでした", { kind: "warn", ms: 2600 }); }
+  finally { $("joinRoomBtn").disabled = false; }
+});
+$("codeInput").addEventListener("input", (e) => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4); });
+
+// ---- ロビーのイベント ----
+$("copyUrlBtn").addEventListener("click", async () => {
+  const url = AsobibaOnline.shareUrl(Online.code);
+  try { await navigator.clipboard.writeText(url); asobibaToast("招待URLをコピーしました"); }
+  catch (e) { prompt("この招待URLをコピーして相手に送ってください", url); }
+});
+$("shareBtn").addEventListener("click", async () => {
+  try { await navigator.share({ title: "チェスで対戦しよう", text: `部屋コード ${Online.code}`, url: AsobibaOnline.shareUrl(Online.code) }); } catch (e) { /* cancel */ }
+});
+$("addCpuBtn").addEventListener("click", async () => {
+  try { await AsobibaOnline.addCpu(Online.code, { name: "CPU" }); }
+  catch (e) { asobibaToast(e.message, { kind: "warn" }); }
+});
+$("startOnlineBtn").addEventListener("click", async () => {
+  $("startOnlineBtn").disabled = true;
+  try { await Online.start(room); } catch (e) { asobibaToast(e.message, { kind: "warn" }); $("startOnlineBtn").disabled = false; }
+});
+$("leaveLobbyBtn").addEventListener("click", confirmAndGoHome);
+
+// ---- 結果のイベント ----
+$("resultHome").addEventListener("click", async () => {
+  if (mode === "online") { closeOverlay("resultOverlay"); await Online.leave(); }
+  goHome();
+});
+$("resultAgain").addEventListener("click", async () => {
+  if (mode === "online") { try { await Online.rematch(); } catch (e) { asobibaToast(e.message, { kind: "warn" }); } return; }
+  startLocalGame(mode);
+});
+
+// ---- トップバー / メニュー / 遊び方 ----
+$("topHelp").addEventListener("click", () => openOverlay("helpOverlay"));
+$("helpClose").addEventListener("click", () => closeOverlay("helpOverlay"));
+$("topMenu").addEventListener("click", () => { renderSoundBtn(); openOverlay("menuOverlay"); });
+$("menuClose").addEventListener("click", () => closeOverlay("menuOverlay"));
+$("menuHelp").addEventListener("click", () => { closeOverlay("menuOverlay"); openOverlay("helpOverlay"); });
+$("menuSound").addEventListener("click", () => { soundOn = !soundOn; try { localStorage.setItem(SOUND_KEY, soundOn ? "1" : "0"); } catch (e) { /* noop */ } renderSoundBtn(); if (soundOn) sfx.move(); });
+$("menuFlip").addEventListener("click", () => { closeOverlay("menuOverlay"); userFlip = !userFlip; selected = -1; legalCache = []; closePromo(); const s = curState(); if (s) renderPlay(s, { hard: true }); });
+$("menuResign").addEventListener("click", resign);
+$("menuHome").addEventListener("click", () => { closeOverlay("menuOverlay"); confirmAndGoHome(); });
+document.querySelectorAll(".overlay").forEach((ov) => ov.addEventListener("click", (e) => { if (e.target === ov && ov.id !== "resultOverlay") ov.classList.remove("show"); }));
+
+// ---- 起動: 招待URL（#1234）ならオンラインモードを選んでコードを入れておく ----
+(function boot() {
+  renderSoundBtn();
+  const m = /(\d{4})/.exec(location.hash || "");
+  if (m) {
+    setMode("online");
+    $("codeInput").value = m[1];
+    const n = $("inviteNotice");
+    n.innerHTML = `招待コード <b style="font-family:var(--font-num);font-size:18px;letter-spacing:.2em">${m[1]}</b> を受け取りました。名前を入れて「コードで参加」を押してください。`;
+    n.hidden = false;
+    if (!$("nameInput").value) $("nameInput").focus();
+  }
+  // 離脱中バッジ・手番表示の鮮度（オンライン時のみ 10 秒ごとに再描画）
+  setInterval(() => { if (mode === "online" && room && room.state && $("playScreen").classList.contains("active")) { renderPlayers(room.state); renderBanner(room.state); } }, 10000);
+  window.addEventListener("pagehide", () => { if (mode === "online" && Online.code && room && room.status !== "playing") { try { AsobibaOnline.leave(Online.code); } catch (e) { /* noop */ } } });
+})();
+</script>
+</body>
+</html>

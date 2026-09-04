@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#10201f">
 <title>呪宝の蔵 — あそびば</title>
+<!-- 書体: 本文/UI = Zen Kaku Gothic New、カードの数字 = Cinzel（共通CSSの --font-ui / このページの --font-num） -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
 <!-- @shared:base-css -->
 <style>
   :root{
@@ -21,11 +25,13 @@
     --gem-teal:#3fd6c0;
     --ink:#0b1413;
     --shadow:rgba(0,0,0,.55);
+    /* 数字専用（カード・蔵のミニ札・スコア）。読めない環境では明朝→serif に落ちる */
+    --font-num:"Cinzel",var(--font-display),serif;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;height:100%;}
   body{
-    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Segoe UI",system-ui,sans-serif;
+    font-family:var(--font-ui);
     background:
       radial-gradient(120% 80% at 50% -10%, rgba(231,184,78,.10), transparent 55%),
       radial-gradient(90% 60% at 50% 110%, rgba(192,57,43,.10), transparent 60%),
@@ -44,15 +50,19 @@
 
   /* ---------- candle ambiance ---------- */
   .ambiance{position:fixed; inset:0; pointer-events:none; z-index:0;}
+  /* ロウソクは左上（光源を1つに決めて、影は右下へ落とす） */
   .ambiance::before{
     content:""; position:absolute; inset:0;
-    background:radial-gradient(60% 45% at 50% 30%, rgba(255,217,122,.13), transparent 70%);
+    background:
+      radial-gradient(55% 42% at 16% 10%, rgba(255,205,110,.20), transparent 70%),
+      radial-gradient(70% 55% at 22% 18%, rgba(255,217,122,.09), transparent 72%);
     animation:flicker 5.5s ease-in-out infinite;
   }
+  /* 石壁の粒子（SVG feTurbulence ノイズ、不透明度 .06） */
   .ambiance::after{
-    content:""; position:absolute; inset:0;
-    background-image:radial-gradient(rgba(255,255,255,.025) 1px, transparent 1px);
-    background-size:3px 3px; opacity:.5;
+    content:""; position:absolute; inset:0; opacity:.06;
+    background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:180px 180px;
   }
   @keyframes flicker{
     0%,100%{opacity:.85;} 25%{opacity:1;} 40%{opacity:.7;}
@@ -112,7 +122,7 @@
   }
   .pcard .pname{
     display:flex; align-items:center; gap:6px;
-    font-size:13px; font-weight:800; color:var(--parch);
+    font-size:13px; font-weight:700; color:var(--parch);
   }
   .pcard .pname .dot{
     width:8px; height:8px; border-radius:50%; background:#555;
@@ -121,7 +131,7 @@
   .pcard.active .pname .dot{background:var(--gold-bright); box-shadow:0 0 8px var(--gold-bright);}
   .pcard .stats{display:flex; justify-content:space-between; margin-top:5px; gap:6px;}
   .stat{display:flex; flex-direction:column; align-items:center; flex:1;}
-  .stat .v{font-size:18px; font-weight:800; line-height:1;}
+  .stat .v{font-size:19px; font-weight:700; line-height:1; font-family:var(--font-num);}
   .stat .v.chips{color:var(--gold-bright);}
   .stat .v.score{color:var(--gem-teal);}
   .stat .l{font-size:11px; color:var(--parch-dim); margin-top:2px; letter-spacing:.08em;}
@@ -136,21 +146,39 @@
     font-size:12px; color:var(--parch-dim); letter-spacing:.1em;
     margin-bottom:6px; display:flex; align-items:center; gap:6px;
   }
-  .deckinfo b{color:var(--gold-bright); font-size:13px;}
+  .deckinfo b{color:var(--gold-bright); font-size:14px; font-family:var(--font-num);}
 
   .treasure-wrap{position:relative; display:flex; flex-direction:column; align-items:center; flex-shrink:0;}
 
-  /* the cursed treasure card */
+  /* 山札（伏せ札スタック）: カードの左に3枚ずらして置く。見た目だけで、枚数の判定には使わない */
+  .deck-stack{position:absolute; left:-104px; top:12px; width:92px; height:124px; pointer-events:none; z-index:0;}
+  .deck-stack.empty{display:none;}
+  .card-back{
+    position:absolute; inset:0; border-radius:12px;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(231,184,78,.35) 0 8px, transparent 9px),
+      repeating-linear-gradient(45deg, rgba(231,184,78,.16) 0 2px, transparent 2px 9px),
+      repeating-linear-gradient(-45deg, rgba(231,184,78,.16) 0 2px, transparent 2px 9px),
+      linear-gradient(160deg,#2a4442,#16302d 60%,#0f2321);
+    border:1px solid rgba(231,184,78,.5);
+    box-shadow:6px 8px 16px rgba(0,0,0,.5), inset 0 0 0 4px rgba(11,23,22,.8), inset 0 0 0 5px rgba(231,184,78,.35);
+  }
+  .card-back:nth-child(1){transform:translate(-7px,7px) rotate(-4deg); opacity:.85;}
+  .card-back:nth-child(2){transform:translate(-3px,3px) rotate(-2deg); opacity:.92;}
+  .card-back:nth-child(3){transform:none;}
+  @media (max-width:359px){ .deck-stack{display:none;} }
+
+  /* the cursed treasure card（光源は左上→影は右下へ） */
   .card{
-    position:relative;
+    position:relative; z-index:1;
     width:148px; height:200px;
     border-radius:18px;
     background:
-      radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,.10), transparent 45%),
+      radial-gradient(120% 90% at 20% 0%, rgba(255,255,255,.14), transparent 48%),
       linear-gradient(160deg,#f3e9cf,#e8dcc0 45%,#d8c69c);
     color:var(--ink);
     box-shadow:
-      0 14px 30px rgba(0,0,0,.55),
+      10px 16px 30px rgba(0,0,0,.55),
       0 0 0 4px #2b211088,
       0 0 0 7px rgba(231,184,78,.45),
       inset 0 0 28px rgba(120,90,30,.18);
@@ -158,17 +186,33 @@
     border:1px solid #00000022;
     transition:transform .25s ease, box-shadow .3s ease;
   }
-  .card .corner{
-    position:absolute; font-size:16px; font-weight:900; color:#6b5320;
+  /* 二重線の内枠（::before）＋四隅の飾り（::after の菱形4つ） */
+  .card::before{
+    content:""; position:absolute; inset:8px; border-radius:11px; pointer-events:none;
+    border:3px double rgba(107,83,32,.55);
   }
-  .card .corner.tl{top:9px; left:11px;}
-  .card .corner.br{bottom:9px; right:11px; transform:rotate(180deg);}
+  .card::after{
+    content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit;
+    --dia:radial-gradient(circle, rgba(107,83,32,.85) 0 2.2px, transparent 2.8px);
+    background:
+      var(--dia) 4px 4px / 10px 10px no-repeat,
+      var(--dia) calc(100% - 4px) 4px / 10px 10px no-repeat,
+      var(--dia) 4px calc(100% - 4px) / 10px 10px no-repeat,
+      var(--dia) calc(100% - 4px) calc(100% - 4px) / 10px 10px no-repeat,
+      linear-gradient(rgba(107,83,32,.5),rgba(107,83,32,.5)) 50% 8px / 22px 1px no-repeat,
+      linear-gradient(rgba(107,83,32,.5),rgba(107,83,32,.5)) 50% calc(100% - 8px) / 22px 1px no-repeat;
+  }
+  .card .corner{
+    position:absolute; font-size:15px; font-weight:700; color:#6b5320; font-family:var(--font-num); z-index:1;
+  }
+  .card .corner.tl{top:13px; left:15px;}
+  .card .corner.br{bottom:13px; right:15px; transform:rotate(180deg);}
   .card .skull{
     font-size:30px; line-height:1; color:#6b5320;
-    filter:drop-shadow(0 2px 2px rgba(0,0,0,.25)); margin-bottom:2px;
+    filter:drop-shadow(2px 2px 2px rgba(0,0,0,.25)); margin-bottom:2px;
   }
   .card .value{
-    font-size:64px; font-weight:900; line-height:.9;
+    font-size:62px; font-weight:900; line-height:.9; font-family:var(--font-num);
     color:#3a2c0e; text-shadow:0 1px 0 rgba(255,255,255,.5);
   }
   .card .neg{font-size:14px; font-weight:800; color:var(--ruby-deep); letter-spacing:.05em; margin-top:2px;}
@@ -191,6 +235,8 @@
   .card.danger .value{color:var(--ruby-deep);}
   .card.danger .corner{color:var(--ruby-deep);}
   .card.danger .skull{color:var(--ruby-deep);}
+  .card.danger::before{border-color:rgba(125,31,23,.55);}
+  .card.danger::after{--dia:radial-gradient(circle, rgba(125,31,23,.85) 0 2.2px, transparent 2.8px);}
 
   /* 連番ヒント（カード下端に重ねるチップ） */
   .runhints{
@@ -199,7 +245,7 @@
     pointer-events:none;
   }
   .runhint{
-    font-size:12px; font-weight:800; letter-spacing:.02em;
+    font-size:12px; font-weight:700; letter-spacing:.02em;
     padding:3px 10px; border-radius:999px; white-space:nowrap;
     box-shadow:0 2px 6px rgba(0,0,0,.45);
   }
@@ -276,7 +322,7 @@
   .mini{
     min-width:22px; height:26px; padding:0 3px;
     border-radius:5px; display:grid; place-items:center;
-    font-size:13px; font-weight:800;
+    font-size:13px; font-weight:700; font-family:var(--font-num);
     background:linear-gradient(160deg,#e8dcc0,#cdbb92); color:#3a2c0e;
     box-shadow:0 1px 2px rgba(0,0,0,.4);
   }
@@ -306,7 +352,7 @@
     font-family:inherit; font-weight:800; font-size:18px;
     padding:16px 10px; border-radius:16px;
     color:var(--ink);
-    box-shadow:0 4px 0 rgba(0,0,0,.35), 0 6px 14px var(--shadow), inset 0 1px 0 rgba(255,255,255,.3);
+    box-shadow:0 4px 0 rgba(0,0,0,.35), 5px 8px 14px var(--shadow), inset 0 1px 0 rgba(255,255,255,.3);
     transition:transform .07s ease, filter .15s ease, opacity .2s ease;
     display:flex; flex-direction:column; align-items:center; line-height:1.1;
   }
@@ -380,7 +426,7 @@
   }
   .scoreline .col.win{border-color:var(--gold); box-shadow:0 0 14px rgba(231,184,78,.25);}
   .scoreline .who{font-size:12px; color:var(--parch-dim);}
-  .scoreline .total{font-size:30px; font-weight:900; color:var(--gem-teal); line-height:1.1;}
+  .scoreline .total{font-size:30px; font-weight:900; color:var(--gem-teal); line-height:1.1; font-family:var(--font-num);}
   .scoreline .break{font-size:12px; color:var(--parch-dim); margin-top:3px;}
   .resbtns{display:flex; gap:10px; margin-top:14px;}
   .resbtns .closebtn{margin-top:0;}
@@ -414,6 +460,7 @@
     .card .value{font-size:54px;}
     .card .skull{font-size:26px;}
     .pile{height:46px; margin-top:10px;}
+    .deck-stack{left:-92px; width:80px; height:108px;}
   }
   @media (max-height:580px){
     .card{width:112px; height:150px;}
@@ -458,6 +505,7 @@
   <div class="stage">
     <div class="deckinfo">残りの呪宝 <b id="deckLeft">24</b> / 24</div>
     <div class="treasure-wrap">
+      <div class="deck-stack" id="deckStack" aria-hidden="true"><div class="card-back"></div><div class="card-back"></div><div class="card-back"></div></div>
       <div class="card" id="card">
         <span class="corner tl" id="cornerTL">3</span>
         <span class="skull"><svg class="ic"><use href="#ic-skull"/></svg></span>
@@ -741,6 +789,9 @@
     els.penYou.textContent = cardPenalty(S.hoard.you);
     els.penCpu.textContent = cardPenalty(S.hoard.cpu);
     els.deckLeft.textContent = S.deck.length - S.idx;
+    // 伏せ札スタック（見た目だけ）: 山札が尽きたら消す
+    var ds = document.getElementById("deckStack");
+    if(ds) ds.classList.toggle("empty", S.deck.length - S.idx <= 0);
     els.pcYou.classList.toggle("active", !S.over && S.turn==="you");
     els.pcCpu.classList.toggle("active", !S.over && S.turn==="cpu");
   }

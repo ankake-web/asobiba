@@ -12,6 +12,15 @@
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
   --sar: env(safe-area-inset-right, 0px);
+
+  /* 書体（色はここに置かない）。Webフォントの <link> は各ページの head に個別に書く（自己完結）。
+     読み込めない環境ではシステム書体にそのまま落ちる。
+       --font-ui      本文・UI（Zen Kaku Gothic New 400/500/700/900）
+       --font-display 和の見出し・題字（Shippori Mincho B1）
+       --font-num     数字専用。既定はシステム。各ゲームが :root で上書き（treasure=Cinzel / back10=Rajdhani 等） */
+  --font-ui: "Zen Kaku Gothic New", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Yu Gothic", Meiryo, system-ui, sans-serif;
+  --font-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+  --font-num: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 html{ -webkit-text-size-adjust:100%; }

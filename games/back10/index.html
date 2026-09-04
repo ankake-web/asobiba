@@ -4,6 +4,10 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <title>BACK10 — FLOW</title>
+<!-- 書体: 本文/UI = Zen Kaku Gothic New、ロゴ・数字・スコア = Rajdhani（共通CSSの --font-ui / このページの --font-num） -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 <!-- @shared:base-css -->
 <style>
 :root{
@@ -35,12 +39,14 @@
   --radius:18px;
   --glow-aqua:0 0 0 1px rgba(56,225,214,.35), 0 0 22px rgba(56,225,214,.28);
   --glow-amber:0 0 0 1px rgba(255,191,77,.45), 0 0 26px rgba(255,191,77,.40);
+  /* 数字専用（ロゴ・場札・手札・スコア）。Rajdhani は最大 700 なので 900 指定はしない */
+  --font-num:"Rajdhani",var(--font-ui);
 }
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
 body{
   color:var(--ink);
-  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Yu Gothic",Segoe UI,sans-serif;
+  font-family:var(--font-ui);
   background:
     radial-gradient(1100px 720px at 12% -8%, #1b2c5e 0%, transparent 55%),
     radial-gradient(900px 700px at 108% 6%, #10314a 0%, transparent 52%),
@@ -61,6 +67,23 @@ body:before{
   mask:radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 78%);
   opacity:.6;
 }
+/* ゆっくり流れるオーロラ（FLOW の「流れ」）。文字の後ろ・グリッドの上 */
+body:after{
+  content:"";
+  position:fixed; inset:-25% -20%; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(38% 26% at 18% 32%, rgba(56,225,214,.13), transparent 70%),
+    radial-gradient(32% 26% at 72% 24%, rgba(139,227,107,.10), transparent 70%),
+    radial-gradient(40% 28% at 58% 74%, rgba(184,156,255,.10), transparent 70%);
+  filter:blur(26px);
+  animation:aurora 30s ease-in-out infinite alternate;
+}
+@keyframes aurora{
+  0%{transform:translate3d(-3%,-2%,0) rotate(-2deg) scale(1);}
+  50%{transform:translate3d(2%,1%,0) rotate(2deg) scale(1.06);}
+  100%{transform:translate3d(4%,3%,0) rotate(5deg) scale(1.02);}
+}
+@media (prefers-reduced-motion:reduce){ body:after{animation:none} }
 button,input,select{
   font:inherit;
   border:0;
@@ -119,7 +142,7 @@ input::placeholder{color:var(--muted2)}
 input:focus,select:focus{outline:none;border-color:rgba(56,225,214,.6);box-shadow:0 0 0 3px rgba(56,225,214,.18)}
 select option{background:#0e1730;color:var(--ink)}
 main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-index:1}
-.small{font-size:13px;line-height:1.5;color:var(--muted);font-weight:600}
+.small{font-size:13px;line-height:1.5;color:var(--muted);font-weight:500}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .screen{display:none}
 .screen.active{display:block}
@@ -158,7 +181,7 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
 }
 .topEmblem{width:26px;height:26px;flex:0 0 auto}
 .topTitle .name{
-  font-weight:900; letter-spacing:.06em; font-size:18px;
+  font-weight:700; letter-spacing:.06em; font-size:20px; font-family:var(--font-num);
   background:linear-gradient(90deg,var(--aqua),var(--lime));
   -webkit-background-clip:text; background-clip:text; color:transparent;
   white-space:nowrap;
@@ -181,8 +204,8 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
 .home{
   position:relative;
   overflow:hidden;
-  min-height:calc(100vh - 150px);
-  min-height:calc(100dvh - 150px);
+  /* 旧: min-height:calc(100dvh - 150px) で下半分が空洞だった → 中身ぶんの高さにして、
+     余白には「遊び方3ステップ」と「自己ベスト」を置く */
   padding:18px 16px 22px;
 }
 /* flowing stream accent behind hero */
@@ -204,9 +227,10 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
 .logoWrap{text-align:center}
 .logo{
   margin:0;
-  font-size:clamp(60px,13vw,108px);
-  font-weight:900;
-  letter-spacing:.02em;
+  font-size:clamp(64px,14vw,116px);
+  font-weight:700;
+  font-family:var(--font-num);
+  letter-spacing:.03em;
   line-height:.92;
   font-variant-numeric:tabular-nums;
 }
@@ -219,7 +243,7 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
 .tagline{
   margin-top:12px;
   font-size:clamp(14px,3vw,20px);
-  font-weight:700;
+  font-weight:600;
   color:var(--muted);
   letter-spacing:.02em;
 }
@@ -227,7 +251,7 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
   margin-top:4px;
   font-size:clamp(11px,2.4vw,14px);
   color:var(--muted2);
-  font-weight:600;
+  font-weight:500;
   letter-spacing:.18em;
   text-transform:uppercase;
 }
@@ -255,20 +279,46 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
 .modeCard.multi:hover{border-color:rgba(139,227,107,.45);box-shadow:0 14px 40px rgba(139,227,107,.18)}
 .modeCardTitle{
   font-size:clamp(30px,5vw,42px);
-  line-height:1.04;font-weight:900;color:var(--ink);
+  line-height:1.04;font-weight:800;color:var(--ink);font-feature-settings:"palt";
 }
-.modeCardSub{margin-top:10px;font-size:14px;font-weight:600;color:var(--muted)}
+.modeCardSub{margin-top:10px;font-size:14px;font-weight:500;color:var(--muted)}
 .coopPanel{position:relative;z-index:3;max-width:620px;margin:16px auto 0;padding:16px}
 .coopPanel .row>*{flex:1}
+/* ホーム下段: 遊び方3ステップ＋自己ベスト（空洞だった余白を埋める。説明だけで判定には関与しない） */
+.homeInfo{position:relative;z-index:3;max-width:760px;margin:16px auto 0}
+.howRow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.howStep{
+  display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;
+  padding:12px 8px 11px;border-radius:16px;
+  background:rgba(8,15,34,.45);border:1px solid var(--glass-border);
+  box-shadow:0 1px 0 var(--glass-hi) inset;
+}
+.howStep .ic{width:24px;height:24px;color:var(--aqua)}
+.howStep:nth-child(2) .ic{color:var(--amber)}
+.howStep:nth-child(3) .ic{color:var(--lime)}
+.howStep b{font-size:13px;font-weight:700;color:var(--ink);line-height:1.3;font-feature-settings:"palt"}
+.howStep span{font-size:11.5px;font-weight:400;color:var(--muted);line-height:1.45;white-space:nowrap;font-feature-settings:"palt"}
+.howStep .n{
+  font-family:var(--font-num);font-weight:700;font-size:12px;letter-spacing:.12em;color:var(--muted2);
+}
+.bestChip{
+  margin:12px auto 0;width:fit-content;max-width:100%;
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 16px;border-radius:999px;
+  background:linear-gradient(180deg, rgba(255,191,77,.16), rgba(255,191,77,.06));
+  border:1px solid rgba(255,191,77,.4);color:var(--amber-soft);font-size:13px;font-weight:700;
+}
+.bestChip b{font-family:var(--font-num);font-weight:700;font-size:20px;line-height:1;color:var(--amber);font-variant-numeric:tabular-nums}
+.bestChip[hidden]{display:none}
 .homeFooter{
   position:relative;z-index:3;text-align:center;margin-top:18px;
-  color:var(--muted2);font-weight:700;letter-spacing:.2em;font-size:12px;
+  color:var(--muted2);font-weight:500;letter-spacing:.2em;font-size:12px;
 }
 
 /* ===== LOBBY ===== */
 .lobby{padding:22px}
 .roomCode{
-  font-size:44px;line-height:1;font-weight:900;color:var(--aqua);
+  font-size:48px;line-height:1;font-weight:700;font-family:var(--font-num);color:var(--aqua);
   letter-spacing:.1em;font-variant-numeric:tabular-nums;
   text-shadow:0 0 26px rgba(56,225,214,.5);
 }
@@ -298,7 +348,7 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
   width:fit-content;max-width:100%;margin:0 auto 10px;
   padding:9px 20px;border-radius:999px;
   border:1px solid var(--glass-border);
-  font-size:clamp(18px,4.2vw,26px);font-weight:900;
+  font-size:clamp(18px,4.2vw,26px);font-weight:800;
   backdrop-filter:blur(8px);
 }
 .turnBanner.mine{
@@ -369,7 +419,7 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
 }
 .pileValue{
   position:relative;z-index:2;width:100%;display:block;text-align:center;
-  line-height:1;padding:0;margin:0;font-size:52px;font-weight:900;
+  line-height:1;padding:0;margin:0;font-size:56px;font-weight:700;font-family:var(--font-num);
   font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;
   text-shadow:0 0 18px currentColor;
 }
@@ -384,16 +434,16 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
   padding:10px;display:flex;flex-direction:column;gap:9px;
 }
 .scoreBig{
-  font-size:clamp(26px,4.2vw,38px);line-height:1;font-weight:900;
+  font-size:clamp(28px,4.4vw,40px);line-height:1;font-weight:700;font-family:var(--font-num);
   color:var(--aqua);text-align:right;font-variant-numeric:tabular-nums;
   white-space:nowrap;text-shadow:0 0 18px rgba(56,225,214,.4);
 }
-.scoreList{font-size:12px;font-weight:700;color:var(--muted);line-height:1.6}
+.scoreList{font-size:12px;font-weight:600;color:var(--muted);line-height:1.6}
 .scoreList div{display:flex;justify-content:space-between;gap:5px;white-space:nowrap}
-.scoreList div span:last-child{color:var(--ink)}
+.scoreList div span:last-child{color:var(--ink);font-family:var(--font-num);font-weight:700;font-size:13px}
 .deckInfo{margin-top:auto;padding-top:8px;border-top:1px solid rgba(120,160,230,.18)}
 .deckNumber{
-  font-size:clamp(28px,5vw,44px);line-height:1;font-weight:900;
+  font-size:clamp(30px,5.2vw,46px);line-height:1;font-weight:700;font-family:var(--font-num);
   color:var(--lime);text-align:center;font-variant-numeric:tabular-nums;
   text-shadow:0 0 16px rgba(139,227,107,.35);
 }
@@ -412,7 +462,7 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
   background:linear-gradient(180deg, rgba(40,58,112,.92), rgba(20,33,68,.92));
   box-shadow:0 6px 16px rgba(0,0,0,.4), 0 1px 0 rgba(255,255,255,.07) inset;
   position:relative;display:flex;align-items:center;justify-content:center;
-  color:var(--cardText);font-size:clamp(22px,5.6vw,30px);font-weight:900;
+  color:var(--cardText);font-size:clamp(24px,6vw,32px);font-weight:700;font-family:var(--font-num);
   font-variant-numeric:tabular-nums;cursor:pointer;
   transition:transform .09s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
 }
@@ -455,7 +505,7 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
   position:fixed;left:50%;top:14%;transform:translateX(-50%);
   z-index:120;display:none;padding:13px 20px;border-radius:999px;
   background:rgba(20,33,68,.92);border:1px solid var(--glass-border);
-  color:var(--ink);font-size:21px;font-weight:900;white-space:nowrap;
+  color:var(--ink);font-size:21px;font-weight:800;white-space:nowrap;
   box-shadow:0 12px 34px rgba(0,0,0,.5);backdrop-filter:blur(8px);
 }
 #toast.back10{
@@ -493,10 +543,10 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
 .resultCard .title{text-align:center;margin:0 0 8px}
 .modalCard li{margin:10px 0;line-height:1.6;font-weight:600;color:var(--ink)}
 .modalCard ul{padding-left:20px}
-.confirmText{text-align:center;font-size:22px;font-weight:900;line-height:1.4;margin:10px 0 8px;color:var(--ink)}
+.confirmText{text-align:center;font-size:22px;font-weight:800;line-height:1.4;margin:10px 0 8px;color:var(--ink)}
 .resultBig{
-  font-size:52px;line-height:1;font-weight:900;text-align:center;
-  margin:8px 0;letter-spacing:.04em;
+  font-size:56px;line-height:1;font-weight:700;font-family:var(--font-num);text-align:center;
+  margin:8px 0;letter-spacing:.06em;
 }
 .resultBig.clear{color:var(--aqua);text-shadow:0 0 30px rgba(56,225,214,.6)}
 .resultBig.fail{color:var(--danger);text-shadow:0 0 26px rgba(255,107,138,.5)}
@@ -505,15 +555,15 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
   background:rgba(8,15,34,.55);border:1px solid var(--glass-border);
   border-radius:16px;padding:10px 6px;text-align:center;
 }
-.metric span{display:block;font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.1em}
-.metric b{display:block;font-size:24px;font-weight:900;color:var(--ink);font-variant-numeric:tabular-nums}
+.metric span{display:block;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.1em}
+.metric b{display:block;font-size:26px;font-weight:700;font-family:var(--font-num);color:var(--ink);font-variant-numeric:tabular-nums}
 .playerCard{
   margin:8px 0;padding:12px;background:rgba(8,15,34,.5);
   border:1px solid var(--glass-border);border-radius:16px;font-weight:600;color:var(--ink);line-height:1.6;
 }
 .rankingTable{width:100%;border-collapse:collapse;font-size:14px;color:var(--ink)}
 .rankingTable th,.rankingTable td{padding:9px 8px;border-bottom:1px solid rgba(120,160,230,.15);text-align:left}
-.rankingTable th{color:var(--muted);font-weight:800;font-size:12px;letter-spacing:.06em}
+.rankingTable th{color:var(--muted);font-weight:700;font-size:12px;letter-spacing:.06em}
 .confetti{position:fixed;top:-10px;width:10px;height:16px;z-index:130;pointer-events:none;animation:fall 2.6s linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.15}}
 
@@ -554,14 +604,14 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
   .pileArrow.down{bottom:8px}
   .pileArrow.up:before{border-left-width:7px;border-right-width:7px;border-bottom-width:10px}
   .pileArrow.down:before{border-left-width:7px;border-right-width:7px;border-top-width:10px;top:3px}
-  .pileValue{font-size:34px}
+  .pileValue{font-size:38px}
   .sideInfo{padding:7px;border-radius:14px;gap:6px}
-  .scoreBig{font-size:26px;text-align:center}
+  .scoreBig{font-size:28px;text-align:center}
   .scoreList{font-size:11px;line-height:1.45}
   .deckNumber{font-size:30px}
   .handWrap{margin-top:8px;padding:8px;border-radius:15px;min-height:146px}
   .handCards{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;grid-auto-rows:64px}
-  .card{height:64px;font-size:24px;border-radius:12px}
+  .card{height:64px;font-size:26px;border-radius:12px}
   .actionInner{grid-template-columns:1fr 52px;gap:6px}
   .actionInner button{min-height:48px;font-size:14px;padding:8px 6px}
   .resultGrid{grid-template-columns:repeat(2,1fr)}
@@ -575,9 +625,31 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
   .handCards{grid-auto-rows:60px}
 }
 
+/* 縦に余裕がある端末（iPhone 13 以上の高さ）では場札・手札を一段大きく。対局画面の下半分が空洞だった対策 */
+@media (max-width:520px) and (min-height:760px){
+  .pile{height:104px}
+  .pileValue{font-size:46px}
+  .pileArrow{width:18px;height:18px}
+  .pileArrow.up{top:10px}
+  .pileArrow.down{bottom:10px}
+  .handWrap{min-height:176px;padding:10px}
+  .handCards{grid-auto-rows:76px;gap:8px}
+  .card{height:76px;font-size:30px;border-radius:14px}
+  .scoreBig{font-size:32px}
+  .deckNumber{font-size:34px}
+  .turnBanner{margin-bottom:10px}
+}
+@media (max-width:390px) and (min-height:760px){
+  .pile{height:96px}
+  .pileValue{font-size:42px}
+  .handWrap{min-height:168px}
+  .handCards{grid-auto-rows:72px}
+  .card{height:72px;font-size:28px}
+}
+
 /* ===== pile A/B/C/D channel labels ===== */
 .pileMark{
-  position:absolute;z-index:3;line-height:1;font-size:13px;font-weight:900;
+  position:absolute;z-index:3;line-height:1;font-size:13px;font-weight:700;font-family:var(--font-num);
   font-variant-numeric:tabular-nums;opacity:.85;pointer-events:none;
   background:transparent;border:0;box-shadow:none;letter-spacing:.04em;
 }
@@ -678,6 +750,16 @@ main{max-width:980px;margin:0 auto;padding:0 12px 110px;position:relative;z-inde
           <button class="good" onclick="joinCoopRoom()">部屋に入る</button>
         </div>
         <div class="small" style="margin-top:10px">部屋を作った人がゲーム開始できます。スタート順はランダムです。</div>
+      </div>
+
+      <!-- 遊び方3ステップ（ルール本文は ☰ / ルール で）＋ この端末の自己ベスト -->
+      <div class="homeInfo">
+        <div class="howRow">
+          <div class="howStep"><span class="n">01</span><svg class="ic"><use href="#ic-updown"/></svg><b>上りは大きく<br>下りは小さく</b><span>4つの場に<br>手札を置く</span></div>
+          <div class="howStep"><span class="n">02</span><svg class="ic"><use href="#ic-restart"/></svg><b>BACK10</b><span>ちょうど10差で<br>逆向きに戻せる</span></div>
+          <div class="howStep"><span class="n">03</span><svg class="ic"><use href="#ic-trophy"/></svg><b>6000点で<br>クリア</b><span>連続で出すほど<br>高得点</span></div>
+        </div>
+        <div class="bestChip" id="bestChip" hidden><svg class="ic"><use href="#ic-crown"/></svg>自己ベスト <b id="bestScore">0</b></div>
       </div>
 
       <div class="homeFooter">© BACK10 · FLOW</div>
@@ -1195,6 +1277,14 @@ function localRankings(field,value){
   try{ return JSON.parse(localStorage.getItem(LOCAL_RANK_KEY)||"[]").filter(r=>r[field]===value); }
   catch(e){ return []; }
 }
+// ホームの「自己ベスト」チップ（端末ローカルのランキングの最高点を表示するだけ。判定・保存には関与しない）
+function paintBestScore(){
+  try{
+    const best=localRankings("mode","solo").reduce((m,r)=>Math.max(m,Number(r.score)||0),0);
+    const chip=$("bestChip"); if(!chip) return;
+    if(best>0){ $("bestScore").textContent=best.toLocaleString(); chip.hidden=false; }
+  }catch(e){}
+}
 async function saveRanking(g,result){
   const names = Object.values(g.players||{}).map(p=>p.name).join(" & ") || "Player";
   const entry = {
@@ -1348,6 +1438,7 @@ function confetti(n){
 }
 
 mountMascots();
+paintBestScore();
 </script>
 </body>
 </html>

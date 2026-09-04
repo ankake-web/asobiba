@@ -143,5 +143,29 @@
       <circle cx="14.5" cy="14.6" r="2.1"/>
       <path d="M11.6 14.6h.8"/>
     </symbol>
+
+    <!-- ── 定番ゲーム用（2026-08-23 追加。既存IDは変更しない） ── -->
+    <!-- トランプ2枚（大富豪・ババ抜き・神経衰弱・BJ・ポーカー） -->
+    <symbol id="ic-cards" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="7.5" width="11.5" height="14" rx="2"/>
+      <path d="M8.5 7.5V5.5a2 2 0 0 1 2-2H19a2 2 0 0 1 2 2v11.2a2 2 0 0 1-2 2h-4.5"/>
+      <path d="m8.75 11.6 2.2 2.9-2.2 2.9-2.2-2.9z" fill="currentColor" stroke="none"/>
+    </symbol>
+    <!-- 格子盤（将棋・チェス・オセロの盤） -->
+    <symbol id="ic-board" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+      <rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/>
+      <path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/>
+    </symbol>
+    <!-- 石（オセロ。半分塗り＝白黒が返る） -->
+    <symbol id="ic-disc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="8.5"/>
+      <path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/>
+    </symbol>
+    <!-- キング（チェス） -->
+    <symbol id="ic-king" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2.5v4.6M9.7 4.8h4.6"/>
+      <path d="M8.2 10.2h7.6l1.4 7H6.8z"/>
+      <path d="M6 20.5h12"/>
+    </symbol>
   </defs>
 </svg>

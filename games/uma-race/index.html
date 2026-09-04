@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>うまうまレース｜あそびば</title>
 <!-- umauma-race v55 / asobiba reskin: 夕暮れのターフ / logic preserved verbatim / public-ready base -->
+<!-- 書体: 本文/UI = Zen Kaku Gothic New、題字・和のラベル = Shippori Mincho B1（共通CSSの --font-ui / --font-display が参照） -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Shippori+Mincho+B1:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- @shared:base-css -->
 <style>
 :root{
@@ -22,12 +26,13 @@
 html{-webkit-text-size-adjust:100%}
 body{
 margin:0;
-font-family:"Hiragino Mincho ProN","Yu Mincho",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+font-family:var(--font-ui);
 color:var(--ink);
+/* クリーム紙の地＋上端だけ夕焼け（旧: 桃→緑の縦グラデはヒーロー絵・盤面の緑と喧嘩していた） */
 background:
-radial-gradient(1200px 420px at 50% -10%,rgba(255,217,168,.85),transparent 60%),
-radial-gradient(900px 360px at 50% 2%,rgba(255,178,122,.55),transparent 62%),
-linear-gradient(180deg,#ffe7cf 0%,#ffd1bd 22%,#f6c0ae 40%,#cbe2c4 64%,#bcdcb3 100%);
+radial-gradient(1100px 300px at 50% -14%,rgba(255,178,122,.78),transparent 62%),
+radial-gradient(820px 220px at 50% 0%,rgba(255,217,168,.9),transparent 60%),
+linear-gradient(180deg,#ffe6cc 0%,#fff3e2 24%,var(--paper) 48%,#f7ecd8 100%);
 background-attachment:fixed;
 min-height:100vh;
 min-height:100dvh;
@@ -35,7 +40,12 @@ min-height:100dvh;
 }
 /* base sans for UI controls/numbers; serif reserved for display */
 button,input,select,.money,.small,.tiny,.pill,.log,.payout,.moves,.betMini,.diceFaces,.lab,.num,.moveLine,.centerList{
-font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+font-family:var(--font-ui);
+}
+/* 和の題字・ラベルだけ明朝（Shippori Mincho B1）。本文・ボタン・数字は Zen Kaku */
+.asobibaTop .topTitle,.hero h1,.homeTitle,.resultTitle,.commentaryLabel,.cutinHead,
+.card>b,.homeForm>div:first-child>b,.homeHow summary b,.homeHow>b,.podiumRankNo{
+font-family:var(--font-display);font-feature-settings:"palt";
 }
 button,input,select{font-size:inherit}
 button{
@@ -83,12 +93,12 @@ background:linear-gradient(180deg,#fffdf7,#fff1d8);
 color:var(--ink);font-weight:800;font-size:13px;
 border:1px solid var(--gold);
 box-shadow:0 3px 10px rgba(0,0,0,.2);
-font-family:system-ui,-apple-system,sans-serif;
+font-family:var(--font-ui);
 }
 .asobibaTop .backPill:active{transform:translateY(1px)}
 .asobibaTop .topTitle{
 flex:1;min-width:0;display:flex;align-items:center;gap:7px;
-color:#fff7ec;font-weight:800;letter-spacing:.06em;font-size:16px;
+color:#fff7ec;font-weight:700;letter-spacing:.06em;font-size:17px;
 text-shadow:0 1px 0 rgba(0,0,0,.35);
 overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
 }
@@ -101,13 +111,16 @@ border:1px solid rgba(255,255,255,.5);
 box-shadow:0 3px 8px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.6);
 }
 .asobibaTop .topCtl{display:flex;gap:6px;flex:0 0 auto}
+/* 他ゲームと同形: 丸いアイコンボタン2個（遊び方=#ic-help / BGM=#ic-music） */
 .asobibaTop .topCtl button{
-font-family:system-ui,-apple-system,sans-serif;
-padding:8px 11px;font-size:13px;border-radius:999px;
+font-family:var(--font-ui);
+width:44px;height:44px;padding:0;font-size:16px;border-radius:50%;
+display:grid;place-items:center;
 background:linear-gradient(180deg,rgba(255,253,247,.95),rgba(255,241,216,.92));
 color:var(--ink);border:1px solid var(--gold);
 box-shadow:0 3px 9px rgba(0,0,0,.2);
 }
+.asobibaTop .topCtl .ic{width:20px;height:20px;vertical-align:middle}
 .asobibaTop .topCtl button.on{
 background:linear-gradient(180deg,#f2d575,#d9a82e);color:#3a2a08;
 }
@@ -146,7 +159,7 @@ box-shadow:inset 0 1px 0 rgba(255,255,255,.6);
 min-width:28px;height:28px;border-radius:999px;border:2px solid;
 display:inline-grid;place-items:center;font-size:12px;font-weight:800;
 background:#fffdf8;color:#2a2118;
-font-family:system-ui,-apple-system,sans-serif;
+font-family:var(--font-ui);
 }
 
 /* ===== Lobby hero =====
@@ -172,7 +185,7 @@ margin-top:10px;padding:8px 10px 8px 14px;border-radius:14px;
 background:rgba(47,141,72,.07);border:1px solid rgba(47,141,72,.22)}
 .stepperLabel{font-weight:800;font-size:14px;color:#3b2f1c}
 .stepper{display:flex;align-items:center;gap:4px}
-.stepBtn{min-width:44px;min-height:44px;padding:0;font-size:20px;font-weight:900;line-height:1;
+.stepBtn{min-width:44px;min-height:44px;padding:0;font-size:20px;font-weight:700;line-height:1;
 border-radius:12px;border:1px solid rgba(47,141,72,.45);background:#fffdf6;color:#1f7a44;cursor:pointer}
 .stepBtn:disabled{opacity:.32;cursor:default}
 .stepBtn:active:not(:disabled){transform:translateY(1px)}
@@ -204,9 +217,9 @@ font-size:clamp(36px,9vw,58px);font-weight:800;letter-spacing:.05em;line-height:
 color:#fff8e7;text-shadow:0 3px 14px rgba(0,0,0,.32);
 }
 .homeLead{
-max-width:650px;margin-top:12px;font-weight:600;font-size:14px;line-height:1.6;
+max-width:650px;margin-top:12px;font-weight:500;font-size:14px;line-height:1.6;
 color:#fdf3df;text-shadow:0 1px 4px rgba(0,0,0,.25);
-font-family:system-ui,-apple-system,sans-serif;
+font-family:var(--font-ui);
 }
 .homePanel{margin-top:14px;display:grid;grid-template-columns:1fr;gap:12px}
 .homeForm,.homeHow{
@@ -215,13 +228,24 @@ border:1px solid var(--hair);border-radius:22px;padding:16px;
 box-shadow:var(--shadow-sm),inset 0 0 0 1px rgba(255,255,255,.4);
 }
 .homeForm b,.homeHow b{font-size:15px;letter-spacing:.02em}
+/* 入力ラベルは sans 14px（旧: 本文明朝16px）。「部屋を作る」を主役に大きく */
+.homeForm>label{display:block;font-size:14px;font-weight:700;color:#5a4a33}
+.homeForm>label input{margin-top:5px;font-size:16px}
+.homeForm .two button{min-height:52px;font-size:16px}
+/* 「遊び方」は <details> で畳む（開くまで長いルール表で画面を占有しない） */
+details.homeHow summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px}
+details.homeHow summary::-webkit-details-marker{display:none}
+details.homeHow summary .tiny{display:inline-flex;align-items:center;gap:4px}
+details.homeHow summary .tiny::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translateY(-2px);transition:transform .2s}
+details.homeHow[open] summary .tiny::after{transform:rotate(-135deg) translateY(-2px)}
+details.homeHow[open] summary{margin-bottom:4px}
 .modeBox{background:#fffdf8;border:1px solid var(--hair);border-radius:15px;padding:11px}
 .modeCheck{display:flex;gap:8px;align-items:center;font-weight:800}
 .modeCheck input{width:auto}
 .ruleBlock{display:grid;gap:9px;margin-top:10px}
 .ruleItem{
 background:#fffdf8;border:1px solid var(--hair);border-radius:14px;padding:11px;line-height:1.6;
-font-family:system-ui,-apple-system,sans-serif;font-size:12.5px;
+font-family:var(--font-ui);font-size:12.5px;
 }
 .ruleItem b{display:block;margin-bottom:3px;color:var(--gold-deep);font-family:inherit}
 .payout{width:100%;border-collapse:separate;border-spacing:0;font-size:12px;margin-top:10px;border-radius:12px;overflow:hidden;border:1px solid var(--hair)}
@@ -394,7 +418,7 @@ background:linear-gradient(180deg,#fff6d6,#fff5e6)!important;
 box-shadow:0 0 16px rgba(176,123,255,.3),0 8px 18px rgba(201,150,47,.22)!important;
 }
 .horseHead{display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
-.horseName{font-weight:800;font-size:13px;font-family:"Hiragino Mincho ProN","Yu Mincho",serif}
+.horseName{font-weight:800;font-size:13px;font-family:var(--font-display)}
 .moves{display:flex;gap:4px;flex-wrap:wrap;margin-top:7px}
 .moves span{background:linear-gradient(180deg,#fff2d3,#ffe9bd);border-radius:999px;padding:3px 7px;font-size:11px;font-weight:800;color:#5a4316}
 .betMini{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px;min-height:20px;align-content:flex-start}
@@ -485,7 +509,7 @@ box-shadow:0 0 28px rgba(231,198,107,.55),var(--shadow);
 }
 .winnerTrophy{font-size:56px;color:var(--gold-deep);animation:trophyPop 1.05s ease-in-out infinite alternate;filter:drop-shadow(0 8px 12px rgba(184,133,31,.4))}
 .winnerTrophy .ic{width:1em;height:1em;vertical-align:middle}
-.winnerName{font-size:30px;font-weight:800;margin-top:4px;color:var(--gold-deep);text-shadow:0 2px 0 rgba(255,255,255,.6);font-family:"Hiragino Mincho ProN","Yu Mincho",serif}
+.winnerName{font-size:30px;font-weight:800;margin-top:4px;color:var(--gold-deep);text-shadow:0 2px 0 rgba(255,255,255,.6);font-family:var(--font-display)}
 .winnerSub{font-size:14px;font-weight:700;color:#5a4316;margin-top:5px}
 @keyframes trophyPop{from{transform:translateY(0) scale(1)}to{transform:translateY(-6px) scale(1.08)}}
 .goalConfettiLayer{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden}
@@ -599,9 +623,9 @@ button.diceStageButton .diceCube{width:54px;height:54px;font-size:28px}
 .podiumRank{font-size:22px}
 .podiumHorse{font-size:12px}
 .payoutGuideCard{margin-bottom:76px;scroll-margin-bottom:96px}
-.asobibaTop .topTitle{font-size:15px}
+.asobibaTop .topTitle{font-size:16px}
 .asobibaTop .backPill{font-size:12px;padding:7px 11px}
-.asobibaTop .topCtl button{padding:7px 10px;font-size:12px}
+.asobibaTop .topCtl button{width:44px;height:44px;padding:0;font-size:15px}
 }
 /* ===== リアルCGアセット統合 ===== */
 /* 左寄せの白文字が絵の上でも読めるよう、左から暗くするスクリムを1枚重ねる（馬がいる右側は明るいまま残す） */
@@ -626,8 +650,8 @@ button.diceStageButton .diceCube{width:54px;height:54px;font-size:28px}
 .horsePortrait::before{content:"";position:absolute;left:0;right:0;bottom:0;height:26px;z-index:1;
   background:linear-gradient(180deg,rgba(18,32,14,0),rgba(18,32,14,.78))}
 .cardStrip .horsePortrait{height:64px;margin:-7px -7px 5px}
-.horsePortrait .hpName{position:absolute;left:8px;right:8px;bottom:5px;color:#fff;font-weight:900;font-size:12px;z-index:2;
-  font-family:"Hiragino Mincho ProN","Yu Mincho",serif;text-shadow:0 1px 5px rgba(0,0,0,.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.horsePortrait .hpName{position:absolute;left:8px;right:8px;bottom:5px;color:#fff;font-weight:800;font-size:12px;z-index:2;
+  font-family:var(--font-display);text-shadow:0 1px 5px rgba(0,0,0,.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cardStrip .horsePortrait .hpName{font-size:12px;left:5px;right:5px}
 .horsePortrait .hpFlag{position:absolute;top:6px;left:6px;width:13px;height:13px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.6);z-index:2}
 /* 伏せ馬は専用の紫シルエットSVGを出すので、写真時代のグレースケール処理は不要。背景だけ夕暮れに寄せる */
@@ -644,20 +668,21 @@ button.diceStageButton .diceCube{width:54px;height:54px;font-size:28px}
 .cutinCard{position:relative;width:min(92vw,560px);aspect-ratio:16/10;border-radius:20px;overflow:hidden;background-color:#1a1822;
   box-shadow:0 24px 60px rgba(0,0,0,.6),0 0 0 3px rgba(255,255,255,.92);background-size:cover;background-position:center;animation:cutinSlide 1.95s cubic-bezier(.2,.8,.2,1) forwards}
 .cutinCard .cutinBar{position:absolute;left:0;right:0;bottom:0;padding:14px 16px;background:linear-gradient(0deg,rgba(0,0,0,.82),transparent)}
-.cutinCard .cutinName{font-size:clamp(20px,5.4vw,32px);font-weight:900;color:#fff;font-family:"Hiragino Mincho ProN","Yu Mincho",serif;text-shadow:0 2px 8px rgba(0,0,0,.85)}
+.cutinCard .cutinName{font-size:clamp(20px,5.4vw,32px);font-weight:900;color:#fff;font-family:var(--font-display);text-shadow:0 2px 8px rgba(0,0,0,.85)}
 .cutinCard .cutinHead{font-size:clamp(14px,3.8vw,19px);font-weight:900;color:#ffdf8a;letter-spacing:.12em;text-shadow:0 2px 6px rgba(0,0,0,.85)}
-.cutinCard .cutinChip{position:absolute;top:12px;left:12px;padding:6px 13px;border-radius:999px;font-weight:900;font-size:13px;color:#1a140a;background:linear-gradient(180deg,#ffe27a,#e7c66b);box-shadow:0 3px 10px rgba(0,0,0,.45)}
+.cutinCard .cutinChip{position:absolute;top:12px;left:12px;padding:6px 13px;border-radius:999px;font-weight:800;font-size:13px;color:#1a140a;background:linear-gradient(180deg,#ffe27a,#e7c66b);box-shadow:0 3px 10px rgba(0,0,0,.45)}
 @keyframes cutinFade{0%{opacity:0}7%{opacity:1}84%{opacity:1}100%{opacity:0}}
 @keyframes cutinSlide{0%{transform:scale(1.14) translateX(7%);opacity:.15}11%{transform:scale(1) translateX(0);opacity:1}100%{transform:scale(1.05) translateX(-2%)}}
 
 /* 結果画面の勝利CG */
 .winnerShot{width:100%;max-width:440px;margin:8px auto 2px;display:block;border-radius:18px;box-shadow:0 12px 30px rgba(0,0,0,.4)}
 
-/* ===== リアルなターフ走路（写真ベース） ===== */
+/* ===== ターフ走路（一枚絵 turf-bg.jpg ベース） =====
+   オーバーレイは緑寄り（旧: 黒寄りで盤面だけ褐色に沈み、ヒーロー絵の深い芝緑 #2f8d48 と合っていなかった） */
 .trackBoard{
-  background:linear-gradient(rgba(10,34,18,.30),rgba(6,24,12,.52)),url('assets/turf-bg.jpg') center 35%/cover!important;
+  background:linear-gradient(180deg,rgba(30,112,52,.40),rgba(16,84,40,.52)),url('assets/turf-bg.jpg') center 35%/cover!important;
   border:5px solid #6b3f17!important;
-  box-shadow:inset 0 0 0 3px rgba(231,198,107,.55),inset 0 0 60px rgba(0,0,0,.45),0 20px 44px rgba(40,24,9,.4)!important;
+  box-shadow:inset 0 0 0 3px rgba(231,198,107,.55),inset 0 0 60px rgba(0,40,15,.45),0 20px 44px rgba(40,24,9,.4)!important;
 }
 .trackBoard:before{
   background:transparent!important;
@@ -665,9 +690,9 @@ button.diceStageButton .diceCube{width:54px;height:54px;font-size:28px}
   box-shadow:inset 0 0 0 3px rgba(120,80,30,.4),0 0 0 2px rgba(84,49,20,.4)!important;
 }
 .trackBoard:after{
-  background:radial-gradient(circle at 50% 45%,rgba(0,0,0,.10),rgba(0,0,0,.34))!important;
+  background:radial-gradient(circle at 50% 45%,rgba(20,90,40,.12),rgba(10,60,30,.42))!important;
   border:2px solid rgba(255,255,255,.16)!important;
-  box-shadow:inset 0 0 26px rgba(0,0,0,.3)!important;
+  box-shadow:inset 0 0 26px rgba(0,30,10,.3)!important;
 }
 .trackSpace{
   background:linear-gradient(180deg,#fff3d6 0%,#e8be78 50%,#c98a3c 100%)!important;
@@ -693,7 +718,7 @@ button.diceStageButton .diceCube{width:54px;height:54px;font-size:28px}
 .diceArena.result{align-items:flex-start}
 .diceArena.result .boardDie{margin-top:10px;transform:scale(.6)}
 .diceArena .die3d{--ds:118px;filter:drop-shadow(0 16px 14px rgba(0,0,0,.5))}
-.diceArena .dieLabel{font-weight:900;font-size:16px;color:#fff;background:rgba(20,16,10,.6);padding:5px 14px;border-radius:999px;
+.diceArena .dieLabel{font-weight:800;font-size:16px;color:#fff;background:rgba(20,16,10,.6);padding:5px 14px;border-radius:999px;
   border:1px solid rgba(231,198,107,.6);text-shadow:0 1px 3px rgba(0,0,0,.8);backdrop-filter:blur(3px)}
 /* 盤上ロール：等速の滑らかな多軸スピン＋ふわっと浮遊（自然なタンブル） */
 .diceArena .die3dCube.rolling{animation:dieSpin3d .72s linear infinite!important}
@@ -763,7 +788,7 @@ button.diceStageButton .diceCube{width:54px;height:54px;font-size:28px}
 <a class="backPill" href="../../"><svg class="ic"><use href="#ic-back"/></svg> あそびば</a>
 <div class="topTitle"><span class="topEmblem"></span><span>うまうまレース</span></div>
 <div class="topCtl">
-<button id="topRules" type="button" title="遊び方">遊び方</button>
+<button id="topRules" type="button" title="遊び方" aria-label="遊び方"><svg class="ic"><use href="#ic-help"/></svg></button>
 <button id="topBgm" type="button" title="BGM" aria-label="BGM"><svg class="ic"><use href="#ic-music"/></svg></button>
 </div>
 </header>
@@ -2038,7 +2063,7 @@ ${homeMessage?`<div class="notice">${escapeHtml(homeMessage)}</div>`:""}
 <div class="grid two"><button id="createRoom">部屋を作る</button><button id="joinRoom" class="secondary">部屋に入る</button></div>
 <div class="tiny">再入室キー：${getLocalRejoinKey()}（同じ端末なら自動復帰します）</div>
 </div>
-<div class="homeHow" id="howToSection"><b>遊び方</b>
+<details class="homeHow" id="howToSection"><summary><b>遊び方</b><span class="tiny">タップで開く</span></summary>
 <div class="ruleBlock small">
 <div class="ruleItem"><b>① BET</b>馬カードを選び、2 → 1 → 1 の順に3枚のチップを置きます。同じ馬に2枚は置けません。</div>
 <div class="ruleItem"><b>② 馬の状態</b>良い位置につけているか、出目との相性が良いか、人気が集まりすぎていないかを見てBETします。</div>
@@ -2051,7 +2076,7 @@ ${homeMessage?`<div class="notice">${escapeHtml(homeMessage)}</div>`:""}
 ${payoutTable()}
 <div class="homeTip">オンライン対戦では、最終レースのBETが非公開になります。</div>
 <button id="toggleBgm" class="secondary" style="margin-top:10px"><svg class="ic"><use href="#ic-music"/></svg> BGM ${bgmOn?"OFF":"ON"}</button>
-</div>
+</details>
 </section>`;
 }
 function renderRoom(){return room.phase==="lobby"?renderLobby():renderGame()}
@@ -2425,7 +2450,7 @@ document.getElementById("topBgm")?.addEventListener("click",()=>{toggleBgm();syn
 document.getElementById("topRules")?.addEventListener("click",()=>{
 playEffect("click");
 const how=document.getElementById("howToSection");
-if(how){how.scrollIntoView({behavior:"smooth",block:"start"});return}
+if(how){if("open" in how)how.open=true;how.scrollIntoView({behavior:"smooth",block:"start"});return}
 const guide=document.querySelector(".payoutGuideCard");
 if(guide)guide.scrollIntoView({behavior:"smooth",block:"center"});
 });

@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#8f7bd9">
+<title>神経衰弱 — あそびば</title>
+<meta name="description" content="裏向きの札を2枚めくって同じ数字ならゲット。24/36/52枚・ひとり記録・CPU対戦（忘れる確率で強さ3段階）・この端末で交代・オンライン対戦。">
+<!-- 書体: 本文/UI = Zen Kaku Gothic New、題字 = Shippori Mincho B1、数字 = Rajdhani（共通CSSの --font-ui / --font-display / このページの --font-num） -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Shippori+Mincho+B1:wght@700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+<!-- @shared:base-css -->
+<style>
+  /* ============================================================
+     世界観: 藤色 × 白の落ち着き。和紙のような明るい地に藤色の札裏（accent #8f7bd9）
+     ============================================================ */
+  :root{
+    --accent:#8f7bd9; --accent-2:#a996e8; --accent-deep:#6f5bc0; --accent-ink:#4d3d9a;
+    --wist-0:#f8f6fc; --wist-1:#efeaf9; --wist-2:#e2dbf4; --wist-3:#cfc4ec;
+    --ink:#2b2540; --ink-2:#4b4463; --muted:#7b7492;
+    --paper:#fffdf8;
+    --hair:rgba(111,91,192,.18); --hair-2:rgba(111,91,192,.34);
+    --gold:#e0b34a; --danger:#d04d5c;
+    --seat0:#8f7bd9; --seat1:#3fa692; --seat2:#e09a3c; --seat3:#dd6f93;
+    --topbar-h:56px;
+    --font-num:"Rajdhani",var(--font-ui);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  [hidden]{display:none !important}
+  body{
+    font-family:var(--font-ui);font-weight:500;
+    color:var(--ink);
+    background:
+      radial-gradient(110% 60% at 50% -10%,rgba(143,123,217,.24),transparent 60%),
+      radial-gradient(80% 50% at 50% 110%,rgba(169,150,232,.2),transparent 60%),
+      linear-gradient(180deg,#f9f7fd,#ece6f7);
+    min-height:100vh;min-height:100dvh;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* 和紙のノイズ（ごく薄く） */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.045;
+    background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:200px 200px;
+  }
+  button,input,select{font-family:var(--font-ui);font-size:inherit}
+  input{
+    width:100%;border:1px solid var(--hair-2);border-radius:14px;padding:12px 14px;
+    background:#fff;color:var(--ink);font-weight:600;
+  }
+  input::placeholder{color:var(--muted);font-weight:500}
+  input:focus{outline:2px solid rgba(143,123,217,.7);outline-offset:1px}
+  b,strong{font-weight:700}
+
+  /* ---------- トップバー（他ゲーム同形: 戻るピル／タイトル＋エンブレム／アイコン2個） ---------- */
+  .asobibaTop{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    height:calc(var(--topbar-h) + var(--sat));padding:var(--sat) 10px 0;
+    display:flex;align-items:center;gap:8px;
+    background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(246,242,252,.9));
+    border-bottom:1px solid var(--hair-2);
+    box-shadow:0 6px 18px rgba(80,60,140,.12);backdrop-filter:blur(8px);
+  }
+  .asobibaTop .backPill{
+    display:inline-flex;align-items:center;gap:6px;text-decoration:none;white-space:nowrap;
+    padding:8px 13px;border-radius:999px;min-height:40px;
+    background:linear-gradient(180deg,#a593e6,#8670d2);color:#fff;
+    font-weight:700;font-size:13px;border:1px solid rgba(255,255,255,.55);
+    box-shadow:0 3px 10px rgba(111,91,192,.35);
+  }
+  .asobibaTop .backPill:active{transform:translateY(1px)}
+  .asobibaTop .topTitle{
+    flex:1;min-width:0;display:flex;align-items:center;gap:8px;
+    color:var(--accent-ink);font-family:var(--font-display);font-weight:800;letter-spacing:.12em;font-size:18px;
+    font-feature-settings:"palt";
+    overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+  }
+  .asobibaTop .topEmblem{flex:0 0 auto;width:30px;height:30px;display:grid;place-items:center;filter:drop-shadow(0 2px 3px rgba(80,60,140,.3))}
+  .asobibaTop .topEmblem svg{width:30px;height:30px}
+  .asobibaTop .topCtl{display:flex;gap:6px;flex:0 0 auto}
+  .asobibaTop .topCtl button{
+    width:44px;height:44px;padding:0;border-radius:50%;display:grid;place-items:center;cursor:pointer;
+    background:#fff;color:var(--accent-deep);border:1px solid var(--hair-2);box-shadow:0 3px 9px rgba(80,60,140,.14);
+  }
+  .asobibaTop .topCtl .ic{width:20px;height:20px;vertical-align:middle}
+
+  /* ---------- 画面の器 ---------- */
+  #app{position:relative;z-index:1;max-width:560px;margin:0 auto;padding:calc(var(--topbar-h) + var(--sat) + 10px) 12px calc(24px + var(--sab))}
+  .screen{display:none}
+  .screen.active{display:block}
+  .panel{
+    background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.62));
+    border:1px solid var(--hair);border-radius:20px;padding:14px;
+    box-shadow:0 10px 30px rgba(80,60,140,.1),inset 0 1px 0 #fff;
+  }
+  .panel + .panel{margin-top:12px}
+  .sectionLabel{font-size:12px;letter-spacing:.18em;color:var(--muted);font-weight:700;margin:0 0 8px 2px;text-transform:uppercase}
+  .small{font-size:13px;color:var(--ink-2);font-weight:500;line-height:1.55}
+  .tiny{font-size:12px;color:var(--muted);font-weight:500;line-height:1.5}
+
+  /* ボタン3役: 主=藤色 / 副=白+縁 / 危険=朱 */
+  .btn{
+    appearance:none;border:none;cursor:pointer;border-radius:16px;min-height:50px;padding:12px 18px;
+    font-weight:700;font-size:16px;letter-spacing:.02em;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    transition:transform .08s ease,filter .15s ease,opacity .15s ease;
+  }
+  .btn:active{transform:translateY(1px) scale(.99)}
+  .btn:disabled{opacity:.4;cursor:default;filter:grayscale(.3)}
+  .btn.primary{background:linear-gradient(180deg,#a08fe4,#8370d0);color:#fff;box-shadow:0 6px 0 #5d4aa8,0 10px 22px rgba(111,91,192,.35)}
+  .btn.primary:active{box-shadow:0 4px 0 #5d4aa8,0 6px 14px rgba(111,91,192,.3)}
+  .btn.secondary{background:#fff;color:var(--accent-ink);border:1px solid var(--hair-2)}
+  .btn.danger{background:linear-gradient(180deg,#e1616f,#c4404f);color:#fff;box-shadow:0 5px 0 #7e2430}
+  .btn.block{width:100%}
+  .btn.sm{min-height:44px;padding:8px 14px;font-size:14px;border-radius:13px}
+  .row{display:flex;gap:10px}
+  .row > *{flex:1}
+
+  /* ---------- ホーム ---------- */
+  .hero{position:relative;padding:18px 6px 10px;display:flex;align-items:center;gap:14px}
+  .hero .emb{width:76px;height:76px;flex:0 0 auto;filter:drop-shadow(0 8px 14px rgba(80,60,140,.3))}
+  .hero h1{margin:0;font-family:var(--font-display);font-weight:800;font-size:34px;letter-spacing:.2em;line-height:1.1;font-feature-settings:"palt";color:var(--accent-ink)}
+  .hero .sub{font-family:var(--font-num);font-weight:600;font-size:13px;letter-spacing:.32em;color:var(--accent);margin-top:4px}
+  .hero .lead{margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--ink-2)}
+  .nameRow{display:flex;align-items:center;gap:10px}
+  .nameRow label{font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap}
+  .modeList{display:grid;gap:8px;margin-top:4px}
+  .modeCard{
+    appearance:none;cursor:pointer;text-align:left;width:100%;
+    display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:12px;
+    padding:12px 14px;border-radius:16px;min-height:64px;
+    background:rgba(255,255,255,.55);border:1px solid var(--hair);color:var(--ink);
+    transition:border-color .15s ease,background .15s ease;
+  }
+  .modeCard .mic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(143,123,217,.16);color:var(--accent-deep)}
+  .modeCard .mic .ic{width:22px;height:22px}
+  .modeCard .mt{font-weight:700;font-size:16px;line-height:1.2}
+  .modeCard .ms{font-size:12px;color:var(--muted);margin-top:3px;font-weight:500}
+  .modeCard .chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--hair-2);display:grid;place-items:center}
+  .modeCard .chk::after{content:"";width:10px;height:10px;border-radius:50%;background:transparent}
+  .modeCard.on{border-color:var(--accent);background:rgba(143,123,217,.12)}
+  .modeCard.on .chk{border-color:var(--accent)}
+  .modeCard.on .chk::after{background:var(--accent)}
+  .optBox{margin-top:12px;padding-top:12px;border-top:1px dashed var(--hair-2)}
+  .optRow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+  .optRow:first-child{margin-top:0}
+  .optRow .lbl{font-size:13px;font-weight:700;color:var(--ink-2)}
+  .seg{display:inline-flex;background:rgba(111,91,192,.08);border-radius:12px;padding:3px;border:1px solid var(--hair)}
+  .seg button{
+    appearance:none;border:none;cursor:pointer;border-radius:9px;min-height:38px;padding:0 13px;
+    background:transparent;color:var(--ink-2);font-weight:700;font-size:13px;
+  }
+  .seg button.on{background:linear-gradient(180deg,#a08fe4,#8370d0);color:#fff;box-shadow:0 2px 6px rgba(111,91,192,.35)}
+  .seg.num button{font-family:var(--font-num);font-size:15px;letter-spacing:.04em}
+  .notice{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(143,123,217,.12);border:1px solid rgba(143,123,217,.4);font-size:13px;line-height:1.5}
+  .notice.warn{background:rgba(208,77,92,.1);border-color:rgba(208,77,92,.45)}
+  .codeInput{font-family:var(--font-num);font-size:24px;font-weight:700;letter-spacing:.4em;text-align:center;padding:10px}
+  .howRow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+  .howStep{position:relative;padding:12px 8px 10px;border-radius:14px;background:rgba(255,255,255,.6);border:1px solid var(--hair);text-align:center;min-width:0}
+  .howStep .n{position:absolute;top:6px;left:9px;font-family:var(--font-num);font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.1em}
+  .howStep .ic{width:24px;height:24px;color:var(--accent-deep);margin-top:6px}
+  .howStep b{display:block;font-size:12.5px;margin-top:6px;line-height:1.35}
+  .howStep span.t{display:block;font-size:12px;color:var(--muted);margin-top:4px;line-height:1.4}
+  .homeFooter{text-align:center;margin-top:18px;font-family:var(--font-num);font-size:12px;letter-spacing:.3em;color:var(--muted)}
+  .bestLine{display:flex;align-items:center;gap:8px;margin-top:10px;padding:9px 12px;border-radius:12px;background:rgba(224,179,74,.12);border:1px solid rgba(224,179,74,.45);font-size:13px;font-weight:700;color:#7a5a10}
+  .bestLine .ic{width:16px;height:16px;color:#c9962a}
+  .bestLine .v{font-family:var(--font-num);font-size:16px;letter-spacing:.04em}
+  .bestLine.none{background:rgba(111,91,192,.06);border-color:var(--hair);color:var(--muted)}
+  .miniCards{display:inline-flex;gap:3px;vertical-align:middle}
+  .miniCards i{display:inline-block;width:12px;height:16px;border-radius:2px;background:var(--accent);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.6)}
+  .miniCards i.w{background:#fff;border:1px solid rgba(0,0,0,.3);box-shadow:none}
+
+  /* ---------- ロビー（オンライン） ---------- */
+  .codeBig{font-family:var(--font-num);font-size:52px;font-weight:700;letter-spacing:.3em;text-align:center;line-height:1;color:var(--accent-ink);margin:6px 0 2px;padding-left:.3em}
+  .seats{display:grid;gap:8px;margin-top:8px}
+  .seat{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.65);border:1px solid var(--hair);min-height:56px}
+  .seat .sdot{width:26px;height:26px;border-radius:50%;background:var(--sc,var(--accent));box-shadow:inset 0 -3px 0 rgba(0,0,0,.15),0 2px 4px rgba(80,60,140,.3);display:grid;place-items:center;color:#fff;font-family:var(--font-num);font-weight:700;font-size:13px}
+  .seat .sname{font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px;min-width:0;flex-wrap:wrap}
+  .seat .sname span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .seat .ssub{font-size:12px;color:var(--muted);font-weight:500;margin-top:2px}
+  .seat.empty{border-style:dashed;color:var(--muted)}
+  .seat.empty .sdot{background:rgba(111,91,192,.12);color:var(--muted);box-shadow:none}
+  .badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(111,91,192,.12);color:var(--accent-ink);letter-spacing:.04em;white-space:nowrap}
+  .badge.host{background:rgba(224,179,74,.22);color:#7a5a10}
+  .badge.cpu{background:rgba(63,166,146,.16);color:#1f6f60}
+  .badge.away{background:rgba(208,77,92,.14);color:#a82f3d}
+  .badge .ic{width:13px;height:13px}
+
+  /* ---------- 対局 ---------- */
+  .pbar{display:grid;gap:6px;margin-bottom:8px;grid-template-columns:repeat(var(--n,2),minmax(0,1fr))}
+  .pchip{
+    min-width:0;position:relative;display:grid;align-content:start;row-gap:2px;
+    padding:8px 9px;border-radius:14px;background:rgba(255,255,255,.72);border:1px solid var(--hair);min-height:60px;
+    transition:border-color .25s ease,box-shadow .25s ease;
+    --sc:var(--accent);
+  }
+  .pchip.turn{border-color:var(--sc);box-shadow:0 0 0 1px var(--sc),0 0 16px rgba(143,123,217,.3)}
+  .pchip .ph{display:flex;align-items:center;gap:5px;min-width:0}
+  .pchip .pdot{width:11px;height:11px;border-radius:50%;background:var(--sc);box-shadow:0 0 0 2px rgba(255,255,255,.9),0 0 0 3px var(--sc);flex:0 0 auto;margin:0 2px 0 1px}
+  .pchip .pn{font-size:12px;font-weight:700;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2);min-width:0;flex:1 1 auto}
+  .pchip .ph .badge{flex:0 0 auto;padding:1px 5px;font-size:10.5px}
+  .pchip .pc{font-family:var(--font-num);font-size:24px;font-weight:700;line-height:1;color:var(--ink);display:flex;align-items:baseline;gap:3px;flex-wrap:wrap}
+  .pchip .pc small{font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--muted)}
+  .pchip .pc .badge{margin-left:auto;padding:2px 6px;font-size:10.5px;align-self:center}
+  .pchip .ps{font-size:11px;color:var(--accent-deep);font-weight:700;min-height:13px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .pbar.n3 .pchip,.pbar.n4 .pchip{padding:7px 7px}
+  .pbar.n4 .pchip .pc{font-size:21px}
+  .pbar.n4 .pchip .pn{font-size:11.5px}
+  .pbar.n4 .pchip .pdot{width:10px;height:10px}
+  .stat{display:grid;justify-items:center;padding:8px 6px;border-radius:14px;background:rgba(255,255,255,.72);border:1px solid var(--hair);min-height:60px;min-width:0}
+  .stat .k{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;display:flex;align-items:center;gap:4px}
+  .stat .k .ic{width:13px;height:13px}
+  .stat .v{font-family:var(--font-num);font-size:24px;font-weight:700;line-height:1.1;color:var(--ink)}
+  .stat .v small{font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--muted);margin-left:2px}
+  .stat.hl{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+
+  .table{
+    position:relative;margin:0 auto;padding:6px;border-radius:18px;
+    background-image:radial-gradient(rgba(255,255,255,.55) 1px,transparent 1.3px),linear-gradient(180deg,#e8e2f7,#dbd2ef);
+    background-size:10px 10px,auto;
+    border:1px solid var(--hair-2);
+    box-shadow:inset 0 2px 10px rgba(80,60,140,.16),0 12px 30px rgba(80,60,140,.16),inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .grid{display:flex;flex-wrap:wrap;justify-content:center;align-content:flex-start;gap:var(--gap,6px);margin:0 auto;width:var(--gw,100%)}
+  .slot{
+    appearance:none;border:none;background:transparent;padding:0;margin:0;cursor:pointer;position:relative;
+    width:var(--cw,50px);height:var(--ch,70px);perspective:600px;flex:0 0 auto;border-radius:8px;
+  }
+  .slot:focus-visible{outline:2px solid var(--accent-deep);outline-offset:2px}
+  .card3d{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .42s cubic-bezier(.3,.7,.3,1),opacity .45s ease}
+  .slot.up .card3d{transform:rotateY(180deg)}
+  .cf{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:8px;filter:drop-shadow(0 2px 3px rgba(60,40,120,.28))}
+  .cf svg{width:100%;height:100%;display:block}
+  .cf.front{transform:rotateY(180deg)}
+  .slot.taken{cursor:default}
+  .slot.taken .card3d{opacity:0;transform:rotateY(180deg) scale(.55);pointer-events:none}
+  .slot.taken::after{content:"";position:absolute;inset:8% 10%;border-radius:6px;border:1.5px dashed var(--oc,var(--accent));opacity:.5}
+  .slot.taken::before{content:"";position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--oc,var(--accent));opacity:.55}
+  .slot.notrans .card3d{transition:none}
+  /* ペア成立の小さな光 */
+  .slot.matched .cf.front{animation:glow .75s ease both}
+  @keyframes glow{0%{filter:drop-shadow(0 2px 3px rgba(60,40,120,.28))}35%{filter:drop-shadow(0 0 6px rgba(255,214,100,1)) drop-shadow(0 0 16px rgba(255,200,80,.9)) brightness(1.15)}100%{filter:drop-shadow(0 2px 3px rgba(60,40,120,.28))}}
+  .spark{position:absolute;left:50%;top:50%;width:7px;height:7px;margin:-3.5px;border-radius:50%;background:#ffe28a;box-shadow:0 0 6px 2px rgba(255,220,120,.8);pointer-events:none;animation:sparkFly .7s ease-out both;z-index:3}
+  @keyframes sparkFly{0%{transform:translate(0,0) scale(.6);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0}}
+  .table.locked .slot:not(.taken){cursor:default}
+
+  .turnBanner{
+    margin:12px auto 0;max-width:440px;padding:11px 14px;border-radius:14px;text-align:center;
+    font-weight:700;font-size:15px;background:rgba(255,255,255,.72);border:1px solid var(--hair);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px;
+  }
+  .turnBanner.mine{background:rgba(143,123,217,.16);border-color:var(--accent)}
+  .turnBanner .sdotS{width:14px;height:14px;border-radius:50%;background:var(--sc,var(--accent));flex:0 0 auto;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+  .turnBanner .dots::after{content:"…";animation:think 1.2s steps(3,end) infinite}
+  @keyframes think{0%{content:"."}33%{content:".."}66%{content:"..."}}
+  .subInfo{margin:8px auto 0;max-width:440px;display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);font-weight:600;padding:0 4px}
+  .subInfo .chip{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .subInfo .ic{width:14px;height:14px}
+
+  /* ---------- オーバーレイ（遊び方 / メニュー / 結果） ---------- */
+  .overlay{position:fixed;inset:0;z-index:80;display:none;align-items:flex-end;justify-content:center;background:rgba(40,30,70,.46);backdrop-filter:blur(3px)}
+  .overlay.show{display:flex}
+  @media(min-width:600px){.overlay{align-items:center}}
+  .sheet{
+    width:100%;max-width:480px;max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);overflow:auto;
+    background:linear-gradient(180deg,#fbfaff,#f1edfa);color:var(--ink);
+    border:1px solid var(--hair-2);border-bottom:none;border-radius:22px 22px 0 0;
+    padding:18px 18px calc(16px + var(--sab));box-shadow:0 -18px 50px rgba(40,30,70,.35);
+    animation:sheetIn .2s ease both;
+  }
+  @media(min-width:600px){.sheet{border-radius:22px;border-bottom:1px solid var(--hair-2);padding-bottom:18px}}
+  @keyframes sheetIn{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+  .sheet h2{margin:0 0 10px;font-family:var(--font-display);font-weight:800;font-size:20px;letter-spacing:.1em;display:flex;align-items:center;gap:8px;font-feature-settings:"palt";color:var(--accent-ink)}
+  .sheet p{margin:8px 0;font-size:14px;line-height:1.65;color:var(--ink-2)}
+  .rule{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.7);border:1px solid var(--hair);font-size:13.5px;line-height:1.6}
+  .rule b{color:var(--accent-ink)}
+  .menuList{display:grid;gap:8px;margin-top:6px}
+  .menuList .btn{justify-content:flex-start;gap:12px}
+  .menuList .btn .ic{width:20px;height:20px}
+
+  .resultHead{text-align:center;padding:6px 0 2px}
+  .resultHead .rt{font-family:var(--font-display);font-weight:800;font-size:clamp(22px,7vw,28px);letter-spacing:.12em;font-feature-settings:"palt";color:var(--accent-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .resultHead .rs{font-size:13px;color:var(--muted);margin-top:4px;font-weight:600}
+  .rankList{display:grid;gap:8px;margin:14px 0 6px}
+  .rankRow{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.7);border:1px solid var(--hair);--sc:var(--accent)}
+  .rankRow.win{border-color:var(--gold);box-shadow:0 0 0 1px rgba(224,179,74,.5),0 0 22px rgba(224,179,74,.25)}
+  .rankRow .rk{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-num);font-weight:700;font-size:15px;background:rgba(111,91,192,.1);color:var(--accent-ink)}
+  .rankRow.win .rk{background:linear-gradient(180deg,#f6d77a,#dcae3a);color:#4a3607}
+  .rankRow .rk .ic{width:16px;height:16px}
+  .rankRow .nm{font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px;min-width:0}
+  .rankRow .nm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rankRow .nm i{width:10px;height:10px;border-radius:50%;background:var(--sc);flex:0 0 auto}
+  .rankRow .bar{height:6px;border-radius:999px;background:rgba(111,91,192,.1);margin-top:6px;overflow:hidden}
+  .rankRow .bar i{display:block;height:100%;background:var(--sc);width:0;transition:width .6s ease}
+  .rankRow .num{font-family:var(--font-num);font-size:28px;font-weight:700;line-height:1;text-align:right}
+  .rankRow .num small{font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--muted);margin-left:2px}
+  .soloStats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 6px}
+  .soloStats .stat{background:rgba(255,255,255,.75);min-height:70px}
+  .soloStats .stat .v{font-size:30px}
+  .resultNote{font-size:12.5px;color:var(--muted);text-align:center;min-height:18px;margin-top:8px}
+  .resultNote.best{color:#7a5a10;font-weight:700}
+  .resultBtns{display:grid;grid-template-columns:1fr 1.3fr;gap:10px;margin-top:12px}
+
+  /* 紙吹雪（勝利時） */
+  .confetti{position:fixed;inset:0;pointer-events:none;z-index:81;overflow:hidden}
+  .confetti i{position:absolute;top:-12px;width:8px;height:14px;border-radius:2px;animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.9}}
+
+  @media(max-width:360px){
+    .hero h1{font-size:30px}
+    .codeBig{font-size:44px}
+    .seg button{padding:0 10px}
+  }
+</style>
+</head>
+<body>
+<!-- @shared:icons -->
+<!-- @shared:confirm -->
+<!-- このページ専用アイコン（24×24 viewBox・共通スプライトと同流儀） -->
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+<defs>
+<symbol id="ic-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></symbol>
+<symbol id="ic-swap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4"/></symbol>
+<symbol id="ic-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7L12 19"/></symbol>
+<symbol id="ic-flip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="8" height="14" rx="1.5"/><rect x="13" y="5" width="8" height="14" rx="1.5" stroke-dasharray="3 2"/><path d="M11 12h2"/></symbol>
+<symbol id="ic-person" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/></symbol>
+</defs>
+</svg>
+
+<header class="asobibaTop">
+  <a class="backPill" href="../../"><svg class="ic"><use href="#ic-back"/></svg> あそびば</a>
+  <div class="topTitle">
+    <span class="topEmblem"><svg viewBox="0 0 48 48" aria-hidden="true"><g transform="rotate(-12 17 25)"><rect x="6" y="10" width="22" height="30" rx="4" fill="#8f7bd9" stroke="#fff" stroke-width="2"/><rect x="9.5" y="13.5" width="15" height="23" rx="2.5" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.2"/><rect x="14" y="21" width="6" height="6" fill="rgba(255,255,255,.55)" transform="rotate(45 17 24)"/></g><g transform="rotate(10 31 24)"><rect x="20" y="9" width="22" height="30" rx="4" fill="#fffdf8" stroke="#8f7bd9" stroke-width="2"/><path transform="translate(22.2 14.2) scale(.74)" d="M12 21.2S3.4 15.9 3.4 9.6C3.4 6.6 5.6 4.4 8.3 4.4c1.6 0 2.9.8 3.7 2 .8-1.2 2.1-2 3.7-2 2.7 0 4.9 2.2 4.9 5.2 0 6.3-8.6 11.6-8.6 11.6z" fill="#c8323a"/></g></svg></span>
+    <span>神経衰弱</span>
+  </div>
+  <div class="topCtl">
+    <button id="topHelp" type="button" title="遊び方" aria-label="遊び方"><svg class="ic"><use href="#ic-help"/></svg></button>
+    <button id="topMenu" type="button" title="メニュー" aria-label="メニュー"><svg class="ic"><use href="#ic-menu"/></svg></button>
+  </div>
+</header>
+
+<main id="app">
+  <!-- ===== ホーム: 名前 → 枚数 → モード → 開始 ===== -->
+  <section id="homeScreen" class="screen active">
+    <div class="hero">
+      <svg class="emb" viewBox="0 0 48 48" aria-hidden="true"><g transform="rotate(-12 17 25)"><rect x="6" y="10" width="22" height="30" rx="4" fill="#8f7bd9" stroke="#fff" stroke-width="2"/><rect x="9.5" y="13.5" width="15" height="23" rx="2.5" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.2"/><rect x="14" y="21" width="6" height="6" fill="rgba(255,255,255,.55)" transform="rotate(45 17 24)"/></g><g transform="rotate(10 31 24)"><rect x="20" y="9" width="22" height="30" rx="4" fill="#fffdf8" stroke="#8f7bd9" stroke-width="2"/><path transform="translate(22.2 14.2) scale(.74)" d="M12 21.2S3.4 15.9 3.4 9.6C3.4 6.6 5.6 4.4 8.3 4.4c1.6 0 2.9.8 3.7 2 .8-1.2 2.1-2 3.7-2 2.7 0 4.9 2.2 4.9 5.2 0 6.3-8.6 11.6-8.6 11.6z" fill="#c8323a"/></g></svg>
+      <div>
+        <h1>神経衰弱</h1>
+        <div class="sub">MEMORY</div>
+        <p class="lead">裏向きの札を2枚めくって、同じ数字ならゲット。そろえば続けてもう1回。</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="sectionLabel">Player</p>
+      <div class="nameRow">
+        <label for="nameInput">名前</label>
+        <input id="nameInput" maxlength="12" placeholder="名前を入力" autocomplete="off">
+      </div>
+      <div id="inviteNotice" class="notice" hidden></div>
+    </div>
+
+    <div class="panel">
+      <p class="sectionLabel">Cards</p>
+      <div class="optRow">
+        <span class="lbl">札の枚数</span>
+        <span class="seg num" id="sizeSeg">
+          <button type="button" data-size="24" class="minh0 on">24</button>
+          <button type="button" data-size="36" class="minh0">36</button>
+          <button type="button" data-size="52" class="minh0">52</button>
+        </span>
+      </div>
+      <p class="tiny" id="sizeDesc" style="margin:8px 0 0"></p>
+      <div class="bestLine none" id="bestLine"></div>
+    </div>
+
+    <div class="panel">
+      <p class="sectionLabel">Mode</p>
+      <div class="modeList" role="radiogroup" aria-label="あそび方">
+        <button class="modeCard on" data-mode="cpu" role="radio" aria-checked="true" type="button">
+          <span class="mic"><svg class="ic"><use href="#ic-cpu"/></svg></span>
+          <span><span class="mt">ひとりで / CPUと対戦</span><span class="ms" style="display:block">CPU 0〜3人。ひとりなら手数とタイムに挑戦</span></span>
+          <span class="chk"></span>
+        </button>
+        <button class="modeCard" data-mode="local" role="radio" aria-checked="false" type="button">
+          <span class="mic"><svg class="ic"><use href="#ic-swap"/></svg></span>
+          <span><span class="mt">この端末で交代</span><span class="ms" style="display:block">1台を回して2〜4人で</span></span>
+          <span class="chk"></span>
+        </button>
+        <button class="modeCard" data-mode="online" role="radio" aria-checked="false" type="button">
+          <span class="mic"><svg class="ic"><use href="#ic-globe"/></svg></span>
+          <span><span class="mt">オンライン対戦</span><span class="ms" style="display:block">部屋を作る / コードで参加（2〜4人）</span></span>
+          <span class="chk"></span>
+        </button>
+      </div>
+
+      <!-- CPU設定 -->
+      <div id="optCpu" class="optBox">
+        <div class="optRow">
+          <span class="lbl">CPUの人数</span>
+          <span class="seg" id="cpuCountSeg">
+            <button type="button" data-count="0" class="minh0">なし</button>
+            <button type="button" data-count="1" class="minh0 on">1人</button>
+            <button type="button" data-count="2" class="minh0">2人</button>
+            <button type="button" data-count="3" class="minh0">3人</button>
+          </span>
+        </div>
+        <div class="optRow" id="levelRow">
+          <span class="lbl">CPUの強さ</span>
+          <span class="seg" id="levelSeg">
+            <button type="button" data-level="1" class="minh0">やさしい</button>
+            <button type="button" data-level="2" class="minh0 on">ふつう</button>
+            <button type="button" data-level="3" class="minh0">つよい</button>
+          </span>
+        </div>
+        <p class="tiny" id="cpuHint" style="margin:8px 0 0">CPUは見た札を覚えますが、強さに応じて忘れます（やさしい 50% / ふつう 25% / つよい 5%）。</p>
+        <button id="startCpu" class="btn primary block" style="margin-top:14px" type="button"><svg class="ic"><use href="#ic-play"/></svg> はじめる</button>
+      </div>
+
+      <!-- ローカル交代 -->
+      <div id="optLocal" class="optBox" hidden>
+        <div class="optRow">
+          <span class="lbl">人数</span>
+          <span class="seg" id="localCountSeg">
+            <button type="button" data-count="2" class="minh0 on">2人</button>
+            <button type="button" data-count="3" class="minh0">3人</button>
+            <button type="button" data-count="4" class="minh0">4人</button>
+          </span>
+        </div>
+        <p class="small" style="margin:10px 0 0">1P から順番。手番の人に端末を渡しながら進めます。そろえた人は続けてもう1回。</p>
+        <button id="startLocal" class="btn primary block" style="margin-top:12px" type="button"><svg class="ic"><use href="#ic-play"/></svg> はじめる</button>
+      </div>
+
+      <!-- オンライン -->
+      <div id="optOnline" class="optBox" hidden>
+        <div class="optRow">
+          <span class="lbl">CPUを入れるときの強さ</span>
+          <span class="seg" id="levelSegOnline">
+            <button type="button" data-level="1" class="minh0">やさしい</button>
+            <button type="button" data-level="2" class="minh0 on">ふつう</button>
+            <button type="button" data-level="3" class="minh0">つよい</button>
+          </span>
+        </div>
+        <button id="createRoomBtn" class="btn primary block" style="margin-top:12px" type="button"><svg class="ic"><use href="#ic-globe"/></svg> 部屋を作る</button>
+        <div class="row" style="margin-top:10px;align-items:stretch">
+          <input id="codeInput" class="codeInput" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="0000" aria-label="部屋コード">
+          <button id="joinRoomBtn" class="btn secondary" type="button" style="flex:1.2">コードで参加</button>
+        </div>
+        <p class="tiny" style="margin:10px 0 0">相手に4桁コードか招待URLを送ってください。枚数は部屋を作る人の設定。途中で抜けた席はCPUが引き継ぎます。</p>
+        <div id="onlineNotice" class="notice warn" hidden></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="sectionLabel">How to play</p>
+      <div class="howRow">
+        <div class="howStep"><span class="n">01</span><svg class="ic"><use href="#ic-flip"/></svg><b>2枚めくる</b><span class="t">裏向きの札から好きな2枚を表に</span></div>
+        <div class="howStep"><span class="n">02</span><svg class="ic"><use href="#ic-check"/></svg><b>同じ数字なら取る</b><span class="t">スートは問わない。そろえば続けてもう1回</span></div>
+        <div class="howStep"><span class="n">03</span><svg class="ic"><use href="#ic-trophy"/></svg><b>組数で勝負</b><span class="t">札が無くなったら終了。多い人の勝ち</span></div>
+      </div>
+    </div>
+    <div class="homeFooter">ASOBIBA · MEMORY</div>
+  </section>
+
+  <!-- ===== ロビー（オンライン） ===== -->
+  <section id="lobbyScreen" class="screen">
+    <div class="panel" style="text-align:center">
+      <p class="sectionLabel">Room code</p>
+      <div class="codeBig" id="lobbyCode">----</div>
+      <p class="tiny" style="margin:6px 0 12px">このコードを相手に伝えるか、招待URLを送ってください</p>
+      <div class="row">
+        <button id="copyUrlBtn" class="btn secondary sm" type="button"><svg class="ic"><use href="#ic-link"/></svg> URLをコピー</button>
+        <button id="shareBtn" class="btn secondary sm" type="button" hidden><svg class="ic"><use href="#ic-envelope"/></svg> 共有</button>
+      </div>
+    </div>
+    <div class="panel">
+      <p class="sectionLabel">Players</p>
+      <div class="tiny" id="lobbySettings" style="margin:-2px 0 8px 2px"></div>
+      <div class="seats" id="seats"></div>
+      <div id="lobbyStatus" class="small" style="margin-top:12px;text-align:center"></div>
+      <div class="row" style="margin-top:12px">
+        <button id="addCpuBtn" class="btn secondary" type="button" style="flex:0 0 auto;padding:12px 14px" hidden><svg class="ic"><use href="#ic-cpu"/></svg> CPUを入れる</button>
+        <button id="startOnlineBtn" class="btn primary" type="button" hidden><svg class="ic"><use href="#ic-play"/></svg> はじめる</button>
+      </div>
+      <button id="leaveLobbyBtn" class="btn danger block sm" style="margin-top:10px" type="button"><svg class="ic"><use href="#ic-exit"/></svg> 退出</button>
+    </div>
+  </section>
+
+  <!-- ===== 対局 ===== -->
+  <section id="playScreen" class="screen">
+    <div class="pbar" id="pbar"></div>
+    <div class="table" id="table">
+      <div class="grid" id="grid" role="grid" aria-label="札"></div>
+    </div>
+    <div class="turnBanner" id="turnBanner"></div>
+    <div class="subInfo">
+      <span class="chip" id="infoMoves"><svg class="ic"><use href="#ic-flip"/></svg> 0手</span>
+      <span class="chip" id="infoMode"></span>
+      <span class="chip" id="infoLeft">残り 0組</span>
+    </div>
+  </section>
+</main>
+
+<!-- 遊び方 -->
+<div class="overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="sheet">
+    <h2 id="helpTitle"><svg class="ic"><use href="#ic-book"/></svg> 神経衰弱 — 遊び方</h2>
+    <p>裏向きに並んだ札から<b>2枚</b>をめくります。</p>
+    <div class="rule"><b>そろった</b>：2枚が<b>同じ数字</b>（スートは問わない）なら、その2枚をもらって<b>続けて自分の番</b>。</div>
+    <div class="rule"><b>外れ</b>：違う数字なら少し見せてから裏に戻し、次の人の番。どこに何があったかを覚えておくのがコツ。</div>
+    <div class="rule"><b>終了</b>：札が全部なくなったら終わり。<b>取った組数が多い人の勝ち</b>。同数なら引き分け。ひとりのときは<b>手数とタイム</b>を競い、自己ベストをこの端末に記録します。</div>
+    <div class="rule"><b>枚数</b>：24枚＝A〜Qのスペードとハート（12組）／36枚＝A〜9の4スート（18組）／52枚＝全部（26組）。</div>
+    <div class="rule"><b>CPU</b>：見た札の場所を覚えますが、強さに応じて忘れます（やさしい 50%／ふつう 25%／つよい 5%）。覚えている組があれば取りにいき、無ければまだ見ていない札をめくります。</div>
+    <p class="tiny" style="margin-top:10px">オンライン対戦：ホストが部屋を作り、相手は4桁コードか招待URLで参加（最大4人・CPU補充可）。途中で退出した席はCPUが代わりにめくります。60秒反応が無い人は「離脱中」と表示されます。</p>
+    <button class="btn secondary block" id="helpClose" type="button" style="margin-top:12px">とじる</button>
+  </div>
+</div>
+
+<!-- メニュー -->
+<div class="overlay" id="menuOverlay" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+  <div class="sheet">
+    <h2 id="menuTitle"><svg class="ic"><use href="#ic-menu"/></svg> メニュー</h2>
+    <div class="menuList">
+      <button class="btn secondary" id="menuSound" type="button"><svg class="ic"><use href="#ic-sound-on"/></svg> <span>サウンド ON</span></button>
+      <button class="btn secondary" id="menuHelp" type="button"><svg class="ic"><use href="#ic-help"/></svg> 遊び方</button>
+      <button class="btn danger" id="menuHome" type="button" hidden><svg class="ic"><use href="#ic-exit"/></svg> <span id="menuHomeLabel">ホームへ戻る</span></button>
+    </div>
+    <button class="btn secondary block" id="menuClose" type="button" style="margin-top:12px">とじる</button>
+  </div>
+</div>
+
+<!-- 結果 -->
+<div class="overlay" id="resultOverlay" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+  <div class="sheet">
+    <div class="resultHead"><div class="rt" id="resultTitle">結果</div><div class="rs" id="resultSub"></div></div>
+    <div class="rankList" id="rankList"></div>
+    <div class="soloStats" id="soloStats" hidden></div>
+    <div class="resultNote" id="resultNote"></div>
+    <div class="resultBtns">
+      <button class="btn secondary" id="resultHome" type="button"><svg class="ic"><use href="#ic-home"/></svg> ホームへ</button>
+      <button class="btn primary" id="resultAgain" type="button"><svg class="ic"><use href="#ic-restart"/></svg> もう一度</button>
+    </div>
+  </div>
+</div>
+
+<!-- @shared:cards -->
+<!-- @shared:online -->
+<script type="module">
+/* ============================================================
+   1. ルールエンジン（純粋関数・DOM非依存）
+      tests/memory.test.mjs が @engine-begin 〜 @engine-end を切り出して node で検証する。
+      契約: initialState / legalMoves / applyMove / cpuMove / isOver / result / publicView
+      seat = 0..n-1（手番の順）。move = {flip: idx}。
+      1回の applyMove = 札1枚をめくる。2枚目で同じ数字なら取得（手番継続）、違えば次の人へ。
+      CPUの記憶は state.mem[seat]（idx→数字、0=未知）。見た札を「忘れる確率」(cpuLevel) で記録し損ねる。
+      乱数は state.rngState（mulberry32 の内部状態）を進める＝全クライアントで同じ結果。
+   ============================================================ */
+/* @engine-begin */
+const Engine = (() => {
+  const SIZES = { 24: 12, 36: 18, 52: 26 };          // 枚数 → 組数
+  const FORGET = { 1: 0.5, 2: 0.25, 3: 0.05 };        // CPUの強さ → 見た札を忘れる確率
+  const SUITS = ["S", "H", "D", "C"];
+  // mulberry32 を1歩進める → [0..1の値, 次の内部状態]
+  function step(seed) {
+    const a = (((seed >>> 0) || 0x9e3779b9) + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return [((t ^ (t >>> 14)) >>> 0) / 4294967296, a >>> 0];
+  }
+  function mulberry(seed) { let s = seed >>> 0; return () => { const [v, n] = step(s); s = n; return v; }; }
+  // 24枚: A〜Q × S,H（全部ちがう数字の12組）/ 36枚: A〜9 × 4スート（18組）/ 52枚: 全部（26組）
+  function buildDeck(cards) {
+    const d = [];
+    if (cards === 24) { for (let r = 1; r <= 12; r++) for (const s of ["S", "H"]) d.push({ r, s }); }
+    else if (cards === 36) { for (let r = 1; r <= 9; r++) for (const s of SUITS) d.push({ r, s }); }
+    else { for (let r = 1; r <= 13; r++) for (const s of SUITS) d.push({ r, s }); }
+    return d;
+  }
+  function initialState(settings = {}, players = [], rng = Math.random) {
+    const cards = SIZES[Number(settings.cards)] ? Number(settings.cards) : 24;
+    const n = Math.max(1, Math.min(4, (players && players.length) || 1));
+    const deck = buildDeck(cards);
+    for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; }
+    const mem = {};
+    for (let s = 0; s < n; s++) mem[s] = new Array(deck.length).fill(0);
+    return {
+      cards: deck, owner: new Array(deck.length).fill(-1), up: [], turn: 0, n,
+      scores: new Array(n).fill(0), flips: 0, attempts: 0, last: null, over: false,
+      pairsLeft: deck.length / 2, cpuLevel: Number(settings.cpuLevel) || 2,
+      mem, rngState: Math.floor(rng() * 4294967296) >>> 0,
+    };
+  }
+  function canFlip(state, idx) {
+    return Number.isInteger(idx) && idx >= 0 && idx < state.cards.length && state.owner[idx] === -1 && !state.up.includes(idx);
+  }
+  function legalMoves(state, seat) {
+    if (state.over || state.turn !== seat) return [];
+    const out = [];
+    for (let i = 0; i < state.cards.length; i++) if (canFlip(state, i)) out.push({ flip: i });
+    return out;
+  }
+  function applyMove(state, move, seat) {
+    if (state.over) throw new Error("終了しています");
+    if (seat !== state.turn) throw new Error("手番ではありません");
+    const idx = move ? move.flip : -1;
+    if (!canFlip(state, idx)) throw new Error("その札はめくれません");
+    let seed = state.rngState;
+    const rand = () => { const [v, s] = step(seed); seed = s; return v; };
+    const mem = {};
+    for (const k of Object.keys(state.mem || {})) mem[k] = state.mem[k].slice();
+    const p = FORGET[state.cpuLevel] ?? FORGET[2];
+    const r = state.cards[idx].r;
+    // 見た札を各席が記憶する（忘れる確率 p で記録し損ねる）
+    for (let s = 0; s < state.n; s++) {
+      if (!mem[s]) mem[s] = new Array(state.cards.length).fill(0);
+      if (rand() >= p) mem[s][idx] = r;
+    }
+    const next = { ...state, mem, flips: state.flips + 1 };
+    if (state.up.length === 0) { next.up = [idx]; next.rngState = seed; return next; }
+    // 2枚目
+    const a = state.up[0];
+    const match = state.cards[a].r === r;
+    next.up = [];
+    next.attempts = state.attempts + 1;
+    next.last = { a, b: idx, seat, match };
+    if (match) {
+      const owner = state.owner.slice(); owner[a] = seat; owner[idx] = seat;
+      const scores = state.scores.slice(); scores[seat] += 1;
+      next.owner = owner; next.scores = scores; next.pairsLeft = state.pairsLeft - 1;
+      for (let s = 0; s < state.n; s++) { mem[s][a] = 0; mem[s][idx] = 0; } // 取られた札は忘れてよい
+      if (next.pairsLeft === 0) next.over = true;                          // 手番はそのまま（もう1回）
+    } else {
+      next.turn = (seat + 1) % state.n;
+    }
+    next.rngState = seed;
+    return next;
+  }
+  function isOver(state) { return !!state.over; }
+  function result(state) {
+    const n = state.n;
+    const order = [...Array(n).keys()].sort((x, y) => state.scores[y] - state.scores[x] || x - y);
+    const ranking = order.map((seat) => ({ seat, pairs: state.scores[seat], rank: 1 }));
+    for (let i = 1; i < ranking.length; i++) ranking[i].rank = ranking[i].pairs === ranking[i - 1].pairs ? ranking[i - 1].rank : i + 1;
+    const top = ranking.filter((x) => x.rank === 1);
+    const winner = n === 1 ? 0 : (top.length === 1 ? top[0].seat : null);
+    const summary = n === 1 ? `${state.attempts}手でクリア`
+      : winner == null ? `引き分け（${top[0].pairs}組）` : `席${winner + 1}の勝ち（${top[0].pairs}組）`;
+    return { winner, ranking, scores: state.scores.slice(), summary, attempts: state.attempts, draw: n > 1 && winner == null };
+  }
+  function publicView(state, seat) { return state; } // 伏せ札は state に入っている（家族・友人用の割り切り）
+
+  /* ---- CPU: 記憶にペアがあれば取る。無ければ未知の札を優先してめくる ---- */
+  function cpuMove(state, seat, rng = Math.random) {
+    if (state.over || state.turn !== seat) return null;
+    const known = (state.mem && state.mem[seat]) || [];
+    const avail = [];
+    for (let i = 0; i < state.cards.length; i++) if (canFlip(state, i)) avail.push(i);
+    if (!avail.length) return null;
+    const pick = (arr) => arr[Math.floor(rng() * arr.length)];
+    const unknown = avail.filter((i) => !known[i]);
+    if (state.up.length === 1) {
+      const r = state.cards[state.up[0]].r;
+      const hit = avail.filter((i) => known[i] === r);
+      if (hit.length) return { flip: pick(hit) };
+      return { flip: pick(unknown.length ? unknown : avail) };
+    }
+    const byRank = {};
+    for (const i of avail) if (known[i]) (byRank[known[i]] = byRank[known[i]] || []).push(i);
+    const pairs = Object.values(byRank).filter((arr) => arr.length >= 2);
+    if (pairs.length) return { flip: pick(pairs)[0] };
+    return { flip: pick(unknown.length ? unknown : avail) };
+  }
+  return { initialState, legalMoves, applyMove, cpuMove, isOver, result, publicView, canFlip, mulberry, buildDeck, SIZES, FORGET };
+})();
+/* @engine-end */
+
+/* ============================================================
+   2. オンライン接続（AsobibaOnline の薄いラッパ）
+      部屋の作成/参加/追従、自分の手の送信、ホストによるCPU駆動、退出
+   ============================================================ */
+const SLUG = "memory";
+const MAX_PLAYERS = 4;
+const Online = {
+  ready: false, code: "", unsub: null, cpuScheduledFor: -1,
+  async ensure() {
+    if (this.ready) return true;
+    if (!window.AsobibaOnline) { showOnlineNotice("オンライン部品が読み込めませんでした。ローカルモードで遊べます。"); return false; }
+    try { await AsobibaOnline.init({ slug: SLUG }); this.ready = true; return true; }
+    catch (e) { showOnlineNotice("オンラインは使えません：" + (e.message || e)); return false; }
+  },
+  async create(name, settings) {
+    const code = await AsobibaOnline.createRoom({ name, maxPlayers: MAX_PLAYERS, minPlayers: 2, settings, initialState: null });
+    this.open(code);
+  },
+  async join(code, name) {
+    await AsobibaOnline.joinRoom(code, { name });
+    this.open(code);
+  },
+  open(code) {
+    this.close();
+    this.code = code;
+    this.cpuScheduledFor = -1;
+    try { history.replaceState(null, "", "#" + code); } catch (e) { /* file:// など */ }
+    this.unsub = AsobibaOnline.subscribe(code, (r, err) => onRoom(r, err));
+  },
+  close() {
+    if (this.unsub) { this.unsub(); this.unsub = null; }
+    this.code = "";
+    try { if (location.hash) history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* noop */ }
+  },
+  mySeat(r) { const me = AsobibaOnline.me(r); return me ? me.seat : -1; },
+  seatPlayer(r, seat) { return r.players.find((p) => p.seat === seat) || null; },
+  // 席番号を 0..n-1 に詰め直す（ロビーで抜けた人がいると飛び番になるため。開始時・再戦時に呼ぶ）
+  normalizeSeats(r) { r.players.sort((a, b) => a.seat - b.seat).forEach((p, i) => { p.seat = i; }); },
+  newState(r) { return Engine.initialState(r.settings || {}, r.players, Engine.mulberry((r.seed || 1) ^ ((r.version || 0) * 0x9e37))); },
+  // 自分の手（純粋関数で次の state。手番でなければ何もしない）
+  move(move) {
+    return AsobibaOnline.update(this.code, (r) => {
+      if (r.status !== "playing" || !r.state || r.state.over) return null;
+      const seat = this.mySeat(r);
+      if (seat < 0 || r.state.turn !== seat) return null;
+      if (!Engine.canFlip(r.state, move.flip)) return null;
+      r.state = Engine.applyMove(r.state, move, seat);
+      if (r.state.over) r.status = "ended";
+      return r;
+    });
+  },
+  // ホストだけが CPU 席を動かす（version 単位で1回だけ。外れた直後は見せる時間ぶん長めに待つ）
+  maybeDriveCpu(r) {
+    if (!AsobibaOnline.isHost(r) || r.status !== "playing" || !r.state || r.state.over) return;
+    const p = this.seatPlayer(r, r.state.turn);
+    if (!p || !p.cpu) return;
+    if (this.cpuScheduledFor === r.version) return;
+    this.cpuScheduledFor = r.version;
+    const v = r.version;
+    const afterMiss = r.state.up.length === 0 && r.state.last && !r.state.last.match;
+    const afterHit = r.state.up.length === 0 && r.state.last && r.state.last.match;
+    const delay = (afterMiss ? 1300 : afterHit ? 1000 : 650) + Math.random() * 400;
+    setTimeout(async () => {
+      try {
+        await AsobibaOnline.update(this.code, (rr) => {
+          if (rr.version !== v || rr.status !== "playing" || !rr.state || rr.state.over) return null;
+          if (!AsobibaOnline.isHost(rr)) return null;
+          const cp = this.seatPlayer(rr, rr.state.turn);
+          if (!cp || !cp.cpu) return null;
+          const mv = Engine.cpuMove(rr.state, rr.state.turn, Math.random);
+          if (!mv) return null;
+          rr.state = Engine.applyMove(rr.state, mv, rr.state.turn);
+          if (rr.state.over) rr.status = "ended";
+          return rr;
+        });
+      } catch (e) { console.warn("cpu move failed", e); }
+    }, delay);
+  },
+  async start() {
+    await AsobibaOnline.start(this.code, (rr) => { this.normalizeSeats(rr); return this.newState(rr); });
+  },
+  async rematch() {
+    await AsobibaOnline.update(this.code, (rr, t) => {
+      if (!AsobibaOnline.isHost(rr)) throw new Error("もう一度はホストが押します");
+      if (rr.status === "playing" && rr.state && !rr.state.over) return null;
+      // 先手を1つずらして再戦（前回2番手だった人から）
+      this.normalizeSeats(rr);
+      const n = rr.players.length;
+      rr.players.forEach((p) => { p.seat = (p.seat + n - 1) % n; });
+      rr.state = this.newState(rr);
+      rr.status = "playing";
+      rr.startedAt = t;
+      return rr;
+    });
+  },
+  async leave() {
+    if (!this.code) return;
+    const code = this.code;
+    try { await AsobibaOnline.leave(code); } catch (e) { console.warn(e); }
+    this.close();
+  },
+};
+
+/* ============================================================
+   3. UI描画（画面遷移・ホーム・ロビー・札・結果）
+   ============================================================ */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+const LEVEL_NAME = { 1: "やさしい", 2: "ふつう", 3: "つよい" };
+const SEAT_COL = ["#8f7bd9", "#3fa692", "#e09a3c", "#dd6f93"];
+const ACCENT = "#8f7bd9";
+const NAME_KEY = "asobiba.name";
+const SOUND_KEY = "asobiba.memory.sound";
+const BEST_KEY = (cards) => `asobiba.memory.best.${cards}`;
+const SIZE_DESC = { 24: "A〜Qのスペードとハート。全部ちがう数字の12組。まずはここから。", 36: "A〜9の4スート。同じ数字が4枚ずつある18組。", 52: "トランプ全部。26組。52枚でも画面に収まります。" };
+const REVEAL_MS = 800;   // 外れたときに見せる時間
+const FLIP_MS = 420;     // めくりアニメ
+const GLOW_MS = 750;     // ペア成立の光
+
+// ---- アプリ状態 ----
+let mode = "cpu";            // "cpu" | "local" | "online"
+let cpuLevel = 2;
+let cpuCount = 1;            // CPUモードの CPU 人数（0 = ひとり）
+let localCount = 2;          // 交代モードの人数
+let cardsSize = 24;          // 24 | 36 | 52
+let game = null;             // ローカル2モードの engine state
+let room = null;             // オンラインの Room
+let busy = false;            // 送信中の入力ロック
+let lockUntil = 0;           // アニメ中の入力ロック（時刻）
+let soundOn = true;
+let cpuTimer = null;
+let slots = [];              // 札ボタン
+let builtFor = "";           // どの山札で slot を作ったか（hard 再構築の判定）
+let prevOwner = null;
+let pendingReveal = null;    // 外れた2枚を見せている間 {a,b}
+let revealTimer = null;
+let holdTaken = new Set();   // ペア成立の光を見せている間、まだ「取られた」表示にしない札
+let lastPairSeen = "";       // last の重複処理防止
+let lastFlipsSeen = -1;
+let resultShownKey = "";
+let soloStart = 0;           // ひとりプレイの開始時刻
+let soloElapsed = 0;
+let soloTimer = null;
+
+// ---- 画面遷移 ----
+function showScreen(id) {
+  ["homeScreen", "lobbyScreen", "playScreen"].forEach((x) => $(x).classList.toggle("active", x === id));
+  $("menuHome").hidden = id === "homeScreen";
+  $("menuHomeLabel").textContent = id === "lobbyScreen" ? "部屋を出る" : "ホームへ戻る";
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+function openOverlay(id) { $(id).classList.add("show"); }
+function closeOverlay(id) { $(id).classList.remove("show"); }
+function showOnlineNotice(text) { const n = $("onlineNotice"); n.textContent = text; n.hidden = !text; }
+
+// ---- 名前 ----
+function myName() {
+  const v = $("nameInput").value.trim().slice(0, 12);
+  try { localStorage.setItem(NAME_KEY, v); } catch (e) { /* noop */ }
+  return v || "名無し";
+}
+try { $("nameInput").value = localStorage.getItem(NAME_KEY) || ""; } catch (e) { /* noop */ }
+
+// ---- 自己ベスト（ひとりプレイ・枚数ごと・この端末） ----
+function loadBest(cards) { try { const v = JSON.parse(localStorage.getItem(BEST_KEY(cards)) || "null"); return v && Number.isFinite(v.attempts) ? v : null; } catch (e) { return null; } }
+function saveBest(cards, rec) { try { localStorage.setItem(BEST_KEY(cards), JSON.stringify(rec)); } catch (e) { /* noop */ } }
+function fmtTime(ms) { const s = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
+function renderBest() {
+  const b = loadBest(cardsSize);
+  const el = $("bestLine");
+  el.classList.toggle("none", !b);
+  el.innerHTML = b
+    ? `<svg class="ic"><use href="#ic-trophy"/></svg> ひとりの自己ベスト（${cardsSize}枚）<span class="v" style="margin-left:auto">${b.attempts}手 · ${fmtTime(b.ms)}</span>`
+    : `<svg class="ic"><use href="#ic-trophy"/></svg> ひとりの自己ベスト（${cardsSize}枚）<span style="margin-left:auto">まだ記録なし</span>`;
+  $("sizeDesc").textContent = SIZE_DESC[cardsSize];
+}
+
+// ---- サウンド（小さなWebAudio。めくる/そろう/外れ/終局） ----
+let actx = null;
+function ac() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; } } if (actx && actx.state === "suspended") actx.resume(); return actx; }
+function blip(freq, dur = 0.06, type = "sine", vol = 0.12, when = 0) {
+  if (!soundOn) return;
+  const c = ac(); if (!c) return;
+  const o = c.createOscillator(), g = c.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, c.currentTime + when);
+  g.gain.exponentialRampToValueAtTime(vol, c.currentTime + when + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + when + dur);
+  o.connect(g).connect(c.destination);
+  o.start(c.currentTime + when); o.stop(c.currentTime + when + dur + 0.02);
+}
+const sfx = {
+  flip() { blip(640, 0.05, "triangle", 0.1); blip(880, 0.04, "sine", 0.05, 0.03); },
+  match() { [784, 988, 1319].forEach((f, i) => blip(f, 0.14, "triangle", 0.12, i * 0.07)); },
+  miss() { blip(300, 0.12, "sine", 0.08); blip(220, 0.16, "sine", 0.07, 0.1); },
+  win() { [523, 659, 784, 1047].forEach((f, i) => blip(f, 0.18, "triangle", 0.12, i * 0.12)); },
+  lose() { [392, 330, 262].forEach((f, i) => blip(f, 0.22, "sine", 0.1, i * 0.16)); },
+};
+try { soundOn = localStorage.getItem(SOUND_KEY) !== "0"; } catch (e) { /* noop */ }
+function renderSoundBtn() {
+  $("menuSound").innerHTML = `<svg class="ic"><use href="#${soundOn ? "ic-sound-on" : "ic-sound-off"}"/></svg> <span>サウンド ${soundOn ? "ON" : "OFF"}</span>`;
+}
+
+// ---- 現在の state と席情報（3モード共通の見方） ----
+function curState() { return mode === "online" ? (room && room.state) : game; }
+function seatInfo(seat) {
+  if (mode === "online") {
+    const p = room ? Online.seatPlayer(room, seat) : null;
+    const me = room ? Online.mySeat(room) : -1;
+    return { name: p ? p.name : "（空席）", cpu: !!(p && p.cpu), mine: p ? (seat === me && !p.cpu) : false, away: p ? AsobibaOnline.isAway(p) : false, host: !!(p && room && room.hostUid === p.uid) };
+  }
+  if (mode === "cpu") {
+    if (seat === 0) return { name: myName(), cpu: false, mine: true, away: false };
+    return { name: cpuCount === 1 ? "CPU" : `CPU ${seat}`, cpu: true, mine: false, away: false };
+  }
+  return { name: `${seat + 1}P`, cpu: false, mine: true, away: false };
+}
+function isSolo(state) { return state && state.n === 1; }
+function lockedNow() { return busy || Date.now() < lockUntil; }
+
+// ---- 札の DOM（山札ごとに一度だけ生成）。裏面は共通部品 AsobibaCards の backPattern(accent) ----
+function buildGrid(state) {
+  const grid = $("grid");
+  grid.innerHTML = "";
+  slots = [];
+  // 裏面の pattern 定義を先頭に1つ置く（各札の裏面SVGも同じ id を持つが、文書内で最初の定義が使われる）
+  const defs = (AsobibaCards.backPattern(ACCENT).match(/<defs>[\s\S]*?<\/defs>/) || [""])[0];
+  grid.insertAdjacentHTML("beforeend", `<svg width="0" height="0" style="position:absolute" aria-hidden="true">${defs}</svg>`);
+  const backSvg = AsobibaCards.svg(null, { w: 100, faceDown: true, accent: ACCENT });
+  state.cards.forEach((card, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "slot minh0"; b.dataset.i = i;
+    b.setAttribute("role", "gridcell"); b.setAttribute("aria-label", `札 ${i + 1}`);
+    b.innerHTML = `<div class="card3d"><div class="cf back">${backSvg}</div><div class="cf front">${AsobibaCards.svg(card, { w: 100 })}</div></div>`;
+    b.addEventListener("click", () => onSlotTap(i));
+    grid.appendChild(b); slots.push(b);
+  });
+  builtFor = state.cards.map((c) => c.r + c.s).join("");
+  layoutGrid(state.cards.length);
+}
+// 枚数に応じて列数とカード幅を決める。
+//   候補の列数（24枚=4or6列、36枚=6列、52枚=7/8/6列）のうち、幅44px以上を守りつつ
+//   画面の高さ（バナー・情報行ぶんを除く）に収まる範囲で札がいちばん大きくなる列数を選ぶ。
+//   どうしても高さが足りないときは 44px を下限にしてページをスクロールさせる。
+function layoutGrid(N) {
+  const table = $("table"), grid = $("grid");
+  const W = table.clientWidth - 12;
+  if (W <= 0) return;
+  const gap = N >= 52 ? 4 : 6;
+  const candidates = N <= 24 ? [4, 6] : N <= 36 ? [6] : [7, 8, 6];
+  const top = table.getBoundingClientRect().top;
+  const availH = window.innerHeight - top - 118; // 手番バナー＋情報行＋余白
+  let best = null;
+  for (const c of candidates) {
+    const byW = Math.floor((W - (c - 1) * gap) / c);
+    const rows = Math.ceil(N / c);
+    const byH = Math.floor(((availH - (rows - 1) * gap) / rows) / 1.4);
+    const fitsW = byW >= 44;
+    const cw = Math.min(byW, byH > 0 ? byH : byW);
+    // 幅44pxを満たす候補を優先し、その中で札が最大のもの
+    if (!best || (fitsW && !best.fitsW) || (fitsW === best.fitsW && cw > best.cw)) best = { cols: c, cw, fitsW };
+  }
+  const cols = best.cols;
+  const cw = Math.max(44, best.cw);
+  const ch = Math.round(cw * 1.4);
+  grid.style.setProperty("--cw", cw + "px");
+  grid.style.setProperty("--ch", ch + "px");
+  grid.style.setProperty("--gap", gap + "px");
+  grid.style.setProperty("--gw", (cols * cw + (cols - 1) * gap) + "px");
+}
+window.addEventListener("resize", () => { const s = curState(); if (s && $("playScreen").classList.contains("active")) layoutGrid(s.cards.length); });
+
+// ---- 札の描画（差分でアニメ） ----
+function renderBoard(state, { hard = false } = {}) {
+  const key = state.cards.map((c) => c.r + c.s).join("");
+  if (hard || key !== builtFor) {
+    buildGrid(state);
+    prevOwner = null; pendingReveal = null; holdTaken = new Set(); clearTimeout(revealTimer);
+    lastPairSeen = state.last ? pairKey(state) : "";
+  }
+  // 今回の結果（そろった / 外れた）を一度だけ演出
+  if (state.last && pairKey(state) !== lastPairSeen) {
+    lastPairSeen = pairKey(state);
+    const { a, b, match } = state.last;
+    const gen = builtFor; // 途中で新しい山札になったら古い演出は捨てる
+    if (match) {
+      // 2枚目がめくり終わってから光る → そのあと「取得済み」表示へ
+      holdTaken.add(a); holdTaken.add(b);
+      lockUntil = Math.max(lockUntil, Date.now() + FLIP_MS + 350);
+      setTimeout(() => { if (builtFor !== gen) return; [a, b].forEach((i) => { slots[i].classList.add("matched"); sparkle(slots[i]); }); }, FLIP_MS - 80);
+      setTimeout(() => {
+        holdTaken.delete(a); holdTaken.delete(b);
+        if (builtFor !== gen) return;
+        [a, b].forEach((i) => slots[i].classList.remove("matched"));
+        const s = curState(); if (s) applyFaces(s);
+      }, FLIP_MS + GLOW_MS);
+    } else {
+      // 外れ: めくり終わってから REVEAL_MS 見せて伏せる
+      pendingReveal = { a, b };
+      clearTimeout(revealTimer);
+      lockUntil = Math.max(lockUntil, Date.now() + FLIP_MS + REVEAL_MS);
+      revealTimer = setTimeout(() => { pendingReveal = null; if (builtFor !== gen) return; const s = curState(); if (s) applyFaces(s); }, FLIP_MS + REVEAL_MS);
+    }
+  } else if (state.up.length === 1) {
+    lockUntil = Math.max(lockUntil, Date.now() + 200);
+  }
+  applyFaces(state, hard);
+  $("table").classList.toggle("locked", !(state && !state.over && seatInfo(state.turn).mine));
+}
+function pairKey(state) { const l = state.last; return l ? `${state.attempts}:${l.a}:${l.b}:${l.seat}` : ""; }
+function applyFaces(state, hard = false) {
+  const up = new Set(state.up);
+  if (pendingReveal) { up.add(pendingReveal.a); up.add(pendingReveal.b); }
+  holdTaken.forEach((i) => up.add(i));
+  slots.forEach((el, i) => {
+    const taken = state.owner[i] !== -1 && !holdTaken.has(i);
+    if (hard) el.classList.add("notrans");
+    el.classList.toggle("taken", taken);
+    el.classList.toggle("up", up.has(i) || taken);
+    if (taken) el.style.setProperty("--oc", SEAT_COL[state.owner[i]] || ACCENT);
+    el.setAttribute("aria-label", taken ? `札 ${i + 1}（取得済み）` : up.has(i) ? `札 ${i + 1}（表）` : `札 ${i + 1}`);
+    if (hard) requestAnimationFrame(() => el.classList.remove("notrans"));
+  });
+  prevOwner = state.owner.slice();
+}
+function sparkle(slot) {
+  for (let k = 0; k < 6; k++) {
+    const s = document.createElement("i"); s.className = "spark";
+    const ang = (Math.PI * 2 * k) / 6 + Math.random() * 0.5, d = 18 + Math.random() * 14;
+    s.style.setProperty("--dx", Math.cos(ang) * d + "px"); s.style.setProperty("--dy", Math.sin(ang) * d + "px");
+    s.style.animationDelay = (Math.random() * 80) + "ms";
+    slot.appendChild(s); setTimeout(() => s.remove(), 800);
+  }
+}
+
+// ---- 上段: プレイヤーチップ（ひとりのときは 組/手数/タイム のタイル） ----
+function renderPlayers(state) {
+  const el = $("pbar");
+  const total = state.cards.length / 2;
+  if (isSolo(state)) {
+    el.className = "pbar solo"; el.style.setProperty("--n", 3);
+    el.innerHTML =
+      `<div class="stat hl"><span class="k"><svg class="ic"><use href="#ic-cards"/></svg>とった組</span><span class="v">${state.scores[0]}<small>/ ${total}</small></span></div>` +
+      `<div class="stat"><span class="k"><svg class="ic"><use href="#ic-flip"/></svg>手数</span><span class="v">${state.attempts}</span></div>` +
+      `<div class="stat"><span class="k"><svg class="ic"><use href="#ic-clock"/></svg>タイム</span><span class="v" id="soloTime">${fmtTime(soloElapsed)}</span></div>`;
+    return;
+  }
+  el.className = "pbar n" + state.n; el.style.setProperty("--n", state.n);
+  let html = "";
+  const wide = state.n <= 2; // 3〜4人のときはチップが細いのでバッジを絞る
+  for (let seat = 0; seat < state.n; seat++) {
+    const info = seatInfo(seat);
+    let head = "", tail = "";
+    if (mode === "online" && info.host) head += '<span class="badge host"><svg class="ic"><use href="#ic-crown"/></svg></span>';
+    if (info.away) head += '<span class="badge away">離脱</span>';
+    if (wide && info.cpu) tail += `<span class="badge cpu">${mode === "online" ? "CPU" : LEVEL_NAME[cpuLevel]}</span>`;
+    if (wide && mode === "online" && info.mine) tail += '<span class="badge">あなた</span>';
+    let status = "";
+    if (!state.over && state.turn === seat) status = info.mine ? (mode === "local" ? "手番" : "あなたの番") : (info.cpu ? "考え中…" : "相手の番");
+    else if (!wide && mode === "online" && info.mine) status = "あなた";
+    html += `<div class="pchip${!state.over && state.turn === seat ? " turn" : ""}" style="--sc:${SEAT_COL[seat]}">` +
+      `<div class="ph"><span class="pdot"></span><span class="pn">${esc(info.name)}</span>${head}</div>` +
+      `<div class="pc">${state.scores[seat]}<small>組</small>${tail}</div><div class="ps">${status}</div></div>`;
+  }
+  el.innerHTML = html;
+}
+function renderBanner(state) {
+  const el = $("turnBanner");
+  if (state.over) {
+    const r = Engine.result(state);
+    el.className = "turnBanner"; el.style.removeProperty("--sc");
+    el.innerHTML = `<svg class="ic"><use href="#ic-flag"/></svg> 終了 — ${esc(isSolo(state) ? r.summary : r.winner == null ? "引き分け" : seatInfo(r.winner).name + "の勝ち")}`;
+    return;
+  }
+  const info = seatInfo(state.turn);
+  const dot = `<i class="sdotS"></i>`;
+  el.style.setProperty("--sc", SEAT_COL[state.turn]);
+  el.className = "turnBanner" + (info.mine ? " mine" : "");
+  const nth = state.up.length === 0 ? "1枚目" : "2枚目";
+  if (isSolo(state)) el.innerHTML = `${dot} ${nth}をめくる${state.up.length ? "（同じ数字を探そう）" : ""}`;
+  else if (info.mine) el.innerHTML = `${dot} ${mode === "local" ? esc(info.name) + "の番" : "あなたの番"} — ${nth}をめくる`;
+  else if (info.cpu) el.innerHTML = `${dot} ${esc(info.name)} が<span class="dots">考え中</span>`;
+  else if (info.away) el.innerHTML = `${dot} ${esc(info.name)} は離脱中… 戻るまで待っています`;
+  else el.innerHTML = `${dot} ${esc(info.name)} の番<span class="dots"></span>`;
+}
+function renderInfo(state) {
+  $("infoMoves").innerHTML = `<svg class="ic"><use href="#ic-flip"/></svg> ${state.attempts}手`;
+  $("infoLeft").textContent = `残り ${state.pairsLeft}組`;
+  let m = "";
+  if (mode === "cpu") m = isSolo(state) ? `<svg class="ic"><use href="#ic-person"/></svg> ひとり · ${state.cards.length}枚` : `<svg class="ic"><use href="#ic-cpu"/></svg> CPU ${LEVEL_NAME[cpuLevel]} · ${state.cards.length}枚`;
+  else if (mode === "local") m = `<svg class="ic"><use href="#ic-swap"/></svg> 交代 · ${state.cards.length}枚`;
+  else m = `<svg class="ic"><use href="#ic-globe"/></svg> 部屋 ${esc(Online.code)} · ${state.cards.length}枚`;
+  $("infoMode").innerHTML = m;
+}
+function renderPlay(state, opts = {}) {
+  renderBoard(state, opts);
+  renderPlayers(state);
+  renderBanner(state);
+  renderInfo(state);
+}
+
+// ---- ひとりプレイのタイマー ----
+function startSoloClock() {
+  soloStart = Date.now(); soloElapsed = 0;
+  clearInterval(soloTimer);
+  soloTimer = setInterval(() => { const s = curState(); if (!s || s.over || !isSolo(s)) { clearInterval(soloTimer); return; } soloElapsed = Date.now() - soloStart; const el = $("soloTime"); if (el) el.textContent = fmtTime(soloElapsed); }, 500);
+}
+
+// state が進んだ時の共通処理（音・終局）。ローカル/オンライン両方から呼ぶ
+function afterStateChange(state, { animate = true } = {}) {
+  if (state.flips !== lastFlipsSeen) {
+    if (animate && lastFlipsSeen >= 0 && state.flips > lastFlipsSeen) {
+      if (state.last && state.up.length === 0 && state.flips === lastFlipsSeen + 1) {
+        if (state.last.match) { sfx.flip(); setTimeout(() => sfx.match(), FLIP_MS - 80); } else { sfx.flip(); setTimeout(() => sfx.miss(), FLIP_MS + 100); }
+      } else sfx.flip();
+    }
+    if (isSolo(state) && state.flips === 1 && mode !== "online") startSoloClock();
+    lastFlipsSeen = state.flips;
+  }
+  if (state.over) {
+    if (isSolo(state)) { clearInterval(soloTimer); soloElapsed = soloStart ? Date.now() - soloStart : soloElapsed; }
+    const key = `${mode}:${Online.code}:${state.flips}:${state.attempts}`;
+    if (resultShownKey !== key) { resultShownKey = key; setTimeout(() => showResult(state), animate ? FLIP_MS + GLOW_MS + 300 : 200); }
+  }
+}
+
+// ---- 札をタップ ----
+async function onSlotTap(idx) {
+  const state = curState();
+  if (!state || state.over || lockedNow()) return;
+  const info = seatInfo(state.turn);
+  if (!info.mine) { asobibaToast(info.cpu ? "CPUが考え中です" : "相手の番です", { kind: "warn" }); return; }
+  if (!Engine.canFlip(state, idx)) return; // 表の札・取られた札は無反応
+  ac();
+  if (mode === "online") {
+    busy = true;
+    try { await Online.move({ flip: idx }); }
+    catch (e) { asobibaToast(e.message || "送信に失敗しました", { kind: "warn" }); }
+    busy = false;
+    return;
+  }
+  localApply({ flip: idx });
+}
+function localApply(move) {
+  const seat = game.turn;
+  game = Engine.applyMove(game, move, seat);
+  renderPlay(game);
+  afterStateChange(game);
+  maybeCpuLocal();
+}
+function maybeCpuLocal() {
+  clearTimeout(cpuTimer);
+  if (mode !== "cpu" || !game || game.over) return;
+  if (!seatInfo(game.turn).cpu) return;
+  const snapshot = game.flips;
+  const wait = Math.max(0, lockUntil - Date.now()) + 450 + Math.random() * 400;
+  cpuTimer = setTimeout(() => {
+    if (!game || game.over || game.flips !== snapshot || mode !== "cpu") return;
+    const mv = Engine.cpuMove(game, game.turn, Math.random);
+    if (mv) localApply(mv);
+  }, wait);
+}
+
+// ---- 開始（ローカル） ----
+function resetUiState() {
+  builtFor = ""; prevOwner = null; pendingReveal = null; holdTaken = new Set(); clearTimeout(revealTimer);
+  lastPairSeen = ""; lastFlipsSeen = -1; resultShownKey = ""; busy = false; lockUntil = 0;
+  clearInterval(soloTimer); soloStart = 0; soloElapsed = 0;
+}
+function startLocalGame(kind) {
+  mode = kind;
+  Online.close();
+  room = null;
+  const n = kind === "cpu" ? 1 + cpuCount : localCount;
+  const players = Array.from({ length: n }, (_, i) => ({ seat: i }));
+  game = Engine.initialState({ cards: cardsSize, cpuLevel }, players, Math.random);
+  resetUiState();
+  closeOverlay("resultOverlay");
+  showScreen("playScreen");
+  renderPlay(game, { hard: true });
+  // 画面が出てから（幅が確定してから）並べ直す
+  requestAnimationFrame(() => layoutGrid(game.cards.length));
+  maybeCpuLocal();
+}
+
+// ---- オンライン: 部屋の更新を受け取る ----
+function onRoom(r, err) {
+  if (err) { asobibaToast(err.message, { kind: "warn", ms: 3200 }); if (/準備ができていません/.test(err.message)) showOnlineNotice(err.message); return; }
+  if (!r) { asobibaToast("部屋が閉じられました", { kind: "warn" }); Online.close(); room = null; goHome(); return; }
+  const prev = room; room = r;
+  if (r.status === "lobby") { closeOverlay("resultOverlay"); renderLobby(r); if (!$("lobbyScreen").classList.contains("active")) showScreen("lobbyScreen"); return; }
+  // playing / ended
+  const newGame = !prev || prev.status === "lobby" || !prev.state || (r.state && prev.state && r.state.flips < prev.state.flips) || (prev.startedAt !== r.startedAt);
+  if (newGame) { resetUiState(); closeOverlay("resultOverlay"); }
+  if (!$("playScreen").classList.contains("active")) showScreen("playScreen");
+  if (r.state) {
+    renderPlay(r.state, { hard: newGame });
+    if (newGame) requestAnimationFrame(() => layoutGrid(r.state.cards.length));
+    afterStateChange(r.state, { animate: !newGame });
+  }
+  Online.maybeDriveCpu(r);
+}
+function renderLobby(r) {
+  $("lobbyCode").textContent = r.code;
+  const me = Online.mySeat(r);
+  const isHost = AsobibaOnline.isHost(r);
+  const st = r.settings || {};
+  $("lobbySettings").innerHTML = `札 <b>${esc(st.cards || 24)}枚</b> ・ CPUの強さ <b>${esc(LEVEL_NAME[st.cpuLevel] || "ふつう")}</b> ・ 最大4人`;
+  const seatsEl = $("seats");
+  const sorted = r.players.slice().sort((a, b) => a.seat - b.seat);
+  const rows = [];
+  sorted.forEach((p, i) => {
+    const badges = [
+      r.hostUid === p.uid ? '<span class="badge host"><svg class="ic"><use href="#ic-crown"/></svg>ホスト</span>' : "",
+      p.cpu ? `<span class="badge cpu">CPU ${LEVEL_NAME[st.cpuLevel || 2]}</span>` : "",
+      !p.cpu && AsobibaOnline.isAway(p) ? '<span class="badge away">離脱中</span>' : "",
+      p.seat === me ? '<span class="badge">あなた</span>' : "",
+    ].filter(Boolean).join(" ");
+    const remove = isHost && p.cpu ? `<button class="btn secondary sm minh0" data-remove="${esc(p.uid)}" type="button" style="min-height:36px;padding:4px 10px;font-size:12px">外す</button>` : "";
+    rows.push(`<div class="seat"><span class="sdot" style="--sc:${SEAT_COL[i] || ACCENT}">${i + 1}</span><div><div class="sname"><span>${esc(p.name)}</span>${badges}</div><div class="ssub">${i === 0 ? "先手" : `${i + 1}番手`}</div></div>${remove}</div>`);
+  });
+  for (let i = sorted.length; i < MAX_PLAYERS; i++) rows.push(`<div class="seat empty"><span class="sdot">${i + 1}</span><div><div class="sname"><span>（空席）</span></div><div class="ssub">参加待ち</div></div><span></span></div>`);
+  seatsEl.innerHTML = rows.join("");
+  seatsEl.querySelectorAll("[data-remove]").forEach((b) => b.addEventListener("click", async () => {
+    try { await AsobibaOnline.removeCpu(Online.code, b.dataset.remove); } catch (e) { asobibaToast(e.message, { kind: "warn" }); }
+  }));
+  const n = r.players.length;
+  $("addCpuBtn").hidden = !(isHost && n < MAX_PLAYERS);
+  $("startOnlineBtn").hidden = !isHost;
+  $("startOnlineBtn").disabled = n < 2;
+  $("lobbyStatus").textContent = isHost
+    ? (n < 2 ? "相手の参加を待っています。来ないときは CPU を入れて始められます。" : `${n}人そろっています。「はじめる」で開始（4人まで参加できます）。`)
+    : "ホストが開始するのを待っています…";
+  $("shareBtn").hidden = !navigator.share;
+}
+
+// ---- 結果 ----
+function showResult(state) {
+  const r = Engine.result(state);
+  const solo = isSolo(state);
+  const list = $("rankList"), stats = $("soloStats"), note = $("resultNote");
+  note.className = "resultNote";
+  if (solo) {
+    list.innerHTML = ""; stats.hidden = false;
+    stats.innerHTML =
+      `<div class="stat"><span class="k"><svg class="ic"><use href="#ic-flip"/></svg>手数</span><span class="v">${state.attempts}<small>手</small></span></div>` +
+      `<div class="stat"><span class="k"><svg class="ic"><use href="#ic-clock"/></svg>タイム</span><span class="v">${fmtTime(soloElapsed)}</span></div>`;
+    const best = loadBest(state.cards.length);
+    const isBest = !best || state.attempts < best.attempts || (state.attempts === best.attempts && soloElapsed < best.ms);
+    if (isBest) saveBest(state.cards.length, { attempts: state.attempts, ms: soloElapsed, at: Date.now() });
+    $("resultTitle").textContent = "クリア！";
+    $("resultSub").textContent = `${state.cards.length}枚 · ${state.cards.length / 2}組を ${state.attempts}手で`;
+    note.textContent = isBest ? (best ? `自己ベスト更新！（前回 ${best.attempts}手 · ${fmtTime(best.ms)}）` : "自己ベストを記録しました") : `自己ベスト ${best.attempts}手 · ${fmtTime(best.ms)}`;
+    note.classList.toggle("best", isBest);
+    renderBest();
+  } else {
+    stats.hidden = true; stats.innerHTML = "";
+    const total = state.cards.length / 2;
+    list.innerHTML = r.ranking.map((x) => {
+      const info = seatInfo(x.seat);
+      const win = x.rank === 1 && r.winner != null;
+      return `<div class="rankRow${win ? " win" : ""}" style="--sc:${SEAT_COL[x.seat]}"><span class="rk">${win ? '<svg class="ic"><use href="#ic-crown"/></svg>' : x.rank}</span><div><div class="nm"><i></i><span>${esc(info.name)}</span>${info.cpu ? '<span class="badge cpu">CPU</span>' : ""}${mode === "online" && info.mine ? '<span class="badge">あなた</span>' : ""}</div><div class="bar"><i style="width:${Math.round((x.pairs / total) * 100)}%"></i></div></div><span class="num">${x.pairs}<small>組</small></span></div>`;
+    }).join("");
+    let title, sub = "";
+    if (r.winner == null) { title = "引き分け"; sub = `${r.ranking[0].pairs}組で同数`; }
+    else {
+      const wi = seatInfo(r.winner);
+      const iPlay = mode === "cpu" || (mode === "online" && Online.mySeat(room) >= 0);
+      title = mode === "local" ? `${wi.name}の勝ち` : (wi.mine ? "あなたの勝ち" : (iPlay ? "あなたの負け" : `${wi.name}の勝ち`));
+      sub = `${wi.name} ${r.ranking[0].pairs}組 · 全${total}組 · ${state.attempts}手`;
+    }
+    $("resultTitle").textContent = title;
+    $("resultSub").textContent = sub;
+    if (mode === "online") {
+      const host = AsobibaOnline.isHost(room);
+      note.textContent = host ? "「もう一度」で先手をずらして再戦（相手も同じ部屋のまま）" : "ホストが「もう一度」を押すと再戦が始まります";
+    } else note.textContent = mode === "cpu" ? "もう一度で同じ設定で再戦" : "";
+  }
+  if (mode === "online") $("resultAgain").hidden = !AsobibaOnline.isHost(room); else $("resultAgain").hidden = false;
+  openOverlay("resultOverlay");
+  if (solo) { sfx.win(); confetti(); return; }
+  if (r.winner == null) return;
+  const mine = seatInfo(r.winner).mine;
+  if (mode === "local" || mine) { sfx.win(); confetti(); } else sfx.lose();
+}
+function confetti() {
+  const box = document.createElement("div"); box.className = "confetti";
+  const cols = ["#8f7bd9", "#ffffff", "#e0b34a", "#3fa692", "#dd6f93", "#cfc4ec"];
+  for (let i = 0; i < 70; i++) {
+    const p = document.createElement("i");
+    p.style.left = Math.random() * 100 + "vw"; p.style.background = cols[i % cols.length];
+    p.style.animationDuration = 1.6 + Math.random() * 1.4 + "s"; p.style.animationDelay = Math.random() * 0.6 + "s";
+    p.style.transform = `rotate(${Math.random() * 360}deg)`; box.appendChild(p);
+  }
+  document.body.appendChild(box); setTimeout(() => box.remove(), 3400);
+}
+
+// ---- ホームへ（確認は呼び出し側） ----
+function goHome() {
+  clearTimeout(cpuTimer); clearInterval(soloTimer);
+  Online.close();
+  room = null; game = null; busy = false; lockUntil = 0;
+  closeOverlay("resultOverlay"); closeOverlay("menuOverlay");
+  showScreen("homeScreen");
+  renderBest();
+}
+async function confirmAndGoHome() {
+  const state = curState();
+  if (mode === "online" && Online.code) {
+    const playing = room && room.status === "playing" && state && !state.over;
+    const me = playing ? Online.mySeat(room) : -1;
+    const ok = await asobibaConfirm({
+      title: playing ? "対局中に部屋を出る" : "部屋を出る",
+      lines: playing ? [["あなたの席", "CPUが引き継ぐ"], ["あなたの組数", `${me >= 0 ? state.scores[me] : 0}組`], ["残り", `${state.pairsLeft}組`]] : [],
+      note: playing ? "相手はCPU相手に続けられます。同じコードで戻れば席に復帰できます。" : "",
+      okLabel: "出る", cancelLabel: "もどる", danger: true,
+    });
+    if (!ok) return;
+    await Online.leave();
+    goHome(); return;
+  }
+  if (state && !state.over && $("playScreen").classList.contains("active")) {
+    const lines = isSolo(state)
+      ? [["とった組", `${state.scores[0]} / ${state.cards.length / 2}組`], ["手数", `${state.attempts}手`]]
+      : [["残り", `${state.pairsLeft}組`], ["手数", `${state.attempts}手`]];
+    const ok = await asobibaConfirm({ title: "ゲームをやめてホームへ", lines, note: isSolo(state) ? "この記録は残りません。" : "このゲームは保存されません。", okLabel: "やめてホームへ", cancelLabel: "つづける", danger: true });
+    if (!ok) return;
+  }
+  goHome();
+}
+
+// ---- ホームのイベント ----
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll(".modeCard").forEach((c) => { const on = c.dataset.mode === m; c.classList.toggle("on", on); c.setAttribute("aria-checked", on ? "true" : "false"); });
+  $("optCpu").hidden = m !== "cpu"; $("optLocal").hidden = m !== "local"; $("optOnline").hidden = m !== "online";
+}
+document.querySelectorAll(".modeCard").forEach((c) => c.addEventListener("click", () => setMode(c.dataset.mode)));
+function bindSeg(id, attr, onPick) {
+  $(id).querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+    $(id).querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+    onPick(Number(b.dataset[attr]));
+  }));
+}
+const syncLevelSegs = (lv) => ["levelSeg", "levelSegOnline"].forEach((id) => $(id).querySelectorAll("button").forEach((x) => x.classList.toggle("on", Number(x.dataset.level) === lv)));
+bindSeg("levelSeg", "level", (v) => { cpuLevel = v; syncLevelSegs(v); });
+bindSeg("levelSegOnline", "level", (v) => { cpuLevel = v; syncLevelSegs(v); });
+bindSeg("sizeSeg", "size", (v) => { cardsSize = v; renderBest(); });
+function renderCpuOpts() {
+  $("levelRow").hidden = cpuCount === 0;
+  $("cpuHint").textContent = cpuCount === 0
+    ? "ひとりで全部そろえるまでの手数とタイムに挑戦。自己ベストはこの端末に記録されます。"
+    : "CPUは見た札を覚えますが、強さに応じて忘れます（やさしい 50% / ふつう 25% / つよい 5%）。";
+  $("startCpu").innerHTML = `<svg class="ic"><use href="#ic-play"/></svg> ${cpuCount === 0 ? "ひとりではじめる" : `CPU ${cpuCount}人とはじめる`}`;
+}
+bindSeg("cpuCountSeg", "count", (v) => { cpuCount = v; renderCpuOpts(); });
+bindSeg("localCountSeg", "count", (v) => { localCount = v; });
+$("startCpu").addEventListener("click", () => { myName(); startLocalGame("cpu"); });
+$("startLocal").addEventListener("click", () => startLocalGame("local"));
+$("createRoomBtn").addEventListener("click", async () => {
+  const name = myName();
+  showOnlineNotice("");
+  $("createRoomBtn").disabled = true;
+  try {
+    if (!(await Online.ensure())) return;
+    await Online.create(name, { cards: cardsSize, cpuLevel });
+  } catch (e) { asobibaToast(e.message || "部屋を作れませんでした", { kind: "warn", ms: 2600 }); }
+  finally { $("createRoomBtn").disabled = false; }
+});
+$("joinRoomBtn").addEventListener("click", async () => {
+  const name = myName();
+  const code = $("codeInput").value.trim();
+  if (!/^\d{4}$/.test(code)) { asobibaToast("4桁のコードを入れてください", { kind: "warn" }); $("codeInput").focus(); return; }
+  showOnlineNotice("");
+  $("joinRoomBtn").disabled = true;
+  try {
+    if (!(await Online.ensure())) return;
+    await Online.join(code, name);
+  } catch (e) { asobibaToast(e.message || "参加できませんでした", { kind: "warn", ms: 2600 }); }
+  finally { $("joinRoomBtn").disabled = false; }
+});
+$("codeInput").addEventListener("input", (e) => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4); });
+
+// ---- ロビーのイベント ----
+$("copyUrlBtn").addEventListener("click", async () => {
+  const url = AsobibaOnline.shareUrl(Online.code);
+  try { await navigator.clipboard.writeText(url); asobibaToast("招待URLをコピーしました"); }
+  catch (e) { prompt("この招待URLをコピーして相手に送ってください", url); }
+});
+$("shareBtn").addEventListener("click", async () => {
+  try { await navigator.share({ title: "神経衰弱で対戦しよう", text: `部屋コード ${Online.code}`, url: AsobibaOnline.shareUrl(Online.code) }); } catch (e) { /* cancel */ }
+});
+$("addCpuBtn").addEventListener("click", async () => {
+  try { await AsobibaOnline.addCpu(Online.code, {}); }
+  catch (e) { asobibaToast(e.message, { kind: "warn" }); }
+});
+$("startOnlineBtn").addEventListener("click", async () => {
+  $("startOnlineBtn").disabled = true;
+  try { await Online.start(); } catch (e) { asobibaToast(e.message, { kind: "warn" }); $("startOnlineBtn").disabled = false; }
+});
+$("leaveLobbyBtn").addEventListener("click", confirmAndGoHome);
+
+// ---- 結果のイベント ----
+$("resultHome").addEventListener("click", async () => {
+  if (mode === "online") { closeOverlay("resultOverlay"); await Online.leave(); }
+  goHome();
+});
+$("resultAgain").addEventListener("click", async () => {
+  if (mode === "online") { try { await Online.rematch(); } catch (e) { asobibaToast(e.message, { kind: "warn" }); } return; }
+  startLocalGame(mode);
+});
+
+// ---- トップバー / メニュー / 遊び方 ----
+$("topHelp").addEventListener("click", () => openOverlay("helpOverlay"));
+$("helpClose").addEventListener("click", () => closeOverlay("helpOverlay"));
+$("topMenu").addEventListener("click", () => { renderSoundBtn(); openOverlay("menuOverlay"); });
+$("menuClose").addEventListener("click", () => closeOverlay("menuOverlay"));
+$("menuHelp").addEventListener("click", () => { closeOverlay("menuOverlay"); openOverlay("helpOverlay"); });
+$("menuSound").addEventListener("click", () => { soundOn = !soundOn; try { localStorage.setItem(SOUND_KEY, soundOn ? "1" : "0"); } catch (e) { /* noop */ } renderSoundBtn(); if (soundOn) sfx.flip(); });
+$("menuHome").addEventListener("click", () => { closeOverlay("menuOverlay"); confirmAndGoHome(); });
+document.querySelectorAll(".overlay").forEach((ov) => ov.addEventListener("click", (e) => { if (e.target === ov && ov.id !== "resultOverlay") ov.classList.remove("show"); }));
+
+// ---- 起動: 招待URL（#1234）ならオンラインモードを選んでコードを入れておく ----
+(function boot() {
+  renderSoundBtn();
+  renderBest();
+  renderCpuOpts();
+  const m = /(\d{4})/.exec(location.hash || "");
+  if (m) {
+    setMode("online");
+    $("codeInput").value = m[1];
+    const n = $("inviteNotice");
+    n.innerHTML = `招待コード <b style="font-family:var(--font-num);font-size:18px;letter-spacing:.2em">${m[1]}</b> を受け取りました。名前を入れて「コードで参加」を押してください。`;
+    n.hidden = false;
+    if (!$("nameInput").value) $("nameInput").focus();
+  }
+  // 離脱中バッジ・手番表示の鮮度（オンライン時のみ 10 秒ごとに再描画）
+  setInterval(() => { if (mode === "online" && room && room.state && $("playScreen").classList.contains("active")) { renderPlayers(room.state); renderBanner(room.state); } }, 10000);
+  window.addEventListener("pagehide", () => { if (mode === "online" && Online.code && room && room.status !== "playing") { try { AsobibaOnline.leave(Online.code); } catch (e) { /* noop */ } } });
+})();
+</script>
+</body>
+</html>

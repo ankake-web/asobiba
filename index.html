@@ -5,17 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#14111c" />
 <title>あそびば — ミニゲーム集</title>
-<meta name="description" content="スマホでさっと遊べる、夫婦・友だち向けのミニゲーム集。競馬レース・登山ダイス・押しつけ財宝・協力カード・ブラフの5本。" />
+<meta name="description" content="スマホでさっと遊べる、夫婦・友だち向けのミニゲーム集（全13本）。オリジナル5本（競馬レース・登山ダイス・押しつけ財宝・協力カード・ブラフ）に、大富豪・ババ抜き・神経衰弱・ブラックジャック・ポーカー・オセロ・将棋・チェスの定番8本。" />
 <!-- SNSでURLを貼ったときのプレビュー（OGP） -->
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="あそびば" />
-<meta property="og:title" content="あそびば — スマホでさっと遊べるミニゲーム集" />
-<meta property="og:description" content="夫婦で・友だちと、短時間で盛り上がる5つのミニゲーム。競馬・登山ダイス・押しつけ財宝・協力カード・ブラフ。" />
+<meta property="og:title" content="あそびば — スマホでさっと遊べるミニゲーム全13本" />
+<meta property="og:description" content="夫婦で・友だちと、短時間で盛り上がるミニゲーム集（全13本）。オリジナル5本＋トランプ・ボードゲームの定番8本（大富豪・ババ抜き・オセロ・将棋・チェスほか）。オンライン対戦対応。" />
 <meta property="og:url" content="https://ankake-web.github.io/asobiba/" />
-<meta property="og:image" content="https://ankake-web.github.io/asobiba/og.png" />
+<!-- og:image の ?v= は SNS 側のプレビュー画像キャッシュ避け。画像を差し替えたら番号を上げる -->
+<meta property="og:image" content="https://ankake-web.github.io/asobiba/og.png?v=2" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="あそびば — 13本のミニゲームのエンブレム一覧" />
+<meta property="og:locale" content="ja_JP" />
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
 <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+<!-- 書体: 本文/UI = Zen Kaku Gothic New（共通CSSの --font-ui が参照）。各ページが自分の head に個別に持つ（自己完結） -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet" />
 <!-- @shared:base-css -->
 <style>
   :root{
@@ -29,7 +39,7 @@
     --gold:#e7c66b;
     --radius:26px;
     --maxw:1080px;
-    --font:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    --font:var(--font-ui); /* 共通CSS（base-mobile.css）の書体変数 */
   }
   *{box-sizing:border-box}
   html,body{margin:0;min-height:100%}
@@ -56,14 +66,14 @@
     display:flex;align-items:center;justify-content:space-between;gap:10px;
     padding:8px 4px;
   }
-  .brandMini{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.04em}
+  .brandMini{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.04em;font-feature-settings:"palt"}
   .brandMini .dot{width:12px;height:12px;border-radius:50%;
     background:conic-gradient(from 0deg,#ff9d4d,#e7c66b,#38e1d6,#8be36b,#c084fc,#ff9d4d);
     box-shadow:0 0 14px rgba(231,198,107,.6)}
   .iconbtn{
     display:inline-flex;align-items:center;gap:7px;
     border:1px solid var(--line2);background:rgba(255,255,255,.06);
-    color:var(--ink);font-weight:800;border-radius:999px;padding:10px 16px;font-size:14px;
+    color:var(--ink);font-weight:700;border-radius:999px;padding:10px 16px;font-size:14px;
     cursor:pointer;backdrop-filter:blur(6px);transition:transform .12s, background .2s;
   }
   .iconbtn:active{transform:scale(.95)}
@@ -75,29 +85,58 @@
     margin:14px 0 22px;padding:34px 26px 30px;
     border:1px solid var(--line);border-radius:var(--radius);
     background:
+      linear-gradient(90deg, rgba(20,17,28,.96) 0%, rgba(20,17,28,.78) 42%, rgba(20,17,28,.25) 72%, transparent 100%),
       radial-gradient(600px 280px at 90% -20%, rgba(231,198,107,.22), transparent 60%),
       radial-gradient(520px 320px at -5% 120%, rgba(56,225,214,.18), transparent 60%),
-      linear-gradient(160deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+      linear-gradient(160deg, rgba(255,255,255,.07), rgba(255,255,255,.02)),
+      /* PC幅（.hero が約1048×277）だと center では木馬の耳・頭頂が可視帯の外に出て切れる。
+         32% で木馬を丸ごと入れる（スマホ幅は横切りなので見え方はほぼ変わらない）。 */
+      url(./hero-hub.jpg) right 32% / cover no-repeat;
     box-shadow:0 30px 60px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.10);
   }
+  /* 文字は装飾リング（::before/::after）より前面に */
+  .hero h1,.hero .romaji,.hero p{position:relative;z-index:1}
   .hero h1{
     margin:0;font-size:clamp(46px,12vw,96px);line-height:.92;font-weight:900;letter-spacing:.02em;
+    font-feature-settings:"palt";
     background:linear-gradient(180deg,#fff 0%, #ffe9c2 55%, var(--gold) 100%);
     -webkit-background-clip:text;background-clip:text;color:transparent;
     text-shadow:0 1px 0 rgba(255,255,255,.15);
     filter:drop-shadow(0 8px 20px rgba(0,0,0,.35));
   }
-  .hero .romaji{margin-top:4px;font-size:clamp(12px,2.6vw,15px);letter-spacing:.55em;color:var(--gold);font-weight:800;text-transform:uppercase;padding-left:.3em}
-  .hero p{margin:16px 0 0;max-width:34ch;color:var(--muted);font-size:clamp(13px,3.4vw,16px);font-weight:600;line-height:1.7}
-  .hero .floaties{position:absolute;inset:0;pointer-events:none;color:var(--gold);opacity:.14}
-  .hero .floaties svg{position:absolute;width:44px;height:44px;animation:float 7s ease-in-out infinite}
-  .hero .f1{right:7%;top:18%;animation-delay:0s}
-  .hero .f2{right:22%;top:54%;width:32px;height:32px;animation-delay:1.4s}
-  .hero .f3{right:38%;top:10%;width:27px;height:27px;animation-delay:2.7s}
-  @keyframes float{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-14px) rotate(6deg)}}
+  .hero .romaji{margin-top:4px;font-size:clamp(12px,2.6vw,15px);letter-spacing:.55em;color:var(--gold);font-weight:700;text-transform:uppercase;padding-left:.3em}
+  .hero p{margin:16px 0 0;max-width:34ch;color:var(--muted);font-size:clamp(13px,3.4vw,16px);font-weight:500;line-height:1.7}
+  /* 旧: 薄いdice/star/flagのフロート（.floaties）は撤去。
+     代わりに右上へ大きめのグラデ円環をCSSだけで置く（5ゲームのアクセント色を一周させたリング） */
+  .hero::before,.hero::after{content:"";position:absolute;border-radius:50%;pointer-events:none;z-index:0}
+  .hero::before{
+    right:-58px;top:-66px;width:212px;height:212px;opacity:.45;
+    background:conic-gradient(from 210deg,#ff9d4d,#e7c66b 22%,#38e1d6 46%,#8be36b 64%,#c084fc 84%,#ff9d4d);
+    -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 30px),#000 calc(100% - 29px));
+    mask:radial-gradient(farthest-side,transparent calc(100% - 30px),#000 calc(100% - 29px));
+    animation:ringSpin 28s linear infinite;
+  }
+  .hero::after{
+    right:-96px;top:-98px;width:312px;height:312px;opacity:.22;
+    border:1.5px solid var(--gold);
+    box-shadow:0 0 0 14px rgba(231,198,107,.05),inset 0 0 0 1px rgba(255,255,255,.08);
+  }
+  @keyframes ringSpin{to{transform:rotate(360deg)}}
+  @media(min-width:680px){
+    .hero::before{right:60px;top:-30px;width:300px;height:300px}
+    .hero::after{right:-20px;top:-120px;width:440px;height:440px}
+  }
+  @media(prefers-reduced-motion:reduce){.hero::before{animation:none}}
 
-  .sectionLabel{display:flex;align-items:center;gap:10px;margin:6px 4px 14px;color:var(--muted);font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
-  .sectionLabel::after{content:"";flex:1;height:1px;background:var(--line)}
+  /* カテゴリ見出し（2026-08-23: オリジナル／定番トランプ／定番ボードゲーム の3区分）
+     旧 .sectionLabel（「遊べるゲーム」1本）を置き換え。見出し800＋本数ピル＋1行説明500。 */
+  .cat + .cat{margin-top:32px}
+  .catHead{display:flex;align-items:center;gap:10px;margin:4px 4px 6px}
+  .catHead h2{margin:0;font-size:16px;font-weight:800;letter-spacing:.08em;font-feature-settings:"palt";color:var(--ink)}
+  .catHead .catNum{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--muted);
+    padding:3px 9px;border-radius:999px;border:1px solid var(--line2);background:rgba(255,255,255,.04)}
+  .catHead::after{content:"";flex:1;height:1px;background:var(--line)}
+  .catDesc{margin:0 4px 14px;font-size:13px;font-weight:500;line-height:1.6;color:var(--muted)}
 
   /* game grid */
   .grid{display:grid;grid-template-columns:1fr;gap:14px}
@@ -120,27 +159,56 @@
   .tile:hover{transform:translateY(-4px);box-shadow:0 22px 44px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.2)}
   .tile:active{transform:translateY(-1px) scale(.995)}
 
+  /* キーアート: games/<slug>/assets/hero-tile.webp（tools/make-tile-art.py が hero.jpg から生成、
+     うまうまレースだけ title-hero.jpg 由来）をタイルの地に敷く。原画(1600x900)は転送量が重いので
+     タイルの実表示に合わせた縮小版を別に持つ（原画はルールモーダルの帯で使い続ける）。
+     CSS背景ではなく <img> にしているのは loading="lazy" を効かせるため（13枚を一斉に読ませない）。
+     ::before でタイル色を薄く被せて色分けを維持し、::after の暗幕で文字のコントラストを確保する。 */
+  .tileArt{position:absolute;inset:0;z-index:-2;overflow:hidden;pointer-events:none;border-radius:inherit}
+  .tileArt img{width:100%;height:100%;object-fit:cover;display:block}
+  /* ::before = タイル色（--w1/--w2）を絵の上に薄く重ねる色被せ。::after = 文字用の暗幕。 */
+  .tileArt::before,.tileArt::after{content:"";position:absolute;inset:0}
+  .tileArt::before{opacity:.38;background:linear-gradient(140deg, var(--w1), var(--w2) 62%, #15121d 100%)}
+  .tileArt::after{
+    background:
+      linear-gradient(90deg, rgba(9,7,13,.88) 0%, rgba(9,7,13,.72) 46%, rgba(9,7,13,.52) 100%),
+      linear-gradient(180deg, rgba(9,7,13,.10) 0%, rgba(9,7,13,.12) 52%, rgba(9,7,13,.52) 100%)}
+
   .t-uma     {--acc:#57c97e; --w1:#1e3d28; --w2:#33291e}
   .t-dice    {--acc:#7fb2e8; --w1:#1c3350; --w2:#161c2c}
   .t-treasure{--acc:#e5b54a; --w1:#173430; --w2:#241c10}
   .t-back10  {--acc:#3fd6c8; --w1:#152459; --w2:#101a30}
   .t-spy     {--acc:#c9a14a; --w1:#2a1c33; --w2:#181020}
+  /* 定番トランプ（accent は docs/03 §3 の色。blackjack #1f7a4d と poker #b53a3a は
+     ピル/ボタンの黒文字とのコントラストが 4.5 未満だったので、その2つだけ --acc を明るめに振り、
+     設計色は --w1（タイル地）側に使っている） */
+  .t-daifugo  {--acc:#d8a83e; --w1:#3a2b0f; --w2:#2a1626}
+  .t-babanuki {--acc:#e0707c; --w1:#3d1a2b; --w2:#1f1224}
+  .t-memory   {--acc:#8f7bd9; --w1:#28204f; --w2:#171329}
+  .t-blackjack{--acc:#2e9a62; --w1:#165236; --w2:#0f1f1a}
+  .t-poker    {--acc:#d9504c; --w1:#4a1a1c; --w2:#1f1118}
+  /* 定番ボードゲーム */
+  .t-othello  {--acc:#2f8f5b; --w1:#14382a; --w2:#1b1f26}
+  .t-shogi    {--acc:#c99a5a; --w1:#3b2915; --w2:#1f1711}
+  .t-chess    {--acc:#8c7b6b; --w1:#2c2724; --w2:#18141b}
 
   /* スマホ: エンブレムは右上の小型表示・テキストは全幅。広い画面では右中央の大型表示 */
   .tileMain{display:block;padding:20px 20px 4px}
   .feature .tileMain{padding:24px 24px 4px}
   .tileChips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding-right:88px}
   .feature .tileChips{padding-right:100px}
-  .tileGenre{display:inline-block;font-size:12px;font-weight:900;letter-spacing:.06em;
+  /* ウェイト階層: 見出し900 / タイトル800 / ボタン800 / ジャンル700 / 本文500 / 補足400 */
+  .tileGenre{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.06em;
     padding:5px 11px;border-radius:999px;color:#101018;background:var(--acc);
     box-shadow:0 2px 8px rgba(0,0,0,.3)}
-  .tileBadge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;
+  .tileBadge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;
     padding:5px 10px;border-radius:999px;background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.2);
     color:rgba(255,255,255,.9)}
-  .tileTitle{margin:12px 0 0;font-size:clamp(24px,6vw,34px);font-weight:900;letter-spacing:.01em;
+  .tileTitle{margin:12px 0 0;font-size:clamp(24px,6vw,34px);font-weight:800;letter-spacing:.01em;
+    font-feature-settings:"palt";
     text-shadow:0 2px 10px rgba(0,0,0,.4)}
   .feature .tileTitle{font-size:clamp(27px,7.2vw,44px)}
-  .tileDesc{margin:8px 0 0;max-width:26ch;font-size:13.5px;font-weight:650;line-height:1.6;
+  .tileDesc{margin:8px 0 0;max-width:26ch;font-size:13.5px;font-weight:500;line-height:1.6;
     color:rgba(255,255,255,.88);text-shadow:0 1px 6px rgba(0,0,0,.4)}
 
   /* エンブレム: 常に完全に見える位置（旧: 半分見切れた120pxの絵文字） */
@@ -160,16 +228,19 @@
     .feature .tileChips{padding-right:0}
     .tileTitle,.tileDesc{padding-right:104px}
     .feature .tileTitle,.feature .tileDesc{padding-right:124px}
+    /* max-width:26ch は border-box なので、右パディングぶんを足さないと本文が数文字幅の縦長カラムになる（2026-08-23 修正） */
+    .tileDesc{max-width:calc(26ch + 104px)}
+    .feature .tileDesc{max-width:calc(26ch + 124px)}
   }
 
   /* フッター行: あそぶ／ルールはリンクの外＝誤タップでゲームに飛ばない */
   .tileFoot{display:flex;align-items:center;gap:10px;padding:14px 20px 20px}
   .feature .tileFoot{padding:16px 24px 24px}
-  .tilePlay{display:inline-flex;align-items:center;gap:7px;font-weight:900;font-size:14px;
+  .tilePlay{display:inline-flex;align-items:center;gap:7px;font-weight:800;font-size:14px;
     min-height:44px;padding:10px 20px;border-radius:999px;background:var(--acc);color:#141019;
     box-shadow:0 6px 16px rgba(0,0,0,.3)}
   .tilePlay:active{transform:scale(.97)}
-  .rulesBtn{display:inline-flex;align-items:center;gap:6px;font-weight:900;font-size:13px;
+  .rulesBtn{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:13px;
     min-height:44px;padding:10px 16px;border-radius:999px;background:rgba(0,0,0,.28);color:#fff;
     border:1px solid rgba(255,255,255,.35);backdrop-filter:blur(4px);cursor:pointer}
   .rulesBtn:active{transform:scale(.95)}
@@ -189,11 +260,11 @@
     color:var(--ink);display:grid;place-items:center;cursor:pointer}
   /* 本文だけがスクロールし、「あそぶ」CTAは常に画面内 */
   #rulesBody{overflow:auto;flex:1;min-height:0;overscroll-behavior:contain}
-  .rmPlay{display:block;text-align:center;margin-top:14px;padding:14px;border-radius:16px;font-weight:900;font-size:16px;
+  .rmPlay{display:block;text-align:center;margin-top:14px;padding:14px;border-radius:16px;font-weight:800;font-size:16px;
     color:#1c1530;background:linear-gradient(180deg,#fff,#ecd9a6);box-shadow:0 6px 0 #b89a48;flex-shrink:0}
   .rmPlay:active{transform:translateY(3px);box-shadow:0 3px 0 #b89a48}
 
-  footer{margin-top:34px;text-align:center;color:var(--muted);font-size:12px;font-weight:700;line-height:1.8}
+  footer{margin-top:34px;text-align:center;color:var(--muted);font-size:12px;font-weight:500;line-height:1.8}
 </style>
 </head>
 <body>
@@ -209,22 +280,23 @@
     </div>
 
     <section class="hero">
-      <div class="floaties" aria-hidden="true">
-        <svg class="f1"><use href="#ic-dice"/></svg>
-        <svg class="f2"><use href="#ic-star"/></svg>
-        <svg class="f3"><use href="#ic-flag"/></svg>
-      </div>
+      <!-- 右上の装飾リングは CSS（.hero::before/::after）で描く -->
       <h1>あそびば</h1>
       <div class="romaji">Asobiba</div>
-      <p>スマホでさっと、夫婦で・友だちと。<br>短時間で盛り上がるミニゲーム集。</p>
+      <p>スマホでさっと、夫婦で・友だちと。<br>オリジナル5本＋トランプ・ボードゲームの定番8本。</p>
     </section>
 
-    <div class="sectionLabel">遊べるゲーム</div>
+    <!-- ゲーム一覧は静的HTML（検索・OGP・JS無効環境でも中身が見える）。
+         3カテゴリ: あそびばオリジナル（5）／定番トランプ（5）／定番ボードゲーム（3） -->
+    <div id="games">
 
-    <!-- ゲーム一覧は静的HTML（検索・OGP・JS無効環境でも中身が見える） -->
-    <div class="grid" id="games">
+    <section class="cat" id="cat-original">
+      <div class="catHead"><h2>あそびばオリジナル</h2><span class="catNum">5本</span></div>
+      <p class="catDesc">ここでしか遊べない自作ゲーム。競馬・登山ダイス・押しつけ財宝・協力カード・ブラフ。</p>
+      <div class="grid">
 
       <article class="tile t-uma feature">
+        <span class="tileArt" aria-hidden="true"><img src="./games/uma-race/assets/hero-tile.webp" alt="" loading="lazy" decoding="async" width="1200" height="675" /></span>
         <a class="tileMain" href="./games/uma-race/">
           <div class="tileChips">
             <span class="tileGenre">レース × 予想</span>
@@ -272,6 +344,7 @@
       </article>
 
       <article class="tile t-dice">
+        <span class="tileArt" aria-hidden="true"><img src="./games/dice-climb/assets/hero-tile.webp" alt="" loading="lazy" decoding="async" width="1024" height="576" /></span>
         <a class="tileMain" href="./games/dice-climb/">
           <div class="tileChips">
             <span class="tileGenre">ダイス × 駆け引き</span>
@@ -306,6 +379,7 @@
       </article>
 
       <article class="tile t-treasure">
+        <span class="tileArt" aria-hidden="true"><img src="./games/treasure/assets/hero-tile.webp" alt="" loading="lazy" decoding="async" width="1024" height="576" /></span>
         <a class="tileMain" href="./games/treasure/">
           <div class="tileChips">
             <span class="tileGenre">カード × 押し引き</span>
@@ -345,6 +419,7 @@
       </article>
 
       <article class="tile t-back10">
+        <span class="tileArt" aria-hidden="true"><img src="./games/back10/assets/hero-tile.webp" alt="" loading="lazy" decoding="async" width="1024" height="576" /></span>
         <a class="tileMain" href="./games/back10/">
           <div class="tileChips">
             <span class="tileGenre">協力 × カード</span>
@@ -385,6 +460,7 @@
       </article>
 
       <article class="tile t-spy">
+        <span class="tileArt" aria-hidden="true"><img src="./games/spy/assets/hero-tile.webp" alt="" loading="lazy" decoding="async" width="1024" height="576" /></span>
         <a class="tileMain" href="./games/spy/">
           <div class="tileChips">
             <span class="tileGenre">心理戦 × カード</span>
@@ -416,6 +492,369 @@
           </svg>
         </span>
       </article>
+
+      </div>
+    </section>
+
+    <!-- ── 定番トランプ（2026-08-23 追加。docs/03-定番ゲーム追加-設計.md §3・§4） ── -->
+    <section class="cat" id="cat-cards">
+      <div class="catHead"><h2>定番トランプ</h2><span class="catNum">5本</span></div>
+      <p class="catDesc">誰でも知っているトランプゲーム。CPU相手にも、オンラインで友だちとも。</p>
+      <div class="grid">
+
+      <article class="tile t-daifugo feature">
+        <span class="tileArt" aria-hidden="true"><img src="./games/daifugo/assets/hero-tile.webp" alt="" loading="lazy" decoding="async" width="1024" height="576" /></span>
+        <a class="tileMain" href="./games/daifugo/">
+          <div class="tileChips">
+            <span class="tileGenre">出し切り × 革命</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-globe"/></svg>オンライン対戦</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-users"/></svg>3〜5人・CPU可</span>
+          </div>
+          <h2 class="tileTitle">大富豪</h2>
+          <p class="tileDesc">革命・8切り・縛りの定番ルール。3ラウンドで称号を競う。</p>
+        </a>
+        <div class="tileFoot">
+          <a class="tilePlay" href="./games/daifugo/">あそぶ <svg class="ic"><use href="#ic-play"/></svg></a>
+          <button class="rulesBtn" type="button" data-rules="daifugo"><svg class="ic"><use href="#ic-book"/></svg> ルール</button>
+        </div>
+        <span class="tileEmblem" aria-hidden="true">
+          <!-- 王冠とカード2枚（フラット2トーン＋1段影・輪郭なし） -->
+          <svg viewBox="0 0 120 120">
+            <defs>
+              <linearGradient id="emDfA" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#ffe38f"/><stop offset="1" stop-color="#d79a28"/>
+              </linearGradient>
+            </defs>
+            <g transform="rotate(-14 42 50)">
+              <rect x="24" y="26" width="36" height="50" rx="5" fill="#1c1208" opacity=".35"/>
+              <rect x="24" y="22" width="36" height="50" rx="5" fill="#fbf8f1"/>
+              <path d="M42 36l9 11-9 11-9-11z" fill="#d63a3a"/>
+            </g>
+            <g transform="rotate(12 78 52)">
+              <rect x="60" y="28" width="36" height="50" rx="5" fill="#1c1208" opacity=".35"/>
+              <rect x="60" y="24" width="36" height="50" rx="5" fill="#fbf8f1"/>
+              <path d="M78 37c-3.4 5-9.4 8.4-9.4 13.6a4.7 4.7 0 0 0 8.6 2.6c-.9 3.4-2.6 5.1-4.3 6.8h10.2c-1.7-1.7-3.4-3.4-4.3-6.8a4.7 4.7 0 0 0 8.6-2.6c0-5.2-6-8.6-9.4-13.6z" fill="#1d1d26"/>
+            </g>
+            <path d="M24 100h72l-6-34-15 14-15-25-15 25-15-14z" fill="#a06a14" transform="translate(0 5)"/>
+            <path d="M24 100h72l-6-34-15 14-15-25-15 25-15-14z" fill="url(#emDfA)"/>
+            <rect x="24" y="90" width="72" height="10" rx="2" fill="#c98c22"/>
+            <circle cx="60" cy="54" r="4.5" fill="#ffe38f"/>
+            <circle cx="30" cy="65" r="3.6" fill="#ffe38f"/>
+            <circle cx="90" cy="65" r="3.6" fill="#ffe38f"/>
+            <circle cx="60" cy="95" r="3.2" fill="#d63a3a"/>
+          </svg>
+        </span>
+      </article>
+
+      <article class="tile t-babanuki">
+        <span class="tileArt" aria-hidden="true"><img src="./games/babanuki/assets/hero-tile.webp" alt="" loading="lazy" decoding="async" width="1024" height="576" /></span>
+        <a class="tileMain" href="./games/babanuki/">
+          <div class="tileChips">
+            <span class="tileGenre">ペア × 引き運</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-globe"/></svg>オンライン対戦</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-users"/></svg>2〜5人・CPU可</span>
+          </div>
+          <h2 class="tileTitle">ババ抜き</h2>
+          <p class="tileDesc">ペアを捨てて隣から1枚。最後にババを持っていた人の負け。</p>
+        </a>
+        <div class="tileFoot">
+          <a class="tilePlay" href="./games/babanuki/">あそぶ <svg class="ic"><use href="#ic-play"/></svg></a>
+          <button class="rulesBtn" type="button" data-rules="babanuki"><svg class="ic"><use href="#ic-book"/></svg> ルール</button>
+        </div>
+        <span class="tileEmblem" aria-hidden="true">
+          <!-- ジョーカーの道化帽（3つの房＋鈴）とカード -->
+          <svg viewBox="0 0 120 120">
+            <defs>
+              <linearGradient id="emBbA" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#f08a96"/><stop offset="1" stop-color="#c9485c"/>
+              </linearGradient>
+              <linearGradient id="emBbB" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#9a6bd6"/><stop offset="1" stop-color="#5f3d9c"/>
+              </linearGradient>
+            </defs>
+            <g transform="rotate(10 70 56)">
+              <rect x="52" y="24" width="40" height="56" rx="5" fill="#1c0a12" opacity=".35"/>
+              <rect x="52" y="20" width="40" height="56" rx="5" fill="#fbf8f1"/>
+              <rect x="57" y="25" width="30" height="46" rx="3" fill="#efe4e8"/>
+            </g>
+            <g transform="rotate(-6 58 70)">
+              <g transform="translate(0 5)" fill="#6b1f32" opacity=".55">
+                <path d="M30 92C26 72 14 58 16 44c12 8 26 24 32 48z"/>
+                <path d="M44 92c2-26 10-50 18-64 8 14 16 38 18 64z"/>
+                <path d="M76 92c6-24 18-40 28-48 2 14-10 28-14 48z"/>
+                <rect x="26" y="88" width="70" height="12" rx="6"/>
+              </g>
+              <path d="M30 92C26 72 14 58 16 44c12 8 26 24 32 48z" fill="url(#emBbA)"/>
+              <path d="M44 92c2-26 10-50 18-64 8 14 16 38 18 64z" fill="url(#emBbB)"/>
+              <path d="M76 92c6-24 18-40 28-48 2 14-10 28-14 48z" fill="url(#emBbA)"/>
+              <rect x="26" y="88" width="70" height="12" rx="6" fill="#5a2236"/>
+              <rect x="26" y="88" width="70" height="6" rx="3" fill="#7c3048"/>
+              <circle cx="16" cy="43" r="5.5" fill="#f3c75c"/>
+              <circle cx="62" cy="27" r="5.5" fill="#f3c75c"/>
+              <circle cx="104" cy="43" r="5.5" fill="#f3c75c"/>
+            </g>
+          </svg>
+        </span>
+      </article>
+
+      <article class="tile t-memory">
+        <span class="tileArt" aria-hidden="true"><img src="./games/memory/assets/hero-tile.webp" alt="" loading="lazy" decoding="async" width="1024" height="576" /></span>
+        <a class="tileMain" href="./games/memory/">
+          <div class="tileChips">
+            <span class="tileGenre">記憶 × ペア</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-globe"/></svg>オンライン対戦</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-users"/></svg>1〜4人・CPU可</span>
+          </div>
+          <h2 class="tileTitle">神経衰弱</h2>
+          <p class="tileDesc">裏向きの札をめくってペア当て。連続正解でもう1回。</p>
+        </a>
+        <div class="tileFoot">
+          <a class="tilePlay" href="./games/memory/">あそぶ <svg class="ic"><use href="#ic-play"/></svg></a>
+          <button class="rulesBtn" type="button" data-rules="memory"><svg class="ic"><use href="#ic-book"/></svg> ルール</button>
+        </div>
+        <span class="tileEmblem" aria-hidden="true">
+          <!-- 裏向きのカード2枚（紫の裏模様） -->
+          <svg viewBox="0 0 120 120">
+            <defs>
+              <linearGradient id="emMeA" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#a391ea"/><stop offset="1" stop-color="#6f5ac4"/>
+              </linearGradient>
+            </defs>
+            <g transform="rotate(8 76 58)">
+              <rect x="54" y="31" width="44" height="62" rx="6" fill="#1c1436" opacity=".5"/>
+              <rect x="54" y="26" width="44" height="62" rx="6" fill="url(#emMeA)"/>
+              <rect x="59" y="31" width="34" height="52" rx="4" fill="#5a46aa"/>
+              <path d="M76 43l9 14-9 14-9-14z" fill="#c3b6f5"/>
+              <path d="M76 50l4.5 7-4.5 7-4.5-7z" fill="#6f5ac4"/>
+            </g>
+            <g transform="rotate(-10 44 64)">
+              <rect x="22" y="37" width="44" height="62" rx="6" fill="#1c1436" opacity=".5"/>
+              <rect x="22" y="32" width="44" height="62" rx="6" fill="url(#emMeA)"/>
+              <rect x="27" y="37" width="34" height="52" rx="4" fill="#5a46aa"/>
+              <path d="M44 49l9 14-9 14-9-14z" fill="#c3b6f5"/>
+              <path d="M44 56l4.5 7-4.5 7-4.5-7z" fill="#6f5ac4"/>
+            </g>
+          </svg>
+        </span>
+      </article>
+
+      <article class="tile t-blackjack">
+        <span class="tileArt" aria-hidden="true"><img src="./games/blackjack/assets/hero-tile.webp" alt="" loading="lazy" decoding="async" width="1024" height="576" /></span>
+        <a class="tileMain" href="./games/blackjack/">
+          <div class="tileChips">
+            <span class="tileGenre">21 × ベット</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-globe"/></svg>オンライン対戦</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-users"/></svg>1〜4人・対ディーラー</span>
+          </div>
+          <h2 class="tileTitle">ブラックジャック</h2>
+          <p class="tileDesc">21を超えずにディーラーに勝て。ヒット・スタンド・ダブル・スプリット。</p>
+        </a>
+        <div class="tileFoot">
+          <a class="tilePlay" href="./games/blackjack/">あそぶ <svg class="ic"><use href="#ic-play"/></svg></a>
+          <button class="rulesBtn" type="button" data-rules="blackjack"><svg class="ic"><use href="#ic-book"/></svg> ルール</button>
+        </div>
+        <span class="tileEmblem" aria-hidden="true">
+          <!-- フェルトの上に A（スペード）＋絵札 K -->
+          <svg viewBox="0 0 120 120">
+            <defs>
+              <linearGradient id="emBjA" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#2b9a63"/><stop offset="1" stop-color="#165a39"/>
+              </linearGradient>
+            </defs>
+            <circle cx="60" cy="64" r="52" fill="#0c2a1b" opacity=".7"/>
+            <circle cx="60" cy="60" r="52" fill="url(#emBjA)"/>
+            <g transform="rotate(-12 46 62)">
+              <rect x="26" y="39" width="40" height="56" rx="5" fill="#06160e" opacity=".5"/>
+              <rect x="26" y="34" width="40" height="56" rx="5" fill="#fbf8f1"/>
+              <text x="30.5" y="48" font-size="13" font-weight="900" font-family="'Zen Kaku Gothic New',system-ui,sans-serif" fill="#1d1d26">A</text>
+              <path d="M46 52c-3.4 5-9.4 8.4-9.4 13.6a4.7 4.7 0 0 0 8.6 2.6c-.9 3.4-2.6 5.1-4.3 6.8h10.2c-1.7-1.7-3.4-3.4-4.3-6.8a4.7 4.7 0 0 0 8.6-2.6c0-5.2-6-8.6-9.4-13.6z" fill="#1d1d26"/>
+            </g>
+            <g transform="rotate(10 76 58)">
+              <rect x="56" y="35" width="40" height="56" rx="5" fill="#06160e" opacity=".5"/>
+              <rect x="56" y="30" width="40" height="56" rx="5" fill="#fbf8f1"/>
+              <text x="60.5" y="44" font-size="13" font-weight="900" font-family="'Zen Kaku Gothic New',system-ui,sans-serif" fill="#c9302c">K</text>
+              <rect x="62" y="48" width="28" height="32" rx="3" fill="#c9302c"/>
+              <rect x="62" y="62" width="28" height="7" fill="#f0c75a"/>
+              <path d="M68 60l3-7 5 5 5-5 3 7z" fill="#f0c75a"/>
+            </g>
+          </svg>
+        </span>
+      </article>
+
+      <article class="tile t-poker">
+        <span class="tileArt" aria-hidden="true"><img src="./games/poker/assets/hero-tile.webp" alt="" loading="lazy" decoding="async" width="1024" height="576" /></span>
+        <a class="tileMain" href="./games/poker/">
+          <div class="tileChips">
+            <span class="tileGenre">役 × ベット</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-globe"/></svg>オンライン対戦</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-users"/></svg>2〜5人・CPU可</span>
+          </div>
+          <h2 class="tileTitle">ポーカー</h2>
+          <p class="tileDesc">5枚交換の定番ドローポーカー。役を作り、ベットで揺さぶる。</p>
+        </a>
+        <div class="tileFoot">
+          <a class="tilePlay" href="./games/poker/">あそぶ <svg class="ic"><use href="#ic-play"/></svg></a>
+          <button class="rulesBtn" type="button" data-rules="poker"><svg class="ic"><use href="#ic-book"/></svg> ルール</button>
+        </div>
+        <span class="tileEmblem" aria-hidden="true">
+          <!-- チップ3枚（黒・白・赤） -->
+          <svg viewBox="0 0 120 120">
+            <defs>
+              <linearGradient id="emPkA" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#d9504c"/><stop offset="1" stop-color="#a52f31"/>
+              </linearGradient>
+            </defs>
+            <circle cx="38" cy="50" r="26" fill="#0a0a0e" opacity=".4"/>
+            <circle cx="38" cy="46" r="26" fill="#262a36"/>
+            <circle cx="38" cy="46" r="22" fill="none" stroke="#f3efe6" stroke-width="6" stroke-dasharray="8.6 8.68"/>
+            <circle cx="38" cy="46" r="13" fill="#3a4050"/>
+            <circle cx="84" cy="50" r="26" fill="#0a0a0e" opacity=".4"/>
+            <circle cx="84" cy="46" r="26" fill="#f3efe6"/>
+            <circle cx="84" cy="46" r="22" fill="none" stroke="#d9504c" stroke-width="6" stroke-dasharray="8.6 8.68"/>
+            <circle cx="84" cy="46" r="13" fill="#ddd6c7"/>
+            <circle cx="61" cy="80" r="29" fill="#0a0a0e" opacity=".45"/>
+            <circle cx="61" cy="76" r="29" fill="url(#emPkA)"/>
+            <circle cx="61" cy="76" r="24.5" fill="none" stroke="#f3efe6" stroke-width="6.5" stroke-dasharray="9.6 9.64"/>
+            <circle cx="61" cy="76" r="14.5" fill="#e46c66"/>
+            <circle cx="61" cy="76" r="7" fill="#b53a3a"/>
+          </svg>
+        </span>
+      </article>
+
+      </div>
+    </section>
+
+    <!-- ── 定番ボードゲーム ── -->
+    <section class="cat" id="cat-board">
+      <div class="catHead"><h2>定番ボードゲーム</h2><span class="catNum">3本</span></div>
+      <p class="catDesc">2人で向き合う盤上の定番。CPUの強さを選べて、オンライン対戦も。</p>
+      <div class="grid">
+
+      <article class="tile t-othello feature">
+        <span class="tileArt" aria-hidden="true"><img src="./games/othello/assets/hero-tile.webp" alt="" loading="lazy" decoding="async" width="1024" height="576" /></span>
+        <a class="tileMain" href="./games/othello/">
+          <div class="tileChips">
+            <span class="tileGenre">陣取り × 読み合い</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-globe"/></svg>オンライン対戦</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-users"/></svg>2人・CPU可</span>
+          </div>
+          <h2 class="tileTitle">オセロ</h2>
+          <p class="tileDesc">挟んで返して盤を染める。角と辺の取り合いで、最後まで逆転あり。</p>
+        </a>
+        <div class="tileFoot">
+          <a class="tilePlay" href="./games/othello/">あそぶ <svg class="ic"><use href="#ic-play"/></svg></a>
+          <button class="rulesBtn" type="button" data-rules="othello"><svg class="ic"><use href="#ic-book"/></svg> ルール</button>
+        </div>
+        <span class="tileEmblem" aria-hidden="true">
+          <!-- 緑の盤（2×2）に白黒の石。置ける場所のドット付き -->
+          <svg viewBox="0 0 120 120">
+            <defs>
+              <linearGradient id="emOtA" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#43b374"/><stop offset="1" stop-color="#1f6f45"/>
+              </linearGradient>
+            </defs>
+            <g transform="rotate(-6 60 62)">
+              <rect x="16" y="22" width="88" height="86" rx="11" fill="#10371f"/>
+              <rect x="16" y="16" width="88" height="86" rx="11" fill="url(#emOtA)"/>
+              <path d="M60 16v86M16 59h88" stroke="#0f3a22" stroke-width="2" opacity=".55"/>
+              <circle cx="38" cy="37.5" r="4.5" fill="#fff" opacity=".45"/>
+              <circle cx="38" cy="84" r="17" fill="#0b0d11" opacity=".45"/>
+              <circle cx="38" cy="80.5" r="17" fill="#171a20"/>
+              <path d="M21 80.5a17 17 0 0 1 34 0z" fill="#3a3f4b"/>
+              <circle cx="82" cy="41" r="17" fill="#0b0d11" opacity=".35"/>
+              <circle cx="82" cy="37.5" r="17" fill="#d6d1c4"/>
+              <path d="M65 37.5a17 17 0 0 1 34 0z" fill="#fbf9f3"/>
+              <circle cx="82" cy="84" r="17" fill="#0b0d11" opacity=".45"/>
+              <circle cx="82" cy="80.5" r="17" fill="#171a20"/>
+              <path d="M65 80.5a17 17 0 0 1 34 0z" fill="#3a3f4b"/>
+            </g>
+          </svg>
+        </span>
+      </article>
+
+      <article class="tile t-shogi">
+        <span class="tileArt" aria-hidden="true"><img src="./games/shogi/assets/hero-tile.webp" alt="" loading="lazy" decoding="async" width="1024" height="576" /></span>
+        <a class="tileMain" href="./games/shogi/">
+          <div class="tileChips">
+            <span class="tileGenre">王手 × 持ち駒</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-globe"/></svg>オンライン対戦</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-users"/></svg>2人・CPU可</span>
+          </div>
+          <h2 class="tileTitle">将棋</h2>
+          <p class="tileDesc">取った駒は自分の戦力に。成り・持ち駒ありの本将棋。</p>
+        </a>
+        <div class="tileFoot">
+          <a class="tilePlay" href="./games/shogi/">あそぶ <svg class="ic"><use href="#ic-play"/></svg></a>
+          <button class="rulesBtn" type="button" data-rules="shogi"><svg class="ic"><use href="#ic-book"/></svg> ルール</button>
+        </div>
+        <span class="tileEmblem" aria-hidden="true">
+          <!-- 五角形の駒2枚。「王」は書体に依存しないよう矩形で描く -->
+          <svg viewBox="0 0 120 120">
+            <defs>
+              <linearGradient id="emShA" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#f3d597"/><stop offset="1" stop-color="#cf9a55"/>
+              </linearGradient>
+              <linearGradient id="emShB" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#d6a866"/><stop offset="1" stop-color="#a0692f"/>
+              </linearGradient>
+            </defs>
+            <g transform="rotate(16 82 50)">
+              <path d="M82 20 104 37l-4 58H64l-4-58z" fill="#6a4217" opacity=".7"/>
+              <path d="M82 16 104 33l-4 58H64l-4-58z" fill="url(#emShB)"/>
+            </g>
+            <g transform="rotate(-7 50 64)">
+              <path d="M50 31 76 50l-5 66H29l-5-66z" fill="#6a4217"/>
+              <path d="M50 26 76 45l-5 66H29l-5-66z" fill="url(#emShA)"/>
+              <rect x="36" y="60" width="28" height="4.5" rx="1.2" fill="#2b1a0c"/>
+              <rect x="39" y="74" width="22" height="4.5" rx="1.2" fill="#2b1a0c"/>
+              <rect x="34" y="90" width="32" height="5" rx="1.2" fill="#2b1a0c"/>
+              <rect x="47.75" y="60" width="4.5" height="35" rx="1.2" fill="#2b1a0c"/>
+            </g>
+          </svg>
+        </span>
+      </article>
+
+      <article class="tile t-chess">
+        <span class="tileArt" aria-hidden="true"><img src="./games/chess/assets/hero-tile.webp" alt="" loading="lazy" decoding="async" width="1024" height="576" /></span>
+        <a class="tileMain" href="./games/chess/">
+          <div class="tileChips">
+            <span class="tileGenre">戦術 × メイト</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-globe"/></svg>オンライン対戦</span>
+            <span class="tileBadge"><svg class="ic"><use href="#ic-users"/></svg>2人・CPU可</span>
+          </div>
+          <h2 class="tileTitle">チェス</h2>
+          <p class="tileDesc">キャスリングもアンパッサンも。世界の定番を指し合う。</p>
+        </a>
+        <div class="tileFoot">
+          <a class="tilePlay" href="./games/chess/">あそぶ <svg class="ic"><use href="#ic-play"/></svg></a>
+          <button class="rulesBtn" type="button" data-rules="chess"><svg class="ic"><use href="#ic-book"/></svg> ルール</button>
+        </div>
+        <span class="tileEmblem" aria-hidden="true">
+          <!-- ナイトのシルエット（象牙＋たてがみ陰＋黒い台座） -->
+          <svg viewBox="0 0 120 120">
+            <defs>
+              <linearGradient id="emChA" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#fbf5ea"/><stop offset="1" stop-color="#d9cbb5"/>
+              </linearGradient>
+            </defs>
+            <g transform="rotate(-4 60 64)">
+              <g transform="translate(0 5)" fill="#1a1519" opacity=".45">
+                <path d="M40 94 44 74C46 66 38 64 34 60L24 50C22 46 26 40 32 40L44 33 52 22 56 14 62 26C76 30 86 44 88 60 90 74 88 86 88 94z"/>
+                <rect x="30" y="94" width="64" height="12" rx="4"/>
+              </g>
+              <rect x="30" y="94" width="64" height="12" rx="4" fill="#2c2530"/>
+              <rect x="30" y="94" width="64" height="5" rx="2.5" fill="#4a3f4c"/>
+              <path d="M40 94 44 74C46 66 38 64 34 60L24 50C22 46 26 40 32 40L44 33 52 22 56 14 62 26C76 30 86 44 88 60 90 74 88 86 88 94z" fill="url(#emChA)"/>
+              <path d="M62 26C76 30 86 44 88 60 90 74 88 86 88 94H76C76 80 78 66 72 54 68 44 64 36 62 26z" fill="#c9b89f"/>
+              <circle cx="42" cy="43" r="2.8" fill="#2c2530"/>
+              <circle cx="28" cy="48" r="1.8" fill="#2c2530" opacity=".7"/>
+            </g>
+          </svg>
+        </span>
+      </article>
+
+      </div>
+    </section>
 
     </div>
 
