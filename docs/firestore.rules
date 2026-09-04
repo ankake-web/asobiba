@@ -1,0 +1,56 @@
+// ============================================================
+// あそびば 定番ゲーム（オセロ等）用 Firestore ルール（案）
+// Firebase プロジェクト: umauma-737d6（うまうまレースと同じ）
+// ============================================================
+//
+// ■ これは何？
+//   games/othello などの「オンライン対戦」は Firestore の rooms コレクションに
+//   rooms/{slug}-{4桁コード}（例: rooms/othello-1234）という1ドキュメントを作って読み書きする。
+//   うまうまレースも同じ rooms コレクション（rooms/1234 など）を使っている。
+//   クライアントは匿名ログイン（signInAnonymously）しているので、
+//   「ログイン済みなら rooms 配下を読み書きできる」という最小ルールで動く。
+//
+// ■ いつ貼る？
+//   オセロで「部屋を作る」を押したときに、画面に
+//   「オンライン対戦の準備ができていません（管理者へ: Firestore のルール設定が必要です）」
+//   と出たら（= permission-denied）、いまのルールが rooms/{id} を弾いている。
+//   下のルールを Firebase コンソールに貼れば直る。
+//
+// ■ 貼り方（ブラウザ作業・3分）
+//   1. https://console.firebase.google.com/ を開き、プロジェクト「umauma-737d6」を選ぶ
+//   2. 左メニュー「構築」→「Firestore Database」→ 上のタブ「ルール」
+//   3. いまのルールの中身を確認する。
+//        - 既に `match /rooms/{roomId}` のブロックがあり、`allow read, write: if request.auth != null;`
+//          相当なら何もしなくてよい（この案と同じ）。
+//        - `allow read, write: if true;` のように全開放なら、動くが誰でも書ける状態。
+//          セキュリティ的には下の「request.auth != null」に寄せる方がよい（うまうまレースも匿名ログインしているので壊れない）。
+//        - rooms のブロックが無い／条件が厳しくて弾かれるなら、下の `match /rooms/{roomId}` ブロックを
+//          `match /databases/{database}/documents { ... }` の中に足す（既存の他のブロックは消さない）。
+//   4. 「公開」を押す。反映は数十秒。
+//   5. オセロの「部屋を作る」をもう一度押して、4桁コードが出れば OK。
+//
+// ■ 注意
+//   - BACK10 は別プロジェクト（thegameonline）なのでここは関係ない。
+//   - 隠し情報（手札など）は state にそのまま入る（devtools で見れば見える）。家族・友人用の割り切り。
+//   - 古い部屋の自動削除をしたい場合は、Firestore の「TTL ポリシー」で rooms コレクションの
+//     `expiresAt` フィールドを指定する（online.js は作成/更新のたびに 3 日後の時刻を入れている。
+//     うまうまレースの部屋も同じフィールド名）。
+//
+// ============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // オンライン対戦の部屋（うまうまレース＝rooms/1234、定番ゲーム＝rooms/othello-1234 など）
+    // 匿名ログイン済みのクライアントだけ読み書きできる。
+    match /rooms/{roomId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // それ以外のコレクションは全部拒否（既存のルールに他のブロックがあるなら、そちらを残す）
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
