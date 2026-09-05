@@ -5,7 +5,7 @@
    window.AsobibaOnline を1つだけ生やす。設計書: docs/03-定番ゲーム追加-設計.md §1-1
 
    ■ 使い方（ゲーム本体も <script type="module"> にしてマーカーの後ろに置く）
-     await AsobibaOnline.init({ slug:"othello" });   // Firebase読込＋匿名ログイン。失敗時 throw（日本語message）
+     await AsobibaOnline.init({ slug:"reversi" });   // Firebase読込＋匿名ログイン。失敗時 throw（日本語message）
      const code = await AsobibaOnline.createRoom({ name, maxPlayers, minPlayers, initialState, settings });
      const room = await AsobibaOnline.joinRoom(code, { name });
      const unsub = AsobibaOnline.subscribe(code, (room, err) => { ... });   // heartbeat も自動開始

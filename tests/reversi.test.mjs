@@ -1,4 +1,4 @@
-// オセロのルールエンジン単体テスト。games/othello/index.html の
+// リバーシのルールエンジン単体テスト。games/reversi/index.html の
 // /* @engine-begin */ 〜 /* @engine-end */ を切り出して node の vm で評価する（1ファイル自己完結を崩さない）。
 //   実行: node --test tests/
 import { test } from "node:test";
@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const html = readFileSync(resolve(here, "../games/othello/index.html"), "utf8");
+const html = readFileSync(resolve(here, "../games/reversi/index.html"), "utf8");
 const m = /\/\* @engine-begin \*\/([\s\S]*?)\/\* @engine-end \*\//.exec(html);
 assert.ok(m, "engine block marker not found");
 // 同じレルムで評価する（別コンテキストだと配列の deepEqual がプロトタイプ違いで落ちる）

@@ -6,7 +6,7 @@ import "../src/shared/online.js";
 import { makeFakeStore } from "./fake-store.mjs";
 
 const O = globalThis.AsobibaOnline;
-const SLUG = "othello";
+const SLUG = "reversi";
 
 // 仮想時計（ホスト引き継ぎの60秒判定に使う）
 function clock(start = 1_700_000_000_000) { let t = start; const f = () => t; f.advance = (ms) => { t += ms; }; return f; }

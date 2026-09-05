@@ -8,6 +8,15 @@
 - 2026-08-15 全ゲームUI監査を実施（レポート3本: `docs/` ※2026-08-23整理で `../_audit-2026-08-15/` から移設・スクショ34MBは削除済み）。
   優先度: ハブ → uma-race → dice-climb → back10 →（他プロジェクト）。
 
+## 2026-09-05 オセロ→リバーシ改名（済・未push）
+
+- 「オセロ／Othello」はメガハウスの登録商標で営利利用にライセンスが要るため、収益化の前に改名（オーナー承認）。
+- `git mv games/othello → games/reversi`、slug `reversi`、Firestore 部屋名 `rooms/reversi-XXXX`。旧 slug の部屋には `LEGACY_SLUG` で join フォールバック（片方向・部屋TTL 3日）→ 数日後に `LEGACY_SLUG`/`SOUND_KEY_OLD` を削除してよい。
+- 旧URL `/games/othello/` は転送ページ1枚（location.replace＋meta refresh・#部屋コード引き継ぎ・noindex）として残す。
+- ハブ index.html（description/og/タイル/CSS `.t-reversi`・og:image ?v=3）、rules.js、online.js コメント、tests/reversi.test.mjs、icons.svg コメント、public/og.png のラベル「オセロ」→「リバーシ」も差し替え。
+- 検証: `node --test tests/*.test.mjs` 122件緑、`npm run build` 成功、dist から可視の「オセロ」消滅（残りは babanuki の CSS コメント1か所のみ）。
+- ★同日: 定番8本＋キーアート等の未コミット33件を4コミットに整理して push 済み（Actions success・本番で8本のリンク確認）。
+
 ## 2026-08-15 UI改修 第1弾（済）
 
 - **共通部品を新設**: `src/shared/base-mobile.css`（44px/safe-area/dvh基盤）・

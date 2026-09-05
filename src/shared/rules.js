@@ -116,9 +116,9 @@ export const RULES = {
   },
 
   // ── 定番ボードゲーム ──
-  "othello": {
-    title: "オセロ", icon: "ic-disc", accent: "#2f8f5b",
-    hero: "./games/othello/assets/hero.jpg",
+  "reversi": {
+    title: "リバーシ", icon: "ic-disc", accent: "#2f8f5b",
+    hero: "./games/reversi/assets/hero.jpg",
     lead: "白黒の石で挟んで返す。最後に多い色が勝つ、2人対戦の定番。",
     steps: [
       { icon: "ic-disc", title: "挟んで返す", text: "相手の石をタテ・ヨコ・ナナメに自分の石で挟める場所にだけ置ける。挟んだ石はすべてひっくり返る。置ける場所はドットで表示。" },

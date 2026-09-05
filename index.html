@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#14111c" />
 <title>あそびば — ミニゲーム集</title>
-<meta name="description" content="スマホでさっと遊べる、夫婦・友だち向けのミニゲーム集（全13本）。オリジナル5本（競馬レース・登山ダイス・押しつけ財宝・協力カード・ブラフ）に、大富豪・ババ抜き・神経衰弱・ブラックジャック・ポーカー・オセロ・将棋・チェスの定番8本。" />
+<meta name="description" content="スマホでさっと遊べる、夫婦・友だち向けのミニゲーム集（全13本）。オリジナル5本（競馬レース・登山ダイス・押しつけ財宝・協力カード・ブラフ）に、大富豪・ババ抜き・神経衰弱・ブラックジャック・ポーカー・リバーシ・将棋・チェスの定番8本。" />
 <!-- SNSでURLを貼ったときのプレビュー（OGP） -->
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="あそびば" />
 <meta property="og:title" content="あそびば — スマホでさっと遊べるミニゲーム全13本" />
-<meta property="og:description" content="夫婦で・友だちと、短時間で盛り上がるミニゲーム集（全13本）。オリジナル5本＋トランプ・ボードゲームの定番8本（大富豪・ババ抜き・オセロ・将棋・チェスほか）。オンライン対戦対応。" />
+<meta property="og:description" content="夫婦で・友だちと、短時間で盛り上がるミニゲーム集（全13本）。オリジナル5本＋トランプ・ボードゲームの定番8本（大富豪・ババ抜き・リバーシ・将棋・チェスほか）。オンライン対戦対応。" />
 <meta property="og:url" content="https://ankake-web.github.io/asobiba/" />
 <!-- og:image の ?v= は SNS 側のプレビュー画像キャッシュ避け。画像を差し替えたら番号を上げる -->
-<meta property="og:image" content="https://ankake-web.github.io/asobiba/og.png?v=2" />
+<meta property="og:image" content="https://ankake-web.github.io/asobiba/og.png?v=3" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
@@ -188,7 +188,7 @@
   .t-blackjack{--acc:#2e9a62; --w1:#165236; --w2:#0f1f1a}
   .t-poker    {--acc:#d9504c; --w1:#4a1a1c; --w2:#1f1118}
   /* 定番ボードゲーム */
-  .t-othello  {--acc:#2f8f5b; --w1:#14382a; --w2:#1b1f26}
+  .t-reversi  {--acc:#2f8f5b; --w1:#14382a; --w2:#1b1f26}
   .t-shogi    {--acc:#c99a5a; --w1:#3b2915; --w2:#1f1711}
   .t-chess    {--acc:#8c7b6b; --w1:#2c2724; --w2:#18141b}
 
@@ -730,20 +730,20 @@
       <p class="catDesc">2人で向き合う盤上の定番。CPUの強さを選べて、オンライン対戦も。</p>
       <div class="grid">
 
-      <article class="tile t-othello feature">
-        <span class="tileArt" aria-hidden="true"><img src="./games/othello/assets/hero-tile.webp" alt="" loading="lazy" decoding="async" width="1024" height="576" /></span>
-        <a class="tileMain" href="./games/othello/">
+      <article class="tile t-reversi feature">
+        <span class="tileArt" aria-hidden="true"><img src="./games/reversi/assets/hero-tile.webp" alt="" loading="lazy" decoding="async" width="1024" height="576" /></span>
+        <a class="tileMain" href="./games/reversi/">
           <div class="tileChips">
             <span class="tileGenre">陣取り × 読み合い</span>
             <span class="tileBadge"><svg class="ic"><use href="#ic-globe"/></svg>オンライン対戦</span>
             <span class="tileBadge"><svg class="ic"><use href="#ic-users"/></svg>2人・CPU可</span>
           </div>
-          <h2 class="tileTitle">オセロ</h2>
+          <h2 class="tileTitle">リバーシ</h2>
           <p class="tileDesc">挟んで返して盤を染める。角と辺の取り合いで、最後まで逆転あり。</p>
         </a>
         <div class="tileFoot">
-          <a class="tilePlay" href="./games/othello/">あそぶ <svg class="ic"><use href="#ic-play"/></svg></a>
-          <button class="rulesBtn" type="button" data-rules="othello"><svg class="ic"><use href="#ic-book"/></svg> ルール</button>
+          <a class="tilePlay" href="./games/reversi/">あそぶ <svg class="ic"><use href="#ic-play"/></svg></a>
+          <button class="rulesBtn" type="button" data-rules="reversi"><svg class="ic"><use href="#ic-book"/></svg> ルール</button>
         </div>
         <span class="tileEmblem" aria-hidden="true">
           <!-- 緑の盤（2×2）に白黒の石。置ける場所のドット付き -->
